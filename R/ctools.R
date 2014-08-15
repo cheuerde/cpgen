@@ -93,7 +93,7 @@ csolve <- function(X,y=NULL){
  b = class(y)
  
  if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
- if((sum(is.na(X)) + sum(is.na(y))) > 0) { stop("no NAs allowed") }
+ if(anyNA(X) | anyNA(y)) { stop("no NAs allowed") }
 
  if(is.vector(X)) { X = matrix(X); a = "matrix" } 
  if(is.vector(y)) { y = matrix(y); b = "matrix" } 
