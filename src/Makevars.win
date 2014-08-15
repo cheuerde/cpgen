@@ -5,8 +5,10 @@
 # this is for openmp-support in windows
 
 CXX_STD = CXX11
-PKG_LIBS= $(SHLIB_OPENMP_CFLAGS) `Rscript -e "Rcpp:::LdFlags()"`
-PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS) `Rscript -e "Rcpp:::CxxFlags()"`
+PKG_LIBS= $(SHLIB_OPENMP_CFLAGS)
+PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS)
+#PKG_LIBS= $(SHLIB_OPENMP_CFLAGS) `Rscript -e "Rcpp:::LdFlags()"`
+#PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS) `Rscript -e "Rcpp:::CxxFlags()"`
 #USE_CXX1X =
 
 # without openmp
