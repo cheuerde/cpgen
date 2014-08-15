@@ -1,0 +1,91 @@
+/*
+// ctools.h
+// Claas Heuer, June 2014
+//
+// Copyright (C)  2014 Claas Heuer
+//
+// This file is part of cpgen.
+//
+// cpgen is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License, or
+// (at your option) any later version.
+//
+// cpgen is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// in file.path(R.home("share"), "licenses").  If not, see
+// <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef _cpgen_ctools_H
+#define _cpgen_ctools_H
+
+#include <RcppEigen.h>
+
+#ifdef _OPENMP
+  #define has_openmp 1
+  #include <omp.h>
+  #define OMP_VERSION _OPENMP
+#else 
+  #define has_openmp 0
+  #define omp_get_num_threads() 1
+  #define omp_set_num_threads(x) 1
+  #define omp_get_max_threads() 1
+  #define omp_get_thread_limit() 1
+  #define omp_set_dynamic(x) 1
+  #define omp_get_thread_num() 0
+  #define OMP_VERSION 0
+#endif
+
+using namespace Rcpp;
+using namespace Eigen;
+using namespace std;
+
+typedef Eigen::SparseMatrix<double> SpMat;
+typedef Eigen::Map<Eigen::MatrixXd> MapMatrixXd;
+typedef Eigen::MappedSparseMatrix<double> MapSparseMatrixXd;
+typedef Eigen::Map<Eigen::VectorXd> MapVectorXd;
+typedef Eigen::Map<Eigen::ArrayXd> MapArrayXd;
+
+template<class T1,class T2>
+SEXP ccrossproduct(SEXP XR, SEXP ZR)
+
+{
+
+
+  T1 X(as<T1> (XR));
+  T2 Z(as<T2> (ZR));
+
+//  MatrixXd res = X*Z;
+
+  return wrap(X*Z);
+  
+};
+
+
+RcppExport SEXP check_openmp();
+RcppExport SEXP check_openmp_version();
+RcppExport SEXP get_max_threads();
+//RcppExport SEXP get_limit_threads();
+
+RcppExport SEXP ccp_dense_dense(SEXP X, SEXP Z, SEXP threadsR);
+RcppExport SEXP ccp_dense_sparse(SEXP X, SEXP Z);
+RcppExport SEXP ccp_sparse_dense(SEXP X, SEXP Z);
+RcppExport SEXP ccp_sparse_sparse(SEXP X, SEXP Z);
+RcppExport SEXP ctrace(SEXP XR);
+
+RcppExport SEXP ccov(SEXP Xa,SEXP lambdaR, SEXP wR, SEXP corR, SEXP threadsR);
+RcppExport SEXP cscanx(SEXP path);
+RcppExport SEXP camat(SEXP Xa,SEXP lambdaR, SEXP yangR, SEXP threadsR);
+RcppExport SEXP cdmat(SEXP Xa, SEXP lambdaR, SEXP threadsR);
+RcppExport SEXP cgrm(SEXP XR,SEXP wR, SEXP iswR, SEXP lambdaR, SEXP threadsR);
+RcppExport SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR);
+RcppExport SEXP csolve(SEXP XR, SEXP yR);
+RcppExport SEXP cmaf(SEXP Xa);
+RcppExport SEXP ccolmv(SEXP XR,SEXP varR);
+
+#endif
