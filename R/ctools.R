@@ -170,7 +170,7 @@ cgrm <- function(X, w = NULL, lambda=0){
  b = class(Y)
 
  if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") }
- if((sum(is.na(X)) + sum(is.na(Y))) > 0) { stop("no NAs allowed") }
+ if(anyNA(X) | anyNA(Y)) { stop("no NAs allowed") }
 
  if(is.vector(X)) { X = matrix(X); a = "matrix" } 
  if(is.vector(Y)) { Y = matrix(Y); b = "matrix" } 
