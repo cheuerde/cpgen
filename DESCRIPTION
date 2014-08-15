@@ -8,6 +8,6 @@ Maintainer: Claas Heuer <cheuer@tierzucht.uni-kiel.de>
 Description: Frequently used methods in genomic applications with emphasis on parallel computing
 License: GPL (>= 2)
 SystemRequirements: C++11
-Depends: R(>= 3.1.0), Matrix(>=1.0.5)
+Depends: R(>= 3.1.0),Matrix(>=1.0-5)
 LinkingTo: Rcpp, RcppEigen
 Packaged: 2014-06-08 15:25:55 UTC; tower
