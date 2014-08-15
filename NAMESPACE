@@ -1,6 +1,5 @@
 useDynLib(cpgen)
 #exportPattern("^[[:alpha:]]+")
-importFrom(Rcpp, evalCpp)
 import(Matrix)
 
 
