@@ -77,7 +77,7 @@ isy = id[!is.na(y)]
 n = length(isy)
 if(!is.vector(y) | !is.numeric(y)) stop("y must be a numeric vector")
 if(n<length(y))   stop("NAs in y are not allowed")
-if(any(is.na(M))) stop("NAs in M are not allowed")
+if(anyNA(M)) stop("NAs in M are not allowed")
 if(missing(X)) X <- array(1,dim=c(n,1))
 
 if(verbose) cat("\nComputing Eigen Decomposition and Estimating V\n")

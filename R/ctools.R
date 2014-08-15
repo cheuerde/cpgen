@@ -71,7 +71,7 @@ ccov <- function(X,lambda=0, w=NULL, cor=FALSE){
   allowed=c("matrix","numeric")
   if(!class(X)%in%allowed) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
   if(is.vector(X)) X<-matrix(X)
-  if(any(is.na(X))) stop("No NAs allowed")
+  if(anyNA(X)) stop("No NAs allowed")
   if(missing(w)) { w<-rep(1/nrow(X),nrow(X))} 
   else { w <- w/sum(w) }
   if(lambda>1) lambda=1
@@ -119,7 +119,7 @@ cscanx <- function(path){
 cgrm.A <- function(X, lambda=0, yang=FALSE){
 
          if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-         if(any(is.na(X))) stop("No NAs allowed in X")
+         if(anyNA(X)) stop("No NAs allowed in X")
          if(lambda>1) lambda=1
          if(lambda<0) lambda=0        
 	 .Call( "camat", X, lambda, yang, options()$cpgen.threads ,PACKAGE = "cpgen" )
@@ -130,7 +130,7 @@ cgrm.A <- function(X, lambda=0, yang=FALSE){
 cgrm.D <- function(X, lambda=0){
 
          if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-         if(any(is.na(X))) stop("No NAs allowed in X")
+         if(anyNA(X)) stop("No NAs allowed in X")
          if(lambda>1) lambda=1
          if(lambda<0) lambda=0
 	.Call( "cdmat", X, lambda, options()$cpgen.threads ,PACKAGE = "cpgen" )
@@ -141,7 +141,7 @@ cgrm.D <- function(X, lambda=0){
 cgrm <- function(X, w = NULL, lambda=0){
 
          if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-         if(any(is.na(X))) stop("No NAs allowed in X")
+         if(anyNA(X)) stop("No NAs allowed in X")
          isw = TRUE
 	 if(missing(w)) {w = rep(1,ncol(X)); isw = FALSE} else {
 	   if(!is.vector(w) | !is.numeric(w)) stop("weights must be passed as a numeric vector")
@@ -259,7 +259,7 @@ cmaf <- function(X)	{
 # ccross
 
 ccross <- function(X,D=NULL){
-         if(any(is.na(X))) stop("No NAs allowed in X")
+         if(anyNA(X)) stop("No NAs allowed in X")
 	 if(missing(D)) { D = rep(1,ncol(X)) } else {
 	   if(!is.vector(D) | !is.numeric(D)) stop("D must be passed as a numeric vector") }
          if(length(D)!=ncol(X)) stop("vector D must have as many items as columns in X") 

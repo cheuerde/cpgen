@@ -346,7 +346,7 @@ a = class(X)
 #if(sum(a%in%allowed)!=1) stop(paste(c("lol","rofl"))) 
 if(sum(a%in%allowed)!=1) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" or "),sep="")) 
 
-if(any(is.na(X))) { stop(paste("No NAs allowed in design matrix '", name,"'", sep="")) } 
+if(anyNA(X)) { stop(paste("No NAs allowed in design matrix '", name,"'", sep="")) } 
       
 if(a=="matrix" | a=="dgCMatrix") { if(nrow(X) != n) stop(paste("Number of rows in design matrix '",name,"' doesnt match number of observations in y",sep="")) }
 
