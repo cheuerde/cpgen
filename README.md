@@ -3,6 +3,8 @@ cpgen
 
 [![Build Status](https://travis-ci.org/cheuerde/cpgen.svg?branch=master)](https://travis-ci.org/cheuerde/cpgen)
 
+## Parallel Genomic Evaluations in R
+
 The package offers a variety of functions that are frequently being used in genomic prediction
 and genomewide association studies. The package is based on 'Rcpp' and`RcppEigen`, hence all routines
 are implemented using the matrix algebra library `Eigen`.
