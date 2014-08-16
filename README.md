@@ -19,6 +19,6 @@ in C++. The package offers a variety of functions that lets you control and chec
 the number of threads that are being used by the functions of the package.
 Internally every function uses the global variable 'cpgen.threads' which is stored in
 `options()$cpgen.threads`.
-The value can be changed using the function `set_num_threads()`. When the package is loaded
+The value can be changed using the function ```R set_num_threads()```. When the package is loaded
 in an R-session `cpgen.threads` will be set to the value returned by `get_max_threads()` which
 is a wrapper for the OpenMP-header function `omp_get_max_threads()`
