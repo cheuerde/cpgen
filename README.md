@@ -6,7 +6,7 @@ cpgen
 ## Parallel Genomic Evaluations in R
 
 The package offers a variety of functions that are frequently being used in genomic prediction
-and genomewide association studies. The package is based on 'Rcpp' and`RcppEigen`, hence all routines
+and genomewide association studies. The package is based on`Rcpp` and`RcppEigen`, hence all routines
 are implemented using the matrix algebra library `Eigen`.
 The main emphasis of the package lies in parallel computing which is realized by C++ functions making
 use of `OpenMP`. 
