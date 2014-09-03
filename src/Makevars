@@ -7,3 +7,11 @@ CXX_STD = CXX11
 PKG_LIBS= $(SHLIB_OPENMP_CFLAGS)
 PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS)
 
+##############################################
+# This is for compiling the package with MKL #
+##############################################
+
+#PKG_LIBS= ${MKL_LIB_PATH} ${OMP_LIB_PATH}
+#PKG_CXXFLAGS= -I/opt/intel/composer_xe_2015.0.090/mkl/include -I/opt/intel/composer_xe_2015.0.090/compiler/include -DEIGEN_USE_MKL_ALL -std=c++11 -lmkl_gf_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -openmp
+
+
