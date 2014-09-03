@@ -59,6 +59,8 @@ if(!.Call("check_openmp",PACKAGE="cpgen")) { if(!silent) cat("OpenMP is not avai
   if(t<=0) t=1
 
   options(cpgen.threads=t)
+# this allows using the function to control other openmp functions in R also (MKL,...)
+  .Call("set_num_threads",t,PACKAGE="cpgen")
   if(!silent) cat("Number of threads set to ",t,"\n")
   }
 
