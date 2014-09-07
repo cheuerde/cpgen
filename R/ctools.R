@@ -261,6 +261,8 @@ cmaf <- function(X)	{
 # ccross
 
 ccross <- function(X,D=NULL){
+
+         if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
          if(anyNA(X)) stop("No NAs allowed in X")
 	 if(missing(D)) { D = rep(1,ncol(X)) } else {
 	   if(!is.vector(D) | !is.numeric(D)) stop("D must be passed as a numeric vector") }
