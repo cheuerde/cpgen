@@ -101,7 +101,7 @@ if(missing(random)) {
 
 ## FIXME the scale for BayesA doesnt make sense for more than one phenotype
             dfA = par_random[[i]]$df
-            par_random[[i]]$scale = (((dfA-2)/dfA) * (var(y[[1]],na.rm=T) / 5)) / (ncol(random[[i]]) * mean(ccolmv(random[[i]],var=TRUE),na.rm=T)) } else {
+            par_random[[i]]$scale = (((dfA-2)/dfA) * (var(y[[1]],na.rm=T) / 5)) / (ncol(random[[i]]) * sum(ccolmv(random[[i]])**2,na.rm=T)) } else {
 
             par_random[[i]]$scale = default_scale }
      
@@ -220,7 +220,7 @@ if(missing(random)) {
 
 ## FIXME the scale for BayesA doesnt make sense for more than one phenotype
             dfA = par_random[[i]]$df
-            par_random[[i]]$scale = (((dfA-2)/dfA) * (var(y[[1]],na.rm=T) / 5)) / (ncol(random[[i]]) * mean(ccolmv(random[[i]],var=TRUE),na.rm=T)) } else {
+            par_random[[i]]$scale = (((dfA-2)/dfA) * (var(y[[1]],na.rm=T) / 5)) / (ncol(random[[i]]) * sum(ccolmv(random[[i]])**2,na.rm=T)) } else {
 
             par_random[[i]]$scale = default_scale }
      
