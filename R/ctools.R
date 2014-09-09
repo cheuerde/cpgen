@@ -292,7 +292,29 @@ ccross <- function(X,D=NULL){
 
 ccolmv <- function(X,var=FALSE){
 
-     .Call( "ccolmv", X,var ,PACKAGE = "cpgen" )[1,]
+ allowed=c("matrix","dgCMatrix")
+ a = class(X)
+
+ if(!a%in%allowed) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") }
+ if(anyNA(X)) { stop("no NAs allowed") }
+ 
+ if(a=="dgCMatrix") {
+ 
+   if(var) {
+   
+     return(apply(X,2,var))
+     
+   } else {
+   
+       return(colMeans(X))
+       
+     }
+     
+  } else {
+ 
+      .Call( "ccolmv", X,var ,PACKAGE = "cpgen" )[1,]
+ 
+    } 
 
 }
 
