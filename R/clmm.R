@@ -48,7 +48,7 @@ if(class(y) == "list") {
   }
 #isy <- (1:n)[!is.na(y)]
 
-if(missing(X)) {
+if(is.null(X)) {
   X = array(1,dim=c(n,1))
   par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense="dense",method="fixed")
   } else {                   
@@ -58,12 +58,12 @@ if(missing(X)) {
     }
   }
 
-if(missing(random)) {
+if(is.null(random)) {
   random = list()
   par_random = list()
   } else {
 
-  if(missing(par_random)) {
+  if(is.null(par_random)) {
     par_random<-list(length(random))
     if(is.null(names(random))) names(random) = 1:length(random)
     for(i in 1:length(random)){
@@ -122,7 +122,7 @@ if(missing(random)) {
 
 # RNG Seed based on system time and process id
 # Taken from: http://stackoverflow.com/questions/8810338/same-random-numbers-every-time
-if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
+if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
 ## FIXME check arguments
 
@@ -167,7 +167,7 @@ if(class(y) == "list") {
   }
 #isy <- (1:n)[!is.na(y)]
 
-if(missing(X)) {
+if(is.null(X)) {
   X = array(1,dim=c(n,1))
   par_fixed <- list(scale=0,df=0,sparse_or_dense="dense",method="fixed")
   } else {                   
@@ -177,12 +177,12 @@ if(missing(X)) {
     }
   }
 
-if(missing(random)) {
+if(is.null(random)) {
   random = list()
   par_random = list()
   } else {
 
-  if(missing(par_random)) {
+  if(is.null(par_random)) {
     par_random<-list(length(random))
     if(is.null(names(random))) names(random) = 1:length(random)
     for(i in 1:length(random)){
@@ -240,7 +240,7 @@ if(missing(random)) {
 
 # RNG Seed based on system time and process id
 # Taken from: http://stackoverflow.com/questions/8810338/same-random-numbers-every-time
-if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
+if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
 ## FIXME check arguments
 
@@ -294,7 +294,7 @@ if(length(isy) < length(y)) {
 
 n <- length(isy)
 
-if(missing(X)) X = rep(1,length(y[isy]))
+if(is.null(X)) X = rep(1,length(y[isy]))
 
 Uy <- (t(UD$vectors)%c%y[isy])[,1]
 UX <- t(UD$vectors)%c%X
@@ -305,7 +305,7 @@ Z<-sparseMatrix(i=1:n,j=1:n,x=D_sqrt)
 par_random <- list(list(scale=scale_a,df=df_a,sparse_or_dense="sparse",method="random"))
 
 if(verbose) cat("Running Model\n")
-if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
+if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
 # set the number of threads to 1 for clmm
 old_threads <- get_num_threads()
