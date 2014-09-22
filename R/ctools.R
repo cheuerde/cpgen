@@ -89,20 +89,25 @@ ccov <- function(X,lambda=0, w=NULL, cor=FALSE){
 
 csolve <- function(X,y=NULL){
 
- allowed=c("matrix","numeric")
+ allowed=c("matrix","numeric","dgCMatrix")
  a = class(X)
- if(missing(y)) y = diag(nrow(X)) 
+ if(is.null(y)) y = diag(nrow(X)) 
  b = class(y)
  
- if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
- if(anyNA(X) | anyNA(y)) { stop("no NAs allowed") }
+ if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'dgCMatrix'") 
+ if(!b%in%allowed[c(1,2)]) stop("y must match one of the following types: 'matrix' , 'numeric'") 
+ if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
 
  if(is.vector(X)) { X = matrix(X); a = "matrix" } 
  if(is.vector(y)) { y = matrix(y); b = "matrix" } 
 
  if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
 
- .Call( "csolve", X,y ,PACKAGE = "cpgen" )
+ if(a == "matrix") {
+   .Call( "csolve", X,y ,PACKAGE = "cpgen" )
+ } else {
+     .Call( "csolve_sparse", X,y ,PACKAGE = "cpgen" )
+   }
 
 }
 
