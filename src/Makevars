@@ -1,17 +1,13 @@
 ## Use the R_HOME indirection to support installations of multiple R version
-#PKG_LIBS = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` 
 CXX_STD = CXX11
-#PKG_LIBS= $(SHLIB_OPENMP_CFLAGS) `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` 
-#PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS) `$(R_HOME)/bin/Rscript -e "Rcpp:::CxxFlags()"`
-
 PKG_LIBS= $(SHLIB_OPENMP_CFLAGS)
-PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS)
+PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS) -DNDEBUG
 
 ##############################################
 # This is for compiling the package with MKL #
 ##############################################
 
 #PKG_LIBS= ${MKL_LIB_PATH} ${OMP_LIB_PATH}
-#PKG_CXXFLAGS= -I${MKL_INCLUDE_PATH} -I${OMP_INCLUDE_PATH} -DEIGEN_USE_MKL_ALL -std=c++11 -lmkl_gf_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -openmp
+#PKG_CXXFLAGS= -I${MKL_INCLUDE_PATH} -I${OMP_INCLUDE_PATH} -DNDEBUG -DEIGEN_USE_MKL_ALL -std=c++11 -lmkl_gf_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -openmp
 
 
