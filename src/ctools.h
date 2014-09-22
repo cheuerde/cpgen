@@ -86,6 +86,7 @@ RcppExport SEXP cdmat(SEXP Xa, SEXP lambdaR, SEXP threadsR);
 RcppExport SEXP cgrm(SEXP XR,SEXP wR, SEXP iswR, SEXP lambdaR, SEXP threadsR);
 RcppExport SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR);
 RcppExport SEXP csolve(SEXP XR, SEXP yR);
+RcppExport SEXP csolve_sparse(SEXP XR, SEXP yR);
 RcppExport SEXP cmaf(SEXP Xa);
 RcppExport SEXP ccolmv(SEXP XR,SEXP varR);
 
