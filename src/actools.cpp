@@ -346,6 +346,26 @@ SEXP csolve(SEXP XR, SEXP yR){
 
 }
 
+// csolve_sparse
+
+SEXP csolve_sparse(SEXP XR, SEXP yR){
+
+  MapSparseMatrixXd X(as<MapSparseMatrixXd> (XR));
+  MapMatrixXd y(as<MapMatrixXd> (yR));
+  
+// SimpliciaLLT doesnt take mapped sparse matrices  
+  SpMat A(X);
+
+  SimplicialLLT<SpMat> W;
+
+  W.compute(A);
+
+  MatrixXd res = W.solve(y);
+
+  return wrap(res); 
+
+}
+
 
 
 // cmaf
