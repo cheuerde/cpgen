@@ -82,7 +82,13 @@ df = 500
 par_random=list(list(method="random",scale=var_m,df = df),list(method="random",scale=var_a,df=df))
 
 #passing model terms to 'clmm'
-mod<-clmm(y=model_terms$y, random=list(model_terms$Marker_Matrix,model_terms$Z_residual),par_random=par_random, scale_e = var_e, df_e=df,niter=50000,burnin=30000)
+mod<-clmm(y=model_terms$y, 
+          random=list(model_terms$Marker_Matrix,model_terms$Z_residual),
+          par_random=par_random,
+          scale_e = var_e,
+          df_e=df,
+          niter=50000,
+          burnin=30000)
 
 # check breeding value prediction:
 print(round(mod$SSBR$Breeding_Values,digits=2))
