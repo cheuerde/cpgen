@@ -26,8 +26,6 @@ yet to be written ...
 
 }
 
-return(list(ids = model_ids, y=pheno, Marker_Matrix=M_combined, Z_residual = L))
-
 \value{
 List of 4:
   \item{ids}{ids for the model (ordered as in other model terms)}
