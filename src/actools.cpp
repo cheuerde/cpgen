@@ -416,15 +416,12 @@ SEXP csolve(SEXP XR, SEXP yR){
 
 SEXP csolve_sparse(SEXP XR, SEXP yR){
 
-  MapSparseMatrixXd X(as<MapSparseMatrixXd> (XR));
-  MapMatrixXd y(as<MapMatrixXd> (yR));
+  Eigen::MappedSparseMatrix<double> X(as<Eigen::MappedSparseMatrix<double> > (XR));
+  Eigen::Map<Eigen::MatrixXd> y(as<Eigen::Map<Eigen::MatrixXd> > (yR));
   
-// SimpliciaLLT doesnt take mapped sparse matrices  
-  SpMat A(X);
+  Eigen::SimplicialLLT<Eigen::SparseMatrix<double, Eigen::ColMajor> > W;
 
-  SimplicialLLT<SpMat> W;
-
-  W.compute(A);
+  W.compute(X);
 
 // allocate R-matrix
   int n = X.rows();
@@ -432,7 +429,7 @@ SEXP csolve_sparse(SEXP XR, SEXP yR){
   Rcpp::NumericMatrix sol(n,p);
 
 // map that R-matrix to an Eigen-class
-  MapMatrixXd sol_map(sol.begin(),n,p);
+  Eigen::Map<Eigen::MatrixXd> sol_map(sol.begin(),n,p);
 
   sol_map.noalias() = W.solve(y);
 
