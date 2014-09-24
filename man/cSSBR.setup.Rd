@@ -83,7 +83,7 @@ par_random=list(list(method="random",scale=var_m,df = df),list(method="random",s
 
 set_num_threads(1)
 
-#passing model terms to 'clmm'
+# passing model terms to 'clmm'
 mod<-clmm(y=model_terms$y, 
           random=list(model_terms$Marker_Matrix,model_terms$Z_residual),
           par_random=par_random,
