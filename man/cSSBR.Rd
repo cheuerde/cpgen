@@ -89,6 +89,8 @@ var_m <- var_e / 10
 df = 500
 
 par_random=list(list(method="random",scale=var_m,df = df),list(method="random",scale=var_a,df=df))
+
+set_num_threads(1)
 mod<-cSSBR(data = dat,M=M,par_random=par_random, scale_e = var_e, df_e=df,niter=50000,burnin=30000)
 
 # check breeding value prediction:
