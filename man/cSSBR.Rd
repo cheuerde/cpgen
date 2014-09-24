@@ -5,17 +5,17 @@
 
 \description{
 This function runs Single Step Bayesian Regression (SSBR) for the prediction of breeding values
-in a unified model that incorporated genotyped and ungenotyped individuals (Fernando et al., 2014).
+in a unified model that incorporates genotyped and ungenotyped individuals (Fernando et al., 2014).
 }
 
 
 \usage{
-cSSBR(data, M, X=NULL , par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE)
+cSSBR(data, M , par_random=NULL, scale_e=0, df_e=0, 
+      niter=5000, burnin=2500, seed=NULL, verbose=TRUE)
 }
 \arguments{
 \item{data}{\code{data.frame} with four columns: id, sire, dam, y}
 \item{M}{Marker Matrix for genotyped individuals. MUST contain rownames}
-\item{X}{Fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}. If omitted a column-vector of ones will be assigned}
 \item{par_random}{as in \code{\link{clmm}}}
 \item{niter}{as in \code{\link{clmm}}}
 \item{burnin}{as in \code{\link{clmm}}}
@@ -60,6 +60,8 @@ analyses". 2014
 \seealso{\code{\link{cSSBR.setup}, \link{clmm}}}
 
 \examples{
+
+# this is the example dataset given in Fernando et al., 2014
 
 id <- 1:6
 sire <- c(rep(NA,3),rep(1,3))
