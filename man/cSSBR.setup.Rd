@@ -50,6 +50,8 @@ analyses". 2014
 
 \examples{
 
+# this is the example dataset given in Fernando et al., 2014
+
 id <- 1:6
 sire <- c(rep(NA,3),rep(1,3))
 dam <- c(rep(NA,3),2,2,3)
