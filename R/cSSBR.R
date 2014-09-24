@@ -23,11 +23,15 @@
 
 # cSSBR
 
-cSSBR <- function(data, M, X=NULL , par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
+cSSBR <- function(data, M, par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
 
 
 # double check some stuff to prevent clmm from failing 
 # after having already done some heavy computations
+
+# Not sure yet how to let X be defined by user, as one doesnt know yet
+# the dimension of the model
+X <- NULL
 if(!is.null(X)) {
   if(class(X)!="matrix") stop("'X' has to be of type 'matrix'") 
   if(anyNA(X)) stop("No NAs allowed in X")
