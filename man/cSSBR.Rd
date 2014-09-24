@@ -53,7 +53,7 @@ Claas Heuer
 \references{
 
 Rohan L Fernando, Jack C M Dekkers and Dorian J Garrick. "A class of Bayesian methods to combine large numbers of genotyped and non-genotyped animals for whole genome
-analyses. 2014
+analyses". 2014
 
 }
 
