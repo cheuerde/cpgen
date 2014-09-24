@@ -56,19 +56,71 @@ SEXP ccp_dense_dense(SEXP XR, SEXP ZR, SEXP threadsR){
   int nt = as<int>(threadsR);
   omp_set_num_threads(nt);
   Eigen::setNbThreads(nt);
-  return(ccrossproduct<MapMatrixXd,MapMatrixXd>(XR,ZR));
+//  return(ccrossproduct<MapMatrixXd,MapMatrixXd>(XR,ZR));
+
+// new version without Rcpp::wrap to prevent copies
+
+  MapMatrixXd X(as<MapMatrixXd> (XR));
+  MapMatrixXd Z(as<MapMatrixXd> (ZR));
+
+// allocate R-matrix
+  int n = X.rows();
+  int p = Z.cols();
+  Rcpp::NumericMatrix sol(n,p);
+
+// map that R-matrix to an Eigen-class
+  MapMatrixXd sol_map(sol.begin(),n,p);
+
+  sol_map.noalias() = X*Z;
+
+  return sol;
+
 
 }
 
 SEXP ccp_dense_sparse(SEXP XR, SEXP ZR){
 
-  return(ccrossproduct<MapMatrixXd,MapSparseMatrixXd>(XR,ZR));
+//  return(ccrossproduct<MapMatrixXd,MapSparseMatrixXd>(XR,ZR));
+
+// new version without Rcpp::wrap to prevent copies
+
+  MapMatrixXd X(as<MapMatrixXd> (XR));
+  MapSparseMatrixXd Z(as<MapSparseMatrixXd> (ZR));
+
+// allocate R-matrix
+  int n = X.rows();
+  int p = Z.cols();
+  Rcpp::NumericMatrix sol(n,p);
+
+// map that R-matrix to an Eigen-class
+  MapMatrixXd sol_map(sol.begin(),n,p);
+
+  sol_map.noalias() = X*Z;
+
+  return sol;
 
 }
 
 SEXP ccp_sparse_dense(SEXP XR, SEXP ZR){
 
-  return(ccrossproduct<MapSparseMatrixXd,MapMatrixXd>(XR,ZR));
+//  return(ccrossproduct<MapSparseMatrixXd,MapMatrixXd>(XR,ZR));
+
+// new version without Rcpp::wrap to prevent copies
+
+  MapSparseMatrixXd X(as<MapSparseMatrixXd> (XR));
+  MapMatrixXd Z(as<MapMatrixXd> (ZR));
+
+// allocate R-matrix
+  int n = X.rows();
+  int p = Z.cols();
+  Rcpp::NumericMatrix sol(n,p);
+
+// map that R-matrix to an Eigen-class
+  MapMatrixXd sol_map(sol.begin(),n,p);
+
+  sol_map.noalias() = X*Z;
+
+  return sol;
 
 }
 
@@ -342,7 +394,21 @@ SEXP csolve(SEXP XR, SEXP yR){
   MapMatrixXd X(as<MapMatrixXd> (XR));
   MapMatrixXd y(as<MapMatrixXd> (yR));
 
-  return wrap(X.llt().solve(y)); 
+//  return wrap(X.llt().solve(y)); 
+
+// new version without Rcpp::wrap to prevent copies
+
+// allocate R-matrix
+  int n = X.rows();
+  int p = y.cols();
+  Rcpp::NumericMatrix sol(n,p);
+
+// map that R-matrix to an Eigen-class
+  MapMatrixXd sol_map(sol.begin(),n,p);
+
+  sol_map.noalias() = X.llt().solve(y);
+
+  return sol;
 
 }
 
@@ -360,9 +426,17 @@ SEXP csolve_sparse(SEXP XR, SEXP yR){
 
   W.compute(A);
 
-  MatrixXd res = W.solve(y);
+// allocate R-matrix
+  int n = X.rows();
+  int p = y.cols();
+  Rcpp::NumericMatrix sol(n,p);
 
-  return wrap(res); 
+// map that R-matrix to an Eigen-class
+  MapMatrixXd sol_map(sol.begin(),n,p);
+
+  sol_map.noalias() = W.solve(y);
+
+  return sol; 
 
 }
 
