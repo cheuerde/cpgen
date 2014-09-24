@@ -71,7 +71,7 @@ rownames(M) <- 1:3
 
 model_terms <- cSSBR.setup(dat,M)
 
-var_y <- var(y,na.rm=T)
+var_y <- var(y,na.rm=TRUE)
 var_e <- (10*var_y / 21)
 var_a <- var_e 
 var_m <- var_e / 10
