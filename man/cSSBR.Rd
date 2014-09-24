@@ -31,7 +31,7 @@ cSSBR(data, M, X=NULL , par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2
 yet to be written ...
 
 }
-mod$SSBR <- list(ids = model_terms$ids, y=model_terms$y, Marker_Matrix=model_terms$Marker_Matrix, Z_residual = model_terms$Z_residual, Breeding_Values = bv)
+
 \value{
 List of 3 + number of random effects as in \code{\link{clmm}} +
   \item{SSBR}{List of 4:
