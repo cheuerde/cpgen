@@ -2,7 +2,7 @@ useDynLib(cpgen)
 #exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
 import(Matrix)
-
+import(pedigreemm)
 
 export("ccov")
 export("ccross")
