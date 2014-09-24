@@ -130,7 +130,7 @@ ped <- editPed(label=data$id,sire=data$sire,dam=data$dam,verbose=FALSE)
 ped <- pedigreemm::pedigree(label=ped$label,sire=ped$sire,dam=ped$dam)
 
 # construct A-inverse
-Ainv <- getAInv(ped)
+Ainv <- as(getAInv(ped),"dgCMatrix")
 
 # now check which individuals have phenotypes and provide pedigree and/or marker information
 DAT <- data.frame(id=ped@label, y = as.numeric(NA), has_y = 0, has_gt = 0, has_ped = 0, stringsAsFactors=FALSE)
@@ -173,7 +173,7 @@ M_combined[(nrow_gt+1):nrow(M_combined),] <- csolve(Ainv[non_genotyped,non_genot
 
 # obtain the cholesky factor for residual error of non_genotyped
 # using pedigreemm::relfactor
-L <- t(relfactor(ped))
+L <- t(as(relfactor(ped),"dgCMatrix"))
 
 # set zeros for genotyped individuals
 L[match(rownames(M)[index_gt],DAT$id),] <- 0 
