@@ -92,8 +92,6 @@ mod<-clmm(y=model_terms$y,
           niter=50000,
           burnin=30000)
 
-# check breeding value prediction:
-print(round(mod$SSBR$Breeding_Values,digits=2))
 
 }
 \keyword{Genomic Prediction}
