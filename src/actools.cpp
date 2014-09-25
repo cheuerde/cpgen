@@ -113,7 +113,6 @@ SEXP ccov(SEXP Xa,SEXP lambdaR, SEXP wR, SEXP corR, SEXP threadsR)
   int cor = as<int>(corR);
   const Map<VectorXd> w(as<Map<VectorXd> >(wR));
 
-
   RowVectorXd mu = (X*w.asDiagonal()).colwise().sum();
   VectorXd sd;
   int p = X.cols();
@@ -207,8 +206,6 @@ SEXP camat(SEXP Xa,SEXP lambdaR, SEXP yangR, SEXP threadsR)
   Rcpp::NumericMatrix A_out(n,n);
   Eigen::Map<Eigen::MatrixXd> A(A_out.begin(),n,n);
 
- 
-
   if(yang == 0) {
 
     double c = (maf.array()*(1-maf.array()).array()).sum() * 2;
@@ -219,7 +216,7 @@ SEXP camat(SEXP Xa,SEXP lambdaR, SEXP yangR, SEXP threadsR)
   } else {
 
       RowVectorXd var = (2*maf).array()*(1-maf.array());
-      A = (((X.array()+1).matrix().rowwise()-2*maf).matrix()*(1/var.array()).matrix().asDiagonal()
+      A.noalias() = (((X.array()+1).matrix().rowwise()-2*maf).matrix()*(1/var.array()).matrix().asDiagonal()
                    *((X.array()+1).matrix().rowwise()-2*maf).matrix().transpose()) / p;
 
 // Diagonals
