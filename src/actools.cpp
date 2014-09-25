@@ -213,7 +213,7 @@ SEXP camat(SEXP Xa,SEXP lambdaR, SEXP yangR, SEXP threadsR)
 
     double c = (maf.array()*(1-maf.array()).array()).sum() * 2;
 
-    A.noalias() = (1-lambda) * ((((X.array()+1).matrix().rowwise()-2*maf)*((X.array()+1).matrix().rowwise()-2*maf).transpose()) / c).array();
+    A = (1-lambda) * ((((X.array()+1).matrix().rowwise()-2*maf)*((X.array()+1).matrix().rowwise()-2*maf).transpose()) / c).array();
     A.diagonal().array() += lambda;
 
   } else {
