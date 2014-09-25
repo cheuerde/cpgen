@@ -110,7 +110,7 @@ if(threads >1) {
     
 } else {
   
-    sol.map.noalias() = W.solve(y);
+    sol_map.noalias() = W.solve(y);
     
   }
   
