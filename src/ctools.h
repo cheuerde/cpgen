@@ -85,7 +85,7 @@ SEXP eigensolver(SEXP XR, SEXP yR) {
 
   T3 W; 
   
-  W.compute(X)
+  W.compute(X);
 
 // allocate R-matrix
   int n = X.rows();
