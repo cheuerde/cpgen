@@ -219,7 +219,7 @@ SEXP camat(SEXP Xa,SEXP lambdaR, SEXP yangR, SEXP threadsR)
   } else {
 
       RowVectorXd var = (2*maf).array()*(1-maf.array());
-      A.noalias() = (((X.array()+1).matrix().rowwise()-2*maf).matrix()*(1/var.array()).matrix().asDiagonal()
+      A = (((X.array()+1).matrix().rowwise()-2*maf).matrix()*(1/var.array()).matrix().asDiagonal()
                    *((X.array()+1).matrix().rowwise()-2*maf).matrix().transpose()).array() / p;
 
 // Diagonals
