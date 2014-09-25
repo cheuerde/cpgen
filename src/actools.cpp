@@ -347,11 +347,7 @@ SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR){
 
 SEXP csolve(SEXP XR, SEXP yR,SEXP threadsR) {
 
-  omp_set_num_threads(as<int>(threadsR));
-  Eigen::setNbThreads(1);
-  Eigen::initParallel();
-
-  return(eigensolver<MapMatrixXd, MapMatrixXd, Eigen::LLT<Eigen::MatrixXd> >(XR,yR));
+  return(eigensolver<MapMatrixXd, MapMatrixXd, Eigen::LLT<Eigen::MatrixXd> >(XR,yR,threadsR));
 
 }
 
@@ -359,11 +355,7 @@ SEXP csolve(SEXP XR, SEXP yR,SEXP threadsR) {
 
 SEXP csolve_sparse(SEXP XR, SEXP yR, SEXP threadsR) {
 
-  omp_set_num_threads(as<int>(threadsR));
-  Eigen::setNbThreads(1);
-  Eigen::initParallel();
-
-  return(eigensolver<MapSparseMatrixXd,MapMatrixXd, Eigen::SimplicialLLT<Eigen::SparseMatrix<double, Eigen::ColMajor> > >(XR,yR));
+  return(eigensolver<MapSparseMatrixXd,MapMatrixXd, Eigen::SimplicialLLT<Eigen::SparseMatrix<double, Eigen::ColMajor> > >(XR,yR, threadsR));
 
 }
 
