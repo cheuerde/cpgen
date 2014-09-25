@@ -130,7 +130,7 @@ ped <- editPed(label=data$id,sire=data$sire,dam=data$dam,verbose=FALSE)
 ped <- pedigreemm::pedigree(label=ped$label,sire=ped$sire,dam=ped$dam)
 
 # construct A-inverse
-Ainv <- as(getAInv(ped),"dgCMatrix")
+Ainv <- getAInv(ped)
 
 # now check which individuals have phenotypes and provide pedigree and/or marker information
 DAT <- data.frame(id=ped@label, y = as.numeric(NA), has_y = 0, has_gt = 0, has_ped = 0, stringsAsFactors=FALSE)
