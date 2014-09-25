@@ -139,8 +139,8 @@ G.D <- cgrm.D(M,lambda=0.01)
 random = list(t(chol(G.A)),t(chol(G.D)))
 
 ### specify options
-par_random = list(list(method="random",scale=var(y)/2 * 7,df=5),
-		  list(method="random",scale=var(y)/10 * 7,df=5))
+par_random = list(list(method="random",scale=var(y)/2 ,df=5),
+		  list(method="random",scale=var(y)/10,df=5))
 
 ### run 
 
