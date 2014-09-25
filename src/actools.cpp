@@ -56,78 +56,34 @@ SEXP ccp_dense_dense(SEXP XR, SEXP ZR, SEXP threadsR){
   int nt = as<int>(threadsR);
   omp_set_num_threads(nt);
   Eigen::setNbThreads(nt);
-//  return(ccrossproduct<MapMatrixXd,MapMatrixXd>(XR,ZR));
 
-// new version without Rcpp::wrap to prevent copies
-
-  MapMatrixXd X(as<MapMatrixXd> (XR));
-  MapMatrixXd Z(as<MapMatrixXd> (ZR));
-
-// allocate R-matrix
-  int n = X.rows();
-  int p = Z.cols();
-  Rcpp::NumericMatrix sol(n,p);
-
-// map that R-matrix to an Eigen-class
-  MapMatrixXd sol_map(sol.begin(),n,p);
-
-  sol_map.noalias() = X*Z;
-
-  return sol;
-
+  return(ccrossproduct<MapMatrixXd,MapMatrixXd>(XR,ZR));
 
 }
 
 SEXP ccp_dense_sparse(SEXP XR, SEXP ZR){
 
-//  return(ccrossproduct<MapMatrixXd,MapSparseMatrixXd>(XR,ZR));
 
-// new version without Rcpp::wrap to prevent copies
-
-  MapMatrixXd X(as<MapMatrixXd> (XR));
-  MapSparseMatrixXd Z(as<MapSparseMatrixXd> (ZR));
-
-// allocate R-matrix
-  int n = X.rows();
-  int p = Z.cols();
-  Rcpp::NumericMatrix sol(n,p);
-
-// map that R-matrix to an Eigen-class
-  MapMatrixXd sol_map(sol.begin(),n,p);
-
-  sol_map.noalias() = X*Z;
-
-  return sol;
+  return(ccrossproduct<MapMatrixXd,MapSparseMatrixXd>(XR,ZR));
 
 }
 
 SEXP ccp_sparse_dense(SEXP XR, SEXP ZR){
 
-//  return(ccrossproduct<MapSparseMatrixXd,MapMatrixXd>(XR,ZR));
 
-// new version without Rcpp::wrap to prevent copies
-
-  MapSparseMatrixXd X(as<MapSparseMatrixXd> (XR));
-  MapMatrixXd Z(as<MapMatrixXd> (ZR));
-
-// allocate R-matrix
-  int n = X.rows();
-  int p = Z.cols();
-  Rcpp::NumericMatrix sol(n,p);
-
-// map that R-matrix to an Eigen-class
-  MapMatrixXd sol_map(sol.begin(),n,p);
-
-  sol_map.noalias() = X*Z;
-
-  return sol;
+  return(ccrossproduct<MapSparseMatrixXd,MapMatrixXd>(XR,ZR));
 
 }
 
 SEXP ccp_sparse_sparse(SEXP XR, SEXP ZR){
 
 
-  return(ccrossproduct<MapSparseMatrixXd,MapSparseMatrixXd>(XR,ZR));
+  MapSparseMatrixXd X(as<MapSparseMatrixXd> (XR));
+  MapSparseMatrixXd Z(as<MapSparseMatrixXd> (ZR));
+
+// On this occasion I use wrap, as it is convenient
+// and memory might not matter that much here
+  return(wrap(X*Z));
 
 }
 
@@ -389,51 +345,25 @@ SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR){
 // csolve
 
 
-SEXP csolve(SEXP XR, SEXP yR){
+SEXP csolve(SEXP XR, SEXP yR,SEXP threadsR) {
 
-  MapMatrixXd X(as<MapMatrixXd> (XR));
-  MapMatrixXd y(as<MapMatrixXd> (yR));
+  omp_set_num_threads(as<int>(threadsR));
+  Eigen::setNbThreads(1);
+  Eigen::initParallel();
 
-//  return wrap(X.llt().solve(y)); 
-
-// new version without Rcpp::wrap to prevent copies
-
-// allocate R-matrix
-  int n = X.rows();
-  int p = y.cols();
-  Rcpp::NumericMatrix sol(n,p);
-
-// map that R-matrix to an Eigen-class
-  MapMatrixXd sol_map(sol.begin(),n,p);
-
-  sol_map.noalias() = X.llt().solve(y);
-
-  return sol;
+  return(eigensolver<MapMatrixXd, MapMatrixXd, Eigen::LLT<Eigen::MatrixXd>(XR,yR));
 
 }
 
 // csolve_sparse
 
-SEXP csolve_sparse(SEXP XR, SEXP yR){
+SEXP csolve_sparse(SEXP XR, SEXP yR, SEXP threadsR) {
 
-  Eigen::MappedSparseMatrix<double> X(as<Eigen::MappedSparseMatrix<double> > (XR));
-  Eigen::Map<Eigen::MatrixXd> y(as<Eigen::Map<Eigen::MatrixXd> > (yR));
-  
-  Eigen::SimplicialLLT<Eigen::SparseMatrix<double, Eigen::ColMajor> > W;
+  omp_set_num_threads(as<int>(threadsR));
+  Eigen::setNbThreads(1);
+  Eigen::initParallel();
 
-  W.compute(X);
-
-// allocate R-matrix
-  int n = X.rows();
-  int p = y.cols();
-  Rcpp::NumericMatrix sol(n,p);
-
-// map that R-matrix to an Eigen-class
-  Eigen::Map<Eigen::MatrixXd> sol_map(sol.begin(),n,p);
-
-  sol_map.noalias() = W.solve(y);
-
-  return sol; 
+  return(eigensolver<MapSparseMatrixXd,MapMatrixXd, Eigen::SimplicialLLT<Eigen::SparseMatrix<double, Eigen::ColMajor> >(XR,yR));
 
 }
 
