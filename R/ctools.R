@@ -104,9 +104,9 @@ csolve <- function(X,y=NULL){
  if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
 
  if(a == "matrix") {
-   .Call( "csolve", X,y ,PACKAGE = "cpgen" )
+   .Call( "csolve", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
  } else {
-     .Call( "csolve_sparse", X,y ,PACKAGE = "cpgen" )
+     .Call( "csolve_sparse", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
    }
 
 }
