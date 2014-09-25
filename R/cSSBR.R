@@ -156,8 +156,9 @@ index_gt <- seq(1,nrow(M))[match(tmp[tmp[,"has_y"]==1,"id"] ,rownames(M))]
 
 if(verbose) cat(" Allocating combined Marker matrix ( n =",nrow_gt + nrow_non_gt,", p =",ncol(M),")\n")
 M_combined <- matrix(double(),nrow = nrow_gt + nrow_non_gt, ncol = ncol(M))
-M_combined[1:nrow_gt,] <- M[index_gt,]
-
+if(nrow_gt > 0){
+  M_combined[1:nrow_gt,] <- M[index_gt,]
+}
 # set up model ids
 model_ids <- c(rownames(M)[index_gt],DAT$id[non_genotyped])
 
