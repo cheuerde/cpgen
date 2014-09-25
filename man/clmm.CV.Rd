@@ -83,7 +83,7 @@ G.A <- cgrm.A(M,lambda=0.01)
 random = list(t(chol(G.A)))
 
 ### specify options
-par_random = list(list(method="random",scale=var(y)/2 * 7,df=5))
+par_random = list(list(method="random",scale=var(y)/2,df=5))
 
 ### run 
 fit <- clmm.CV(y_CV,random=random,par_random=par_random,niter=5000,burnin=2500)
