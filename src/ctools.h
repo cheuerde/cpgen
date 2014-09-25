@@ -56,15 +56,54 @@ SEXP ccrossproduct(SEXP XR, SEXP ZR)
 
 {
 
-
   T1 X(as<T1> (XR));
   T2 Z(as<T2> (ZR));
 
-//  MatrixXd res = X*Z;
+// allocate R-matrix
+  int n = X.rows();
+  int p = Z.cols();
+  Rcpp::NumericMatrix sol(n,p);
 
-  return wrap(X*Z);
+// map that R-matrix to an Eigen-class
+  MapMatrixXd sol_map(sol.begin(),n,p);
+
+  sol_map.noalias() = X*Z;
+
+  return sol;
   
 };
+
+
+// template for eigensolvers using dense
+// and/or sparse matrices.
+// return type is always a dense matrix here.
+templacte<class T1, class T2, class T3>
+SEXP eigensolver(SEXP XR, SEXP yR) {
+
+  T1 X(as<T1> (XR));
+  T2 y(as<T2> (yR));
+
+  T3 W; 
+  
+  W.compute(X)
+
+// allocate R-matrix
+  int n = X.rows();
+  int p = y.cols();
+  Rcpp::NumericMatrix sol(n,p);
+
+// map that R-matrix to an Eigen-class
+  MapMatrixXd sol_map(sol.begin(),n,p);
+
+# pragma omp parallel for
+  for(size_t i=0;i<p;++i) { 
+    sol_map.col(i).noalias() = W.solve(y.col(i));
+  } 
+
+  return sol;
+
+}
+
 
 
 RcppExport SEXP check_openmp();
@@ -85,8 +124,8 @@ RcppExport SEXP camat(SEXP Xa,SEXP lambdaR, SEXP yangR, SEXP threadsR);
 RcppExport SEXP cdmat(SEXP Xa, SEXP lambdaR, SEXP threadsR);
 RcppExport SEXP cgrm(SEXP XR,SEXP wR, SEXP iswR, SEXP lambdaR, SEXP threadsR);
 RcppExport SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR);
-RcppExport SEXP csolve(SEXP XR, SEXP yR);
-RcppExport SEXP csolve_sparse(SEXP XR, SEXP yR);
+RcppExport SEXP csolve(SEXP XR, SEXP yR, SEXP threadsR);
+RcppExport SEXP csolve_sparse(SEXP XR, SEXP yR, SEXP threadsR);
 RcppExport SEXP cmaf(SEXP Xa);
 RcppExport SEXP ccolmv(SEXP XR,SEXP varR);
 
