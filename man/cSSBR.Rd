@@ -93,6 +93,9 @@ par_random=list(list(method="random",scale=var_m,df = df),list(method="random",s
 set_num_threads(1)
 mod<-cSSBR(data = dat,M=M,par_random=par_random, scale_e = var_e, df_e=df,niter=50000,burnin=30000)
 
+# check marker effects
+print(round(mod[[4]]$posterior$estimates_mean,digits=2))
+
 # check breeding value prediction:
 print(round(mod$SSBR$Breeding_Values,digits=2))
 
