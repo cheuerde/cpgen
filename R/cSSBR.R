@@ -126,6 +126,10 @@ if(length(marker_without_ped)>0) {
 }
 
 # R-package: pedigreemm
+# as of now (Sep. 2014) 'editPed' is very slow on large pedigrees.
+# For a faster version install this modified package:
+# library(devtools)
+# install_github("cheuerde/pedigreemm", ref = "master", build_vignettes=FALSE)
 ped <- editPed(label=data$id,sire=data$sire,dam=data$dam,verbose=FALSE)
 ped <- pedigreemm::pedigree(label=ped$label,sire=ped$sire,dam=ped$dam)
 
