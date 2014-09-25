@@ -120,7 +120,8 @@ SEXP ccov(SEXP Xa,SEXP lambdaR, SEXP wR, SEXP corR, SEXP threadsR)
   Rcpp::NumericMatrix covX_out(p,p);
   Eigen::Map<Eigen::MatrixXd> covX(covX_out.begin(),p,p);
 
-  covX = (1-lambda) * ((X.rowwise()-mu).transpose()*w.asDiagonal()*(X.rowwise()-mu)).array() / (1-(w.dot(w))); 
+  covX.noalias() = (1-lambda) * ((X.rowwise()-mu).transpose()*w.asDiagonal()*(X.rowwise()-mu)); 
+  covX.array() /= (1-(w.dot(w));
 
   if(cor!=0) 
   
