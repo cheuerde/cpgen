@@ -78,7 +78,12 @@ SEXP ccrossproduct(SEXP XR, SEXP ZR)
 // and/or sparse matrices.
 // return type is always a dense matrix here.
 template<class T1, class T2, class T3>
-SEXP eigensolver(SEXP XR, SEXP yR) {
+SEXP eigensolver(SEXP XR, SEXP yR, SEXP threadsR) {
+
+  int threads = as<int>(threadsR);
+  omp_set_num_threads(threads);
+  Eigen::setNbThreads(1);
+  Eigen::initParallel();
 
   T1 X(as<T1> (XR));
   T2 y(as<T2> (yR));
@@ -95,11 +100,20 @@ SEXP eigensolver(SEXP XR, SEXP yR) {
 // map that R-matrix to an Eigen-class
   MapMatrixXd sol_map(sol.begin(),n,p);
 
-# pragma omp parallel for
-  for(size_t i=0;i<p;++i) { 
-    sol_map.col(i).noalias() = W.solve(y.col(i));
-  } 
+// only use omp if threads > 1
+if(threads >1) {
 
+# pragma omp parallel for
+    for(size_t i=0;i<p;++i) { 
+      sol_map.col(i).noalias() = W.solve(y.col(i));
+    } 
+    
+} else {
+  
+    sol.map.noalias() = W.solve(y);
+    
+  }
+  
   return sol;
 
 };
