@@ -177,7 +177,9 @@ M_combined[(nrow_gt+1):nrow(M_combined),] <- csolve(Ainv[non_genotyped,non_genot
 L <- t(as(relfactor(ped),"dgCMatrix"))
 
 # set zeros for genotyped individuals
-L[match(rownames(M)[index_gt],DAT$id),] <- 0 
+if(nrow_gt > 0){
+  L[match(rownames(M)[index_gt],DAT$id),] <- 0 
+}
 
 # remove individuals we dont need and order
 L <- L[match(model_ids,DAT$id),non_genotyped]
