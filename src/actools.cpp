@@ -120,7 +120,7 @@ SEXP ccov(SEXP Xa,SEXP lambdaR, SEXP wR, SEXP corR, SEXP threadsR)
   Rcpp::NumericMatrix covX_out(p,p);
   Eigen::Map<Eigen::MatrixXd> covX(covX_out.begin(),p,p);
 
-  covX.noalias() = (1-lambda) * ((X.rowwise()-mu).transpose()*w.asDiagonal()*(X.rowwise()-mu)).array() / (1-(w.dot(w))); 
+  covX = (1-lambda) * ((X.rowwise()-mu).transpose()*w.asDiagonal()*(X.rowwise()-mu)).array() / (1-(w.dot(w))); 
 
   if(cor!=0) 
   
@@ -198,24 +198,22 @@ SEXP camat(SEXP Xa,SEXP lambdaR, SEXP yangR, SEXP threadsR)
   const Map<MatrixXd> X(as<Map<MatrixXd> >(Xa));
   int yang = as<int>(yangR);
   double lambda = as<double>(lambdaR);
-
-
-  double n = X.rows();
   double p = X.cols();
+  int n = X.rows();
 
   RowVectorXd maf = (X.array()+1).colwise().sum() / (n*2);
   Map<ArrayXd> mafa(maf.data(),X.cols());
-  
-  int n = X.rows();
+
   Rcpp::NumericMatrix A_out(n,n);
   Eigen::Map<Eigen::MatrixXd> A(A_out.begin(),n,n);
+
  
 
   if(yang == 0) {
 
     double c = (maf.array()*(1-maf.array()).array()).sum() * 2;
 
-    A.noalias() = (1-lambda) * ((((X.array()+1).matrix().rowwise()-2*maf)*((X.array()+1).matrix().rowwise()-2*maf).transpose()) / c).array();
+    A = (1-lambda) * ((((X.array()+1).matrix().rowwise()-2*maf)*((X.array()+1).matrix().rowwise()-2*maf).transpose()) / c).array();
     A.diagonal().array() += lambda;
 
   } else {
