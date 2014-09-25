@@ -6,7 +6,7 @@
 \description{
 This function prepares all model terms for SSBR using pedigree and marker information.
 The function is particularly useful for using the reported model terms on multiple 
-phenotypes, for cross validation (\code{\link{clmm.CV}}) or to pass it to
+phenotypes, for cross validation (\code{\link{clmm.CV}}) or to pass them to
 alternative software.
 }
 
