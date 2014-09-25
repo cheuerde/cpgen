@@ -91,6 +91,9 @@ mod<-clmm(y=model_terms$y,
           df_e=df,
           niter=50000,
           burnin=30000)
+          
+# check marker effects
+print(round(mod[[4]]$posterior$estimates_mean,digits=2))
 
 
 }
