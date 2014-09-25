@@ -67,10 +67,10 @@ mod <- clmm(y=model_terms$y,
 
 # obtain breeding values
 # FIXME there might be more than just the intercept
-bv <- mod$Predicted - mod$Effect_1$posterior$estimates_mean
+bv <- mod$Predicted - mod[[3]]$posterior$estimates_mean
 
 # add animals that were not in model to the bv-vector
-gt_bv <- (M %c% mod$Effect_2$posterior$estimates_mean)[,1]
+gt_bv <- (M %c% mod[[4]]$posterior$estimates_mean)[,1]
 gt_not_in_model <- rownames(M)[!rownames(M)%in%model_terms$ids]
 bv <- c(bv,gt_bv[!rownames(M)%in%model_terms$ids])
 names(bv) <- c(model_terms$ids,gt_not_in_model)
