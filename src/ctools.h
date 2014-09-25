@@ -77,7 +77,7 @@ SEXP ccrossproduct(SEXP XR, SEXP ZR)
 // template for eigensolvers using dense
 // and/or sparse matrices.
 // return type is always a dense matrix here.
-templacte<class T1, class T2, class T3>
+template<class T1, class T2, class T3>
 SEXP eigensolver(SEXP XR, SEXP yR) {
 
   T1 X(as<T1> (XR));
@@ -102,7 +102,7 @@ SEXP eigensolver(SEXP XR, SEXP yR) {
 
   return sol;
 
-}
+};
 
 
 
