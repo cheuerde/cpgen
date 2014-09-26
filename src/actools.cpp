@@ -404,12 +404,17 @@ SEXP ccolmv(SEXP XR,SEXP varR){
 // this function will return a combined marker matrix
 // with the genotyped individuals on the top rows
 
-SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP threadsR) {
+SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR) {
 	
   int threads = as<int>(threadsR);
   omp_set_num_threads(threads);
   Eigen::setNbThreads(1);
   Eigen::initParallel();
+
+// get genotyped individuals that will enter the model
+
+  n_geno_model = LENGTH(index_gtR);
+  int index_gt = INTEGER(index_gtR);
 
 // this is the marker matrix of the genotyped individuals	
   MapMatrixXd M2(as<MapMatrixXd>(MR));
@@ -418,7 +423,8 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP threadsR) {
   MapSparseMatrixXd A11(as<MapSparseMatrixXd>(A11R));
   MapSparseMatrixXd A12(as<MapSparseMatrixXd>(A12R));
 
-  int n = M2.rows() + A11.rows();
+// dimensions of combined matrix
+  int n = n_geno_model + A11.rows();
   int p = M2.cols();
 
 // the combined model matrix 
@@ -438,8 +444,12 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP threadsR) {
 
   }
 
-// copy genotyped into combined marker matrix (unfortunately necessary)
-  M_full.topRows(M2.rows()).noalias() = M2;
+// copy genotyped into combined marker matrix 
+  for(int i=0;i<n_geno_model;i++) {
+  	
+    M_full.row(i).noalias() = M.row(index_gt[i]);
+    
+  }
 
   return M_full_out;
 	
