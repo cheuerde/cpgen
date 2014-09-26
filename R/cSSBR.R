@@ -23,7 +23,7 @@
 
 # cSSBR
 
-cSSBR <- function(data, M, M.id, X=NULL par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
+cSSBR <- function(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
 
 
 # double check some stuff to prevent clmm from failing 
