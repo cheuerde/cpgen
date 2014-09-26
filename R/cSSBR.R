@@ -87,7 +87,7 @@ return(mod)
 
 # cSSBR.setup
 
-cSSBR.setup <- function(data, M, verbose=TRUE) {
+cSSBR.setup <- function(data, M, M.id, verbose=TRUE) {
 
 
 # double check some stuff to prevent clmm from failing 
