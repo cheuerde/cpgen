@@ -48,10 +48,8 @@ if(!is.null(par_random)) {
 
 # obtain the model terms
 model_terms <- cSSBR.setup(data, M, M.id, verbose)
-# this is necessary to maintain X as a matrix
-col_tmp <- ncol(X)
-X <- X[match(model_terms$ids,data$id),]
-dim(X) <- c(length(match(model_terms$ids,data$id)),col_tmp)
+X <- X[match(model_terms$ids,data$id),,drop=FALSE]
+
 
 #################
 ### Run Model ###
