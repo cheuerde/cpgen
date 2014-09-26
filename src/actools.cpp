@@ -447,7 +447,7 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR) 
 // copy genotyped into combined marker matrix 
   for(int i=0;i<n_geno_model;i++) {
   	
-    M_full.row(i).noalias() = M2.row(index_gt[i]);
+    M_full.row(i).noalias() = M2.row(index_gt[i]-1);
     
   }
 
