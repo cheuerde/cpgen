@@ -400,6 +400,53 @@ SEXP ccolmv(SEXP XR,SEXP varR){
 }
 
 
+// cSSBR_impute
+// this function will return a combined marker matrix
+// with the genotyped individuals on the top rows
+
+SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP threadsR) {
+	
+  int threads = as<int>(threadsR);
+  omp_set_num_threads(threads);
+  Eigen::setNbThreads(1);
+  Eigen::initParallel();
+
+// this is the marker matrix of the genotyped individuals	
+  MapMatrixXd M2(as<MapMatrixXd>(MR));
+
+// those are the submatrices of Ainverse
+  MapSparseMatrixXd A11(as<MapSparseMatrixXd>(A11R));
+  MapSparseMatrixXd A12(as<MapSparseMatrixXd>(A12R));
+
+  int n = M2.rows() + A11.rows();
+  int p = M2.cols();
+
+// the combined model matrix 
+  Rcpp::NumericMatrix M_full_out(n,p);
+  MapMatrixXd M_full(M_full_out.begin(),n,p);
+
+  Eigen::SimplicialLLT<Eigen::SparseMatrix<double, Eigen::ColMajor> > A;
+  A.compute(A11);
+
+//  M_full.bottomRows(A11.rows()).noalias() = A.solve(A12 * M2);
+
+// here we impute the non-genotyped directly into the combined marker matrix
+# pragma omp parallel for
+  for(int i=0;i<p;++i) {
+
+    M_full.block(M2.rows(),i,A11.rows(),1).noalias() = A.solve(A12*M2.col(i));
+
+  }
+
+// copy genotyped into combined marker matrix (unfortunately necessary)
+  M_full.topRows(M2.rows()).noalias() = M2;
+
+  return M_full_out;
+	
+}
+
+
+
 
 			
 
