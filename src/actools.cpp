@@ -413,8 +413,8 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR) 
 
 // get genotyped individuals that will enter the model
 
-  n_geno_model = LENGTH(index_gtR);
-  int index_gt = INTEGER(index_gtR);
+  int n_geno_model = LENGTH(index_gtR);
+  int * index_gt = INTEGER(index_gtR);
 
 // this is the marker matrix of the genotyped individuals	
   MapMatrixXd M2(as<MapMatrixXd>(MR));
