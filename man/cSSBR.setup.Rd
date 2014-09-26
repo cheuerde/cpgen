@@ -12,11 +12,12 @@ alternative software.
 
 
 \usage{
-cSSBR.setup(data, M, verbose=TRUE)
+cSSBR.setup(data, M, M.id, verbose=TRUE)
 }
 \arguments{
 \item{data}{\code{data.frame} with four columns: id, sire, dam, y}
 \item{M}{Marker Matrix for genotyped individuals. MUST contain rownames}
+\item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
 \item{verbose}{Prints progress to the screen}
 }
 
@@ -68,9 +69,9 @@ M <- rbind(c(1,2,1,1,0,0,1,2,1,0),
            c(2,1,1,1,2,0,1,1,1,1),
            c(0,1,0,0,2,1,2,1,1,1))
 
-rownames(M) <- 1:3
+M.id <- 1:3
 
-model_terms <- cSSBR.setup(dat,M)
+model_terms <- cSSBR.setup(dat,M, M.id)
 
 var_y <- var(y,na.rm=TRUE)
 var_e <- (10*var_y / 21)
