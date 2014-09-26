@@ -182,7 +182,7 @@ if(verbose) cat(" Imputing non-genotyped individuals\n")
 
 # This function runs in parallel with an absolute minimum of temporary memory allocation
 M_combined <- .Call("cSSBR_impute",Ainv[non_genotyped,non_genotyped],
-                   (-Ainv[non_genotyped,genotyped]), M, options()$cpgen.threads)
+                   (-Ainv[non_genotyped,genotyped]), M, as.integer(index_gt), options()$cpgen.threads)
 
 # obtain the cholesky factor for residual error of non_genotyped
 # using pedigreemm::relfactor
