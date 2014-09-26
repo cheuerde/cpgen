@@ -30,7 +30,7 @@ cSSBR <- function(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, nit
 # after having already done some heavy computations
 
 if(!is.null(X)) {
-  if(class(X)!="matrix") stop("'X' has to be of type 'matrix'") 
+  if(!class(X)%in%c("matrix","dgCMatrix")) stop("'X' has to be of type 'matrix' or 'dgCMatrix'") 
   if(nrow(X) != nrow(data)) stop("'X' must have as many rows as 'data'")
   if(anyNA(X)) stop("No NAs allowed in 'X'")
 } else {
@@ -48,7 +48,7 @@ if(!is.null(par_random)) {
 
 # obtain the model terms
 model_terms <- cSSBR.setup(data, M, M.id, verbose)
-X <- as(X[match(model_terms$ids,data$id),],"matrix")
+X <- as(X[match(model_terms$ids,data$id),],class(X))
 
 #################
 ### Run Model ###
