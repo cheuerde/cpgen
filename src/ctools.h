@@ -142,6 +142,6 @@ RcppExport SEXP csolve(SEXP XR, SEXP yR, SEXP threadsR);
 RcppExport SEXP csolve_sparse(SEXP XR, SEXP yR, SEXP threadsR);
 RcppExport SEXP cmaf(SEXP Xa);
 RcppExport SEXP ccolmv(SEXP XR,SEXP varR);
-RcppExport SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP threadsR);
+RcppExport SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR);
 
 #endif
