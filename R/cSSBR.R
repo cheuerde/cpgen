@@ -23,22 +23,22 @@
 
 # cSSBR
 
-cSSBR <- function(data, M, par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
+cSSBR <- function(data, M, M.id, X=NULL par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
 
 
 # double check some stuff to prevent clmm from failing 
 # after having already done some heavy computations
 
-# Not sure yet how to let X be defined by user, as one doesnt know yet
-# the dimension of the model
-X <- NULL
 if(!is.null(X)) {
   if(class(X)!="matrix") stop("'X' has to be of type 'matrix'") 
-  if(anyNA(X)) stop("No NAs allowed in X")
-} 
+  if(nrow(X) != nrow(data)) stop("'X' must have as many rows as 'data'")
+  if(anyNA(X)) stop("No NAs allowed in 'X'")
+} else {
+    X = array(1,dim=c(nrow(data),1))
+  }
 
 if(!is.null(par_random)) {
-  if(length(par_random)!=2) stop("par_random has to be of length 2")
+  if(length(par_random)!=2) stop("'par_random' has to be of length 2")
   for(i in 1:length(par_random)) {
     allowed_methods = c("fixed","random","BayesA")
     if(is.null(par_random[[i]]$method)) stop(paste("Define a method for random-effect: ",i,sep=""))
@@ -48,6 +48,7 @@ if(!is.null(par_random)) {
 
 # obtain the model terms
 model_terms <- cSSBR.setup(data,M,verbose)
+X <- X[match(model_terms$ids,data$id),]
 
 #################
 ### Run Model ###
@@ -99,7 +100,8 @@ if(is.null(data$sire)) stop("'data' has to include a sire-vector 'sire'")
 if(is.null(data$dam)) stop("'data' has to include a dam-vector 'dam'")
 
 if(class(M)!="matrix") stop("'M' has to be of type 'matrix'") 
-if(is.null(rownames(M))) stop("Please provide rownames for 'M'")
+if(is.null(M.id)) stop("Please provide rownames for 'M' as 'M.id'")
+if(length(M.id)!=nrow(M)) stop("'M.id' must have as many elements as nrow(M)")
 if(anyNA(M)) stop("No NAs allowed in marker matrix")
 
 # FIXME repeated measures are not implemented yet - find a way not to copy too much
@@ -115,9 +117,9 @@ if(verbose) cat("\n Gathering information and processing pedigree\n")
 data$id <- as.character(data$id)
 data$sire <- as.character(data$sire)
 data$dam <- as.character(data$dam)
-rownames(M) <- as.character(rownames(M))
+M.id <- as.character(M.id)
 
-marker_without_ped <- rownames(M)[!rownames(M)%in%c(data$id,data$sire,data$dam)]
+marker_without_ped <- M.id[!M.id %in% c(data$id,data$sire,data$dam)]
 if(length(marker_without_ped)>0) {
 
   temp <- data.frame(id = marker_without_ped, sire = NA, dam = NA, y = NA)
@@ -142,21 +144,21 @@ n = nrow(DAT)
 
 DAT[match(data$id,DAT$id),"y"] <- data[match(DAT[match(data$id,DAT$id),"id"],data$id),"y"]
 DAT[!is.na(DAT$y),"has_y"] <- 1
-DAT[DAT$id%in%rownames(M),"has_gt"] <- 1
-DAT[DAT$id%in%ped@label,"has_ped"] <- 1
+DAT[DAT$id %in% M.id,"has_gt"] <- 1
+DAT[DAT$id %in% ped@label,"has_ped"] <- 1
 
 ids <- 1:n
 
-genotyped <- ids[match(rownames(M),DAT$id)]
+genotyped <- ids[match(M.id,DAT$id)]
 
 # from the non genotyped we only need those with phenotype
-non_genotyped <- ids[DAT$has_y & !DAT$id%in%DAT[genotyped,"id"]]
+non_genotyped <- ids[DAT$has_y & !DAT$id %in% DAT[genotyped,"id"]]
 
 # allocate the combined marker matrix for the model (only individuals with phenotype)
 nrow_gt = sum(DAT[genotyped,"has_y"])
 nrow_non_gt = length(non_genotyped)
 tmp <- DAT[genotyped,]
-index_gt <- seq(1,nrow(M))[match(tmp[tmp[,"has_y"]==1,"id"] ,rownames(M))]
+index_gt <- seq(1,nrow(M))[match(tmp[tmp[,"has_y"]==1,"id"] ,M.id)]
 
 if(verbose) cat(" Allocating combined Marker matrix ( n =",nrow_gt + nrow_non_gt,", p =",ncol(M),")\n")
 M_combined <- matrix(double(),nrow = nrow_gt + nrow_non_gt, ncol = ncol(M))
@@ -164,7 +166,7 @@ if(nrow_gt > 0){
   M_combined[1:nrow_gt,] <- M[index_gt,]
 }
 # set up model ids
-model_ids <- c(rownames(M)[index_gt],DAT$id[non_genotyped])
+model_ids <- c(M.id[index_gt],DAT$id[non_genotyped])
 
 #######################
 ### Imputation Step ###
@@ -182,7 +184,7 @@ L <- t(as(relfactor(ped),"dgCMatrix"))
 
 # set zeros for genotyped individuals
 if(nrow_gt > 0){
-  L[match(rownames(M)[index_gt],DAT$id),] <- 0 
+  L[match(M.id[index_gt],DAT$id),] <- 0 
 }
 
 # remove individuals we dont need and order
