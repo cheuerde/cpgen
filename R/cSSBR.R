@@ -48,7 +48,7 @@ if(!is.null(par_random)) {
 
 # obtain the model terms
 model_terms <- cSSBR.setup(data, M, M.id, verbose)
-X <- as(X[match(model_terms$ids,ssbr_dat$id),],"matrix")
+X <- as(X[match(model_terms$ids,data$id),],"matrix")
 
 #################
 ### Run Model ###
