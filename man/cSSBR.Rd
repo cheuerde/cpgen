@@ -43,7 +43,8 @@ List of 3 + number of random effects as in \code{\link{clmm}} +
        \item{y - phenotype vector}
        \item{Marker_Matrix - Combined Marker Matrix including imputed and genotyped individuals}
        \item{Z_residual - Design Matrix used to model the residual error for the imputed individuals}
-       \item{Breeding_Values - Predicted Breeding Values for all animals in \code{data} that have genotypes and/or phenotypes}
+       \item{Breeding_Values - Predicted Breeding Values for all animals in \code{data} that have
+             genotypes and/or phenotypes}
       }
    }
 }
