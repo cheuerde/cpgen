@@ -10,12 +10,15 @@ in a unified model that incorporates genotyped and ungenotyped individuals (Fern
 
 
 \usage{
-cSSBR(data, M , par_random=NULL, scale_e=0, df_e=0, 
+cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, 
       niter=5000, burnin=2500, seed=NULL, verbose=TRUE)
 }
 \arguments{
 \item{data}{\code{data.frame} with four columns: id, sire, dam, y}
 \item{M}{Marker Matrix for genotyped individuals. MUST contain rownames}
+\item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
+\item{X}{Fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}.
+         If omitted a column-vector of ones will be assigned. Must have as many rows as data}
 \item{par_random}{as in \code{\link{clmm}}}
 \item{niter}{as in \code{\link{clmm}}}
 \item{burnin}{as in \code{\link{clmm}}}
