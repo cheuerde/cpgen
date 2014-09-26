@@ -159,12 +159,6 @@ nrow_gt = sum(DAT[genotyped,"has_y"])
 nrow_non_gt = length(non_genotyped)
 tmp <- DAT[genotyped,]
 index_gt <- seq(1,nrow(M))[match(tmp[tmp[,"has_y"]==1,"id"] ,M.id)]
-
-if(verbose) cat(" Allocating combined Marker matrix ( n =",nrow_gt + nrow_non_gt,", p =",ncol(M),")\n")
-M_combined <- matrix(double(),nrow = nrow_gt + nrow_non_gt, ncol = ncol(M))
-if(nrow_gt > 0){
-  M_combined[1:nrow_gt,] <- M[index_gt,]
-}
 # set up model ids
 model_ids <- c(M.id[index_gt],DAT$id[non_genotyped])
 
@@ -172,11 +166,23 @@ model_ids <- c(M.id[index_gt],DAT$id[non_genotyped])
 ### Imputation Step ###
 #######################
 
+### this part is recplaced now by very memory efficient c++-function 'cSSBR_impute'
+# M_combined <- matrix(double(),nrow = nrow_gt + nrow_non_gt, ncol = ncol(M))
+# if(nrow_gt > 0){
+#  M_combined[1:nrow_gt,] <- M[index_gt,]
+# }
+
+if(verbose) cat(" Allocating combined Marker matrix ( n =",nrow_gt + nrow_non_gt,", p =",ncol(M),")\n")
 if(verbose) cat(" Imputing non-genotyped individuals\n")
 # 'csolve' uses Eigen's 'SimplicalLLT-Solver' which is very fast for this purpose.
 # Now impute the non_genotyped directly into the model matrix
-M_combined[(nrow_gt+1):nrow(M_combined),] <- csolve(Ainv[non_genotyped,non_genotyped],
-(-Ainv[non_genotyped,genotyped]) %c% M)
+#
+# M_combined[(nrow_gt+1):nrow(M_combined),] <- csolve(Ainv[non_genotyped,non_genotyped],
+# (-Ainv[non_genotyped,genotyped]) %c% M)
+
+# This function runs in parallel with an absolute minimum of temporary memory allocation
+M_combined <- .Call("cSSBR_impute",Ainv[non_genotyped,non_genotyped],
+                   (-Ainv[non_genotyped,genotyped]), M, options()$cpgen.threads)
 
 # obtain the cholesky factor for residual error of non_genotyped
 # using pedigreemm::relfactor
