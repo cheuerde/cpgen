@@ -440,7 +440,7 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR) 
 # pragma omp parallel for
   for(int i=0;i<p;++i) {
 
-    M_full.block(M2.rows(),i,A11.rows(),1).noalias() = A.solve(A12*M2.col(i));
+    M_full.block(n_geno_model,i,A11.rows(),1).noalias() = A.solve(A12*M2.col(i));
 
   }
 
