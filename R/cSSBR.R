@@ -166,7 +166,7 @@ model_ids <- c(M.id[index_gt],DAT$id[non_genotyped])
 ### Imputation Step ###
 #######################
 
-### this part is recplaced now by very memory efficient c++-function 'cSSBR_impute'
+### this part is recplaced now by the very memory efficient c++-function 'cSSBR_impute'
 # M_combined <- matrix(double(),nrow = nrow_gt + nrow_non_gt, ncol = ncol(M))
 # if(nrow_gt > 0){
 #  M_combined[1:nrow_gt,] <- M[index_gt,]
