@@ -47,7 +47,7 @@ if(!is.null(par_random)) {
 }
 
 # obtain the model terms
-model_terms <- cSSBR.setup(data,M,verbose)
+model_terms <- cSSBR.setup(data, M, M.id, verbose)
 X <- X[match(model_terms$ids,data$id),]
 
 #################
