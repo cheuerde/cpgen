@@ -21,3 +21,8 @@ Internally every function uses the global variable `cpgen.threads` which is stor
 The value can be changed using the function `set_num_threads()`. When the package is loaded
 in an R-session `cpgen.threads` will be set to the value returned by `get_max_threads()` which
 is a wrapper for the OpenMP-header function `omp_get_max_threads()`
+
+## Installation
+
+`library(devtools)`
+`install_github("cheuerde/cpgen", ref = "master", build_vignettes=FALSE)`
