@@ -41,6 +41,7 @@ List of 3 + number of random effects as in \code{\link{clmm}} +
      \itemize{
        \item{ids - ids used in the model (ordered as in other model terms)}
        \item{y - phenotype vector}
+       \item{X - Design matrix for fixed effects}
        \item{Marker_Matrix - Combined Marker Matrix including imputed and genotyped individuals}
        \item{Z_residual - Design Matrix used to model the residual error for the imputed individuals}
        \item{Breeding_Values - Predicted Breeding Values for all animals in \code{data} that have
