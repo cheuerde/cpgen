@@ -77,7 +77,7 @@ bv <- c(bv,gt_bv[!rownames(M)%in%model_terms$ids])
 names(bv) <- c(model_terms$ids,gt_not_in_model)
 
 # add some important information concerning SSBR
-mod$SSBR <- list(ids = model_terms$ids, y=model_terms$y, Marker_Matrix=model_terms$Marker_Matrix, Z_residual = model_terms$Z_residual, Breeding_Values = bv)
+mod$SSBR <- list(ids = model_terms$ids, y=model_terms$y, X=X, Marker_Matrix=model_terms$Marker_Matrix, Z_residual = model_terms$Z_residual, Breeding_Values = bv)
 
 return(mod)
 
