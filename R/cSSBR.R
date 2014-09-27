@@ -72,8 +72,8 @@ bv <- mod$Predicted - (X %c% mod[[3]]$posterior$estimates_mean)
 
 # add animals that were not in model to the bv-vector
 gt_bv <- (M %c% mod[[4]]$posterior$estimates_mean)[,1]
-gt_not_in_model <- rownames(M)[!rownames(M)%in%model_terms$ids]
-bv <- c(bv,gt_bv[!rownames(M)%in%model_terms$ids])
+gt_not_in_model <- M.id[!M.id %in% model_terms$ids]
+bv <- c(bv,gt_bv[!M.id %in% model_terms$ids])
 names(bv) <- c(model_terms$ids,gt_not_in_model)
 
 # add some important information concerning SSBR
