@@ -25,4 +25,5 @@ is a wrapper for the OpenMP-header function `omp_get_max_threads()`
 ## Installation
 
 `library(devtools)`
+
 `install_github("cheuerde/cpgen", ref = "master", build_vignettes=FALSE)`
