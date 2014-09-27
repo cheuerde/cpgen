@@ -68,8 +68,7 @@ mod <- clmm(y=model_terms$y,
 	    verbose=verbose) 
 
 # obtain breeding values
-# FIXME there might be more than just the intercept
-bv <- mod$Predicted - mod[[3]]$posterior$estimates_mean
+bv <- mod$Predicted - (X %c% mod[[3]]$posterior$estimates_mean)
 
 # add animals that were not in model to the bv-vector
 gt_bv <- (M %c% mod[[4]]$posterior$estimates_mean)[,1]
