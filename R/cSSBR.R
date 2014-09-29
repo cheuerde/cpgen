@@ -155,7 +155,7 @@ genotyped <- ids[match(M.id,DAT$id)]
 non_genotyped <- ids[DAT$has_y & !DAT$id %in% DAT[genotyped,"id"]]
 
 # if non-genotyped dont provide phenotypes then SSBR is not a good model choice
-if(length(non_genotypes) == 0) stop("There are no non-genotyped individuals that provide phenotypes")
+if(length(non_genotyped) == 0) stop("There are no non-genotyped individuals that provide phenotypes")
 
 # allocate the combined marker matrix for the model (only individuals with phenotype)
 nrow_gt = sum(DAT[genotyped,"has_y"])
