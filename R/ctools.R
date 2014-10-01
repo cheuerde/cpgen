@@ -89,17 +89,17 @@ ccov <- function(X,lambda=0, w=NULL, cor=FALSE){
 
 csolve <- function(X,y=NULL){
 
- allowed=c("matrix","numeric","dgCMatrix")
+ allowed=c("matrix","numeric", "array", "dgCMatrix")
  a = class(X)
  if(is.null(y)) y = diag(nrow(X)) 
  b = class(y)
  
- if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'dgCMatrix'") 
- if(!b%in%allowed[c(1,2)]) stop("y must match one of the following types: 'matrix' , 'numeric'") 
+ if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'array', 'dgCMatrix'") 
+ if(!b%in%allowed[c(1,2,3)]) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
  if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
 
- if(is.vector(X)) { X = matrix(X); a = "matrix" } 
- if(is.vector(y)) { y = matrix(y); b = "matrix" } 
+ if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
+ if(is.vector(y) | is.array(y)) { y = as.matrix(y); b = "matrix" } 
 
  if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
 
@@ -172,15 +172,15 @@ cgrm <- function(X, w = NULL, lambda=0){
 
  `%c%` <- function(X,Y) {
 
- allowed=c("matrix","dgCMatrix","numeric")
+ allowed=c("matrix","dgCMatrix","numeric","array")
  a = class(X)
  b = class(Y)
 
- if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") }
+ if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric', 'array'") }
  if(anyNA(X) | anyNA(Y)) { stop("no NAs allowed") }
 
- if(is.vector(X)) { X = matrix(X); a = "matrix" } 
- if(is.vector(Y)) { Y = matrix(Y); b = "matrix" } 
+ if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
+ if(is.vector(Y) | is.array(Y)) { Y = as.matrix(Y); b = "matrix" } 
 
  if(dim(X)[2]!=dim(Y)[1]) {stop("ncol(X) doesn't match nrow(Y)")}
 
