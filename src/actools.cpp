@@ -40,7 +40,7 @@ SEXP get_max_threads(){ return wrap(omp_get_max_threads()); }
 
 // set_num_threads
 
-SEXP set_num_threads(SEXP n){ omp_set_num_threads(as<int>(n)); } 
+void set_num_threads(SEXP n){ omp_set_num_threads(as<int>(n)); } 
 
 // check_limit_threads
 
