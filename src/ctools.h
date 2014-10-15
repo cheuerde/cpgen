@@ -123,7 +123,7 @@ if(threads >1) {
 RcppExport SEXP check_openmp();
 RcppExport SEXP check_openmp_version();
 RcppExport SEXP get_max_threads();
-RcppExport SEXP set_num_threads(SEXP n);
+RcppExport void set_num_threads(SEXP n);
 //RcppExport SEXP get_limit_threads();
 
 RcppExport SEXP ccp_dense_dense(SEXP X, SEXP Z, SEXP threadsR);
