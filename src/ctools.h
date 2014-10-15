@@ -104,7 +104,7 @@ SEXP eigensolver(SEXP XR, SEXP yR, SEXP threadsR) {
 if(threads >1) {
 
 # pragma omp parallel for
-    for(size_t i=0;i<p;++i) { 
+    for(int i=0;i<p;++i) { 
       sol_map.col(i).noalias() = W.solve(y.col(i));
     } 
     
