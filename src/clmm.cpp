@@ -48,14 +48,19 @@ SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par
 int threads = as<int>(threadsR); 
 int verbose = as<int>(verboseR); 
 
+Rcpp::List list_of_phenotypes(yR);
+int p = list_of_phenotypes.size();
+
+// if number of threads is larger than p
+// we set the number of threads to p
+
+if(threads > p) threads = p;
+
 //omp_set_dynamic(0);
 omp_set_num_threads(threads);
 
 Eigen::setNbThreads(1);
 Eigen::initParallel();
-
-Rcpp::List list_of_phenotypes(yR);
-int p = list_of_phenotypes.size();
 
 printer prog(p / threads);
 
@@ -91,19 +96,19 @@ if((p>1) | (threads==1)) {
 
 // verbose
 
-    if(p>1) {
 
-      if(verbose) { 
+
+  if(verbose) { 
    
-        if(omp_get_thread_num()==0) {
+    if(omp_get_thread_num()==0) {
 
-          prog.DoProgress(); 
-
-        }
-
-      }
+      prog.DoProgress(); 
 
     }
+
+  }
+
+
 
   }
 
