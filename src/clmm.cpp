@@ -53,7 +53,7 @@ int p = list_of_phenotypes.size();
 
 // if number of threads is larger than p
 // we set the number of threads to p
-if(threads > p) threads = p;
+if((p>1) & (threads > p)) threads = p;
 
 //omp_set_dynamic(0);
 omp_set_num_threads(threads);
