@@ -154,11 +154,10 @@ MapMatrixXd V2 = MapMatrixXd(as<MapMatrixXd> (V2_R));
 // for verbose
   int n_threads = omp_get_num_threads();
   int max = M.cols() / n_threads;
-  printer prog(max);
+  if(max < 1) max = 1;
+  printer prog(max); 
 
   
-
-
 #pragma omp for
   for(int i=0;i<M.cols();i++){
 
