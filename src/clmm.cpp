@@ -51,17 +51,15 @@ int verbose = as<int>(verboseR);
 Rcpp::List list_of_phenotypes(yR);
 int p = list_of_phenotypes.size();
 
-// if number of threads is larger than p
-// we set the number of threads to p
-if((p>1) & (threads > p)) threads = p;
-
 //omp_set_dynamic(0);
 omp_set_num_threads(threads);
 
 Eigen::setNbThreads(1);
 Eigen::initParallel();
 
-printer prog(p / threads);
+int max = p / threads;
+if(max < 1) max = 1;
+printer prog(max);
 
 Rcpp::List summary_out;
 
