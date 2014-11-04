@@ -51,6 +51,8 @@ typedef Eigen::MappedSparseMatrix<double> MapSparseMatrixXd;
 typedef Eigen::Map<Eigen::VectorXd> MapVectorXd;
 typedef Eigen::Map<Eigen::ArrayXd> MapArrayXd;
 
+typedef std::vector<std::map<std::string, int> > mp_container;
+
 template<class T1,class T2>
 SEXP ccrossproduct(SEXP XR, SEXP ZR)
 
@@ -101,12 +103,35 @@ SEXP eigensolver(SEXP XR, SEXP yR, SEXP threadsR) {
   MapMatrixXd sol_map(sol.begin(),n,p);
 
 // only use omp if threads > 1
+mp_container thread_vec;
+int n_threads;
+int who;
+
 if(threads >1) {
 
-# pragma omp parallel for
-    for(int i=0;i<p;++i) { 
-      sol_map.col(i).noalias() = W.solve(y.col(i));
-    } 
+// container to store start and length for OpenMP threads - Credit: Hao Cheng (Iowa State University)
+// get the number of threads
+#pragma omp parallel
+{
+if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
+}
+
+thread_vec = mp_container(n_threads);
+
+for(int i=0;i<n_threads;i++) {
+
+  thread_vec.at(i)["start"] = i * p / n_threads;
+  if(i==(n_threads-1)){thread_vec.at(i)["end"] = p;} else {
+  thread_vec.at(i)["end"] = (i+1) * p / n_threads;}
+  thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
+
+}
+
+#pragma omp parallel private(who)
+{ 
+  who = omp_get_thread_num(); 
+  sol_map.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]).noalias() = W.solve(y.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]));
+}
     
 } else {
   
