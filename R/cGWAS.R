@@ -25,21 +25,26 @@
 
 cGWAS <- function(y,M,X=NULL,V=NULL,dom=FALSE, verbose=TRUE){
 
+if(!is.vector(y) | !is.numeric(y)) stop("y must be a numeric vector")
 id = 1:length(y)
 isy = id[!is.na(y)]
 n = length(isy)
-if(n<length(y)) { stop("NA's are not allowed")}
+if(n<length(y)) { stop("NA's in y are not allowed")}
 sparse=FALSE
 
-if(missing(X)) { X<-array(1,dim=c(n,1))}
-if(missing(V)) {
-  V<-sparseMatrix(i=1:n,j=1:n,x=rep(1,n))
-  sparse=TRUE 
-  } else {
-    if (class(V) == "dgCMatrix"){sparse=TRUE} else { 
-      if (class(V) != "matrix") { stop("V must be either of type 'matrix' or 'dgCMatrix'") } 
-    }
+if(is.null(X)) X<-array(1,dim=c(n,1))
+if(is.null(V)) V<-sparseMatrix(i=1:n,j=1:n,x=rep(1,n))
+if(class(X)!="matrix") stop("X must be of type 'matrix'")
+if(anyNA(X)) stop("NAs in X are not allowed")
+if(class(M)!="matrix") stop("M must be of type 'matrix'")
+if(anyNA(M)) stop("NAs in M are not allowed")
+
+if (class(V) == "dgCMatrix"){
+  sparse=TRUE
+} else { 
+    if (class(V) != "matrix") { stop("V must be either of type 'matrix' or 'dgCMatrix'") } 
   }
+
 
 ## this is only for internal use, namely: cGWAS.emmax
 second_transform=FALSE;
@@ -77,17 +82,21 @@ isy = id[!is.na(y)]
 n = length(isy)
 if(!is.vector(y) | !is.numeric(y)) stop("y must be a numeric vector")
 if(n<length(y))   stop("NAs in y are not allowed")
+if(is.null(X)) X <- array(1,dim=c(n,1))
+
+if(class(X)!="matrix") stop("X must be of type 'matrix'")
+if(anyNA(X)) stop("NAs in X are not allowed")
+if(class(M)!="matrix") stop("M must be of type 'matrix'")
 if(anyNA(M)) stop("NAs in M are not allowed")
-if(missing(X)) X <- array(1,dim=c(n,1))
 
 if(verbose) cat("\nComputing Eigen Decomposition and Estimating V\n")
 
 lambda=0.01
-if(missing(A)){
-  UD <- eigen(cgrm(M,lambda=lambda)) 
-} else {
-    UD <- eigen(A)
-  }
+if(is.null(A)) A = cgrm(M,lambda=lambda)
+if(class(A)!="matrix") stop("A must be of type 'matrix'")
+if(anyNA(A)) stop("NAs in A are not allowed")
+
+UD <- eigen(A)
 
 UX <- t(UD$vectors) %c% X
 Uy <- (t(UD$vectors) %c% y)[,1]
