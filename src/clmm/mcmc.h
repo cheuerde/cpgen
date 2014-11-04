@@ -126,9 +126,6 @@ public:
 
 //  void populate(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
   inline void initialize();
-  inline void sample_random();
-  inline void sample_residual();
-  inline void finish_iteration();
   inline void gibbs();
   inline void summary();
   std::string get_name();
