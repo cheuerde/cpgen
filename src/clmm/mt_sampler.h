@@ -39,7 +39,7 @@ public:
 
   };
 
-  double rchisq(int df){
+  double rchisq(double df){
 
     return std::chi_squared_distribution<double>(df)(gen);
 
