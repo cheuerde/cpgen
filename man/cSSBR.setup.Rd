@@ -6,8 +6,8 @@
 \description{
 This function prepares all model terms for SSBR using pedigree and marker information.
 The function is particularly useful for using the reported model terms on multiple 
-phenotypes, for cross validation (\code{\link{clmm.CV}}), for genomewide association studies or to pass them to
-alternative software.
+phenotypes, for cross validation (\code{\link{clmm.CV}}), for genomewide association studies
+or to pass them to alternative software.
 }
 
 
@@ -16,7 +16,7 @@ cSSBR.setup(data, M, M.id, verbose=TRUE)
 }
 \arguments{
 \item{data}{\code{data.frame} with four columns: id, sire, dam, y}
-\item{M}{Marker Matrix for genotyped individuals. MUST contain rownames}
+\item{M}{Marker Matrix for genotyped individuals}
 \item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
 \item{verbose}{Prints progress to the screen}
 }
