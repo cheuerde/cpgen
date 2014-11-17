@@ -24,7 +24,7 @@ cSSBR.setup(data, M, M.id, verbose=TRUE)
 
 
 \details{
-yet to be written ...
+...
 
 }
 
