@@ -16,8 +16,8 @@ csolve(X,y=NULL)
 }
 
 \arguments{
-  \item{X}{positive definite square matrix}
-  \item{y}{vector of length equal to columns/rows of \code{X}}
+  \item{X}{positive definite square matrix of type \code{matrix} or \code{dgCMatrix}}
+  \item{y}{numeric vector of length equal to columns/rows of \code{X}}
 }
 
 \value{
