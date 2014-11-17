@@ -5,8 +5,10 @@ Set the number of OpenMP threads used by the functions of package \code{cpgen}
 }
 \description{
 This function sets the value of the global variable stored in \code{options()$cpgen.threads} to the assigned integer.
-Note: The assigned value may exceed the number of physical cores present but that might lead to dramatical
+Note_1: The assigned value may exceed the number of physical cores present but that might lead to dramatical
 decrease in performance.
+Note_2: The function will override the global variable 'OMP_NUM_THREADS' and hence also other non-cpgen functions
+are affected by a call to \code{set_num_threads()}.
 }
 \usage{
 set_num_threads(x,silent=FALSE)
