@@ -5,8 +5,8 @@ Generate random data for test purposes
 }
 \description{
 Generates a random marker-matrix in \{-1,0,1\} coding and a phenotype vector.
-Both objects are independent and the only purpose is to test 
-functions and show examples
+Phenotypic variance times h2 (variance explained by markers) is equally spreaded among
+all markers (sampled from uniform distribution).
 }
 \usage{
 rand_data(n=500,p_marker=10000,h2=0.3,prop_qtl=0.01,seed=NULL)
