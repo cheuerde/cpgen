@@ -7,15 +7,13 @@
 This function runs Single Step Bayesian Regression (SSBR) for the prediction of breeding values
 in a unified model that incorporates genotyped and ungenotyped individuals (Fernando et al., 2014).
 }
-
-
 \usage{
 cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, 
       niter=5000, burnin=2500, seed=NULL, verbose=TRUE)
 }
 \arguments{
 \item{data}{\code{data.frame} with four columns: id, sire, dam, y}
-\item{M}{Marker Matrix for genotyped individuals. MUST contain rownames}
+\item{M}{Marker Matrix for genotyped individuals}
 \item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
 \item{X}{Fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}.
          If omitted a column-vector of ones will be assigned. Must have as many rows as data}
@@ -31,7 +29,17 @@ cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0,
 
 
 \details{
-yet to be written ...
+
+The functions sets up the following model:
+\deqn{
+\mathbf{y} = \mathbf{Xb} + \mathbf{M\alpha} + \mathbf{Z\epsilon} + \mathbf{e}
+}
+
+The matrix \eqn{\mathbf{M}} denotes a combined marker matrix consisting of actual and imputed marker covariates.
+Best linear predictions of gene content (Gengler et al., 2007) for the non-genotyped individuals are obtained using: \eqn{\mathbf{A}^{11}\hat{\mathbf{M}_1} = -\mathbf{A}^{12}\mathbf{M}_2} (Fernando et al., 2014).
+\eqn{\mathbf{A}^{11}} and \eqn{\mathbf{A}^{12}} are submatrices of the inverse of the numerator relationship matrix, which is easily obtained (Henderson, 1976). The subscripts 1 and 2 denote non genotyped and genotyped individuals respectively. The very sparse equation system is being solved using a sparse cholesky solver provided by the Eigen library.
+The residual imputation error has variance: \eqn{(\mathbf{A}^{11})^{-1}\sigma_{\epsilon}^2} and is modelled by constructing the design matrix as \eqn{\mathbf{Z} = \mathbf{L}_{11}}, where \eqn{\mathbf{A}=\mathbf{LL}'} and \eqn{(\mathbf{A}^{11})^{-1} = \mathbf{L}_{11}\mathbf{L'}_{11}}.
+
 
 }
 
@@ -57,8 +65,14 @@ Claas Heuer
 
 \references{
 
-Rohan L. Fernando, Jack C. M. Dekkers and Dorian J. Garrick. "A class of Bayesian methods to combine large numbers of genotyped and non-genotyped animals for whole genome
-analyses". 2014
+Fernando, R.L., Dekkers, J.C., Garrick, D.J.: A class of bayesian methods to combine large numbers of
+genotyped and non-genotyped animals for whole-genome analyses. Genetics Selection Evolution 46(1), 50 (2014)
+
+Gengler, N., Mayeres, P., Szydlowski, M.: A simple method to approximate gene content in large pedigree
+populations: application to the myostatin gene in dual-purpose belgian blue cattle. animal 1(01), 21 (2007)
+
+Henderson, C.R.: A simple method for computing the inverse of a numerator relationship matrix used in
+prediction of breeding values. Biometrics 32(1), 69–83 (1976)
 
 }
 
