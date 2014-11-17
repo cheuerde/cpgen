@@ -29,6 +29,9 @@ The following functions are multithreaded and access the variable \code{cpgen.th
 \item{cgrm.A}
 \item{cgrm.D}
 \item{ccov}
+\item{csolve}
+\item{cSSBR.setup}
+\item{cSSBR}
 }}
 
 \seealso{\code{\link{set_num_threads}, \link{get_num_threads}, \link{get_max_threads}, \link{check_openmp}}}
