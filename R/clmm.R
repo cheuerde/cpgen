@@ -143,7 +143,7 @@ par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=verbose, t
 
 # clmm.CV
 
-clmm.CV <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, timings = FALSE, seed = NULL){
+clmm.CV <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, seed = NULL){
 
 default_scale = 0
 default_df = -2
@@ -244,8 +244,7 @@ if(is.null(random)) {
 if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
 ## Timings are not allowed here
-timings=FALSE
-par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=FALSE, timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
+par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=FALSE, timings = FALSE, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
 
 
 #set.seed(seed)
