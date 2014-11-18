@@ -30,7 +30,7 @@ cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0,
 
 \details{
 
-The function sets up the following model using \code{\link{cSSBR.setup}}}:
+The function sets up the following model using \code{\link{cSSBR.setup}}:
 \deqn{
 \mathbf{y} = \mathbf{Xb} + \mathbf{M\alpha} + \mathbf{Z\epsilon} + \mathbf{e}
 }
