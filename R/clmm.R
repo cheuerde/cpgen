@@ -23,7 +23,7 @@
 
 # clmm
 
-clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, seed = NULL){
+clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, timings = FALSE, seed = NULL){
 
 default_scale = 0
 default_df = -2
@@ -126,7 +126,8 @@ if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) 
 
 ## FIXME check arguments
 
-par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=verbose, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
+if(timings) verbose = FALSE
+par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=verbose, timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
 
 #set.seed(seed)
 #cat(paste("\n seed: ",seed,"\n",sep="")) 
@@ -142,7 +143,7 @@ par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=verbose, s
 
 # clmm.CV
 
-clmm.CV <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, seed = NULL){
+clmm.CV <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, timings = FALSE, seed = NULL){
 
 default_scale = 0
 default_df = -2
@@ -242,9 +243,9 @@ if(is.null(random)) {
 # Taken from: http://stackoverflow.com/questions/8810338/same-random-numbers-every-time
 if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
-## FIXME check arguments
-
-par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=FALSE, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
+## Timings are not allowed here
+timings=FALSE
+par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=FALSE, timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
 
 
 #set.seed(seed)
@@ -354,7 +355,6 @@ if(a=="matrix" | a=="dgCMatrix") { if(nrow(X) != n) stop(paste("Number of rows i
 return(1) 
 
 }
-
 
 
 
