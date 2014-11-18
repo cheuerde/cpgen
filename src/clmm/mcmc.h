@@ -66,6 +66,7 @@ typedef std::vector<std::map<std::string, int> > mp_container;
 #include "mt_sampler.h"
 #include "effects.h"
 #include "../printer.h"
+#include <chrono>
 
 ////////////////
 // MCMC class //
@@ -80,6 +81,7 @@ private:
   int  burnin;
   bool full_output;
   bool verbose;
+  bool timings;
   bool initialized;
 
   double scale_e;
@@ -124,6 +126,10 @@ public:
   bool has_na;
   vector<int> isna;
 
+// for timings
+  std::chrono::high_resolution_clock::time_point t0;
+  std::chrono::high_resolution_clock::time_point t1;
+
 //  void populate(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
   inline void initialize();
   inline void gibbs();
@@ -154,6 +160,7 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
   burnin = Rcpp::as<int>(par["burnin"]);
   full_output = Rcpp::as<bool>(par["full_output"]);
   verbose = Rcpp::as<bool>(par["verbose"]);
+  timings = Rcpp::as<bool>(par["timings"]);
   scale_e = Rcpp::as<double>(par["scale_e"]);
   df_e = Rcpp::as<double>(par["df_e"]);
   seed = Rcpp::as<std::string>(par["seed"]);
@@ -360,7 +367,8 @@ vector<effects>::iterator it;
 
   for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
 
-
+// timings
+    if(timings) t0 = std::chrono::high_resolution_clock::now();
     for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
     it->sample_effects(mcmc_sampler,my_base_functions,thread_vec);
@@ -404,6 +412,18 @@ vector<effects>::iterator it;
     if (verbose) {
 
       prog.DoProgress();
+
+    }
+
+// timings
+    if(timings) {
+
+      t1 = std::chrono::high_resolution_clock::now();
+      Rcpp::Rcout << std::endl 
+                  << " Iteration: |"   << gibbs_iter + 1 
+//                << "|  var_e: |"     << var_e  
+                  << "|  secs/iter: |" << std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0 
+                  << "|"               << std::endl;
 
     }
 
@@ -469,5 +489,4 @@ Rcpp::List MCMC<F>::get_summary() {
  return summary_list;
 
 }
-
 
