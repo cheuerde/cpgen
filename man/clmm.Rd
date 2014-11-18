@@ -17,7 +17,7 @@ that random effect as described in Waldmann et al. (2008): \eqn{\mathbf{F} = \ma
 
 \usage{
 clmm(y, X = NULL , random = NULL, par_random = NULL, niter=10000, 
-burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, seed = NULL)
+burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, timings=FALSE, seed = NULL)
 }
 \arguments{
 \item{y}{vector of phenotypes}
@@ -33,6 +33,7 @@ burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, seed = NULL)
 \item{niter}{number of iterations}
 \item{burnin}{number of iterations to be discarded as burnin}
 \item{verbose}{prints progress to the screen}
+\item{timings}{prints time per iteration to the screen - sets \code{verbose = FALSE}}
 \item{scale_e}{scale parameter for the inverse chi-square prior for the residuals}
 \item{df_e}{degrees of freedom for the inverse chi-square prior for the residuals}
 \item{seed}{seed for the random number generator. If omitted, a seed will be generated based on machine and time}
