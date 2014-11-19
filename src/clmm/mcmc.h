@@ -129,6 +129,8 @@ public:
 // for timings
   std::chrono::high_resolution_clock::time_point t0;
   std::chrono::high_resolution_clock::time_point t1;
+  double time_temp;
+  double mean_time_per_iter = 0;
 
 //  void populate(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
   inline void initialize();
@@ -419,10 +421,12 @@ vector<effects>::iterator it;
     if(timings) {
 
       t1 = std::chrono::high_resolution_clock::now();
+      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0;
+      mean_time_per_iter += time_temp;
       Rcpp::Rcout << std::endl 
                   << " Iteration: |"   << gibbs_iter + 1 
 //                << "|  var_e: |"     << var_e  
-                  << "|  secs/iter: |" << std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0 
+                  << "|  secs/iter: |" << time_temp
                   << "|"               << std::endl;
 
     }
@@ -468,8 +472,9 @@ void MCMC<F>::summary() {
     summary_list[list_name] = it->get_summary(effiter);
     count++;
   }
-  
 
+  if(timings) summary_list["time_per_iter"] = mean_time_per_iter / niter;
+  
 }
 
 
