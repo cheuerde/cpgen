@@ -29,18 +29,14 @@ cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0,
 
 
 \details{
-
 The function sets up the following model using \code{\link{cSSBR.setup}}:
 \deqn{
 \mathbf{y} = \mathbf{Xb} + \mathbf{M\alpha} + \mathbf{Z\epsilon} + \mathbf{e}
 }
-
 The matrix \eqn{\mathbf{M}} denotes a combined marker matrix consisting of actual and imputed marker covariates.
 Best linear predictions of gene content (Gengler et al., 2007) for the non-genotyped individuals are obtained using: \eqn{\mathbf{A}^{11}\hat{\mathbf{M}_1} = -\mathbf{A}^{12}\mathbf{M}_2} (Fernando et al., 2014).
 \eqn{\mathbf{A}^{11}} and \eqn{\mathbf{A}^{12}} are submatrices of the inverse of the numerator relationship matrix, which is easily obtained (Henderson, 1976). The subscripts 1 and 2 denote non genotyped and genotyped individuals respectively. The very sparse equation system is being solved using a sparse cholesky solver provided by the Eigen library.
 The residual imputation error has variance: \eqn{(\mathbf{A}^{11})^{-1}\sigma_{\epsilon}^2} and is modelled by constructing the design matrix as \eqn{\mathbf{Z} = \mathbf{L}_{11}}, where \eqn{\mathbf{A}=\mathbf{LL}'} and \eqn{(\mathbf{A}^{11})^{-1} = \mathbf{L}_{11}\mathbf{L'}_{11}}.
-
-
 }
 
 \value{
