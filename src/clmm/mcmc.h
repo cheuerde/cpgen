@@ -430,7 +430,7 @@ vector<effects>::iterator it;
 //      t1 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
 //      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0; //FIXME TIMING
       if(timings) gettimeofday(&t1, NULL);
-      time_temp = 1000 * (t1.tv_sec - t0.tv_sec) + (t1.tv_usec - t0.tv_usec) / 1000;
+      time_temp = (t1.tv_sec - t0.tv_sec) + (t1.tv_usec - t0.tv_usec) / 1000;
       mean_time_per_iter += time_temp;
       Rcpp::Rcout << std::endl 
                   << " Iteration: |"   << gibbs_iter + 1 
