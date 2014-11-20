@@ -5,7 +5,7 @@
 
 \description{
 This function runs Single Step Bayesian Regression (SSBR) for the prediction of breeding values
-in a unified model that incorporates genotyped and ungenotyped individuals (Fernando et al., 2014).
+in a unified model that incorporates genotyped and non genotyped individuals (Fernando et al., 2014).
 }
 \usage{
 cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, 
