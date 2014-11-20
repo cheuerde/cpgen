@@ -66,7 +66,11 @@ typedef std::vector<std::map<std::string, int> > mp_container;
 #include "mt_sampler.h"
 #include "effects.h"
 #include "../printer.h"
-#include <chrono>
+// only available from gcc 4.7 onwards.
+// Rtools uses 4.6.3, so we can't include chrono
+// #include <chrono>  //FIXME TIMING
+// tradidtional C-Way:
+#include <sys/time.h>
 
 ////////////////
 // MCMC class //
@@ -126,9 +130,11 @@ public:
   bool has_na;
   vector<int> isna;
 
-// for timings
-  std::chrono::high_resolution_clock::time_point t0;
-  std::chrono::high_resolution_clock::time_point t1;
+//  for timings
+//  std::chrono::high_resolution_clock::time_point t0; //FIXME TIMING
+//  std::chrono::high_resolution_clock::time_point t1; //FIXME TIMING
+  struct timeval t0;
+  struct timeval t1;
   double time_temp;
   double mean_time_per_iter = 0;
 
@@ -370,7 +376,8 @@ vector<effects>::iterator it;
   for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
 
 // timings
-    if(timings) t0 = std::chrono::high_resolution_clock::now();
+//    if(timings) t0 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
+    if(timings) gettimeofday(&t0, NULL);
     for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
     it->sample_effects(mcmc_sampler,my_base_functions,thread_vec);
@@ -420,8 +427,10 @@ vector<effects>::iterator it;
 // timings
     if(timings) {
 
-      t1 = std::chrono::high_resolution_clock::now();
-      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0;
+//      t1 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
+//      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0; //FIXME TIMING
+      if(timings) gettimeofday(&t1, NULL);
+      time_temp = 1000 * (t1.tv_sec - t0.tv_sec) + (t1.tv_usec - t0.tv_usec) / 1000;
       mean_time_per_iter += time_temp;
       Rcpp::Rcout << std::endl 
                   << " Iteration: |"   << gibbs_iter + 1 
