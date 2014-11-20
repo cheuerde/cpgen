@@ -136,7 +136,7 @@ public:
   struct timeval t0;
   struct timeval t1;
   double time_temp;
-  double mean_time_per_iter = 0;
+  double mean_time_per_iter;
 
 //  void populate(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
   inline void initialize();
@@ -358,6 +358,7 @@ for(int i=0;i<n_threads;i++) {
 
     }
 
+    mean_time_per_iter = 0;
     initialized = true;
 
 }
