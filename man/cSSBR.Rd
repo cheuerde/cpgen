@@ -68,7 +68,7 @@ Gengler, N., Mayeres, P., Szydlowski, M.: A simple method to approximate gene co
 populations: application to the myostatin gene in dual-purpose belgian blue cattle. animal 1(01), 21 (2007)
 
 Henderson, C.R.: A simple method for computing the inverse of a numerator relationship matrix used in
-prediction of breeding values. Biometrics 32(1), 69–83 (1976)
+prediction of breeding values. Biometrics 32(1), 69-83 (1976)
 
 }
 
