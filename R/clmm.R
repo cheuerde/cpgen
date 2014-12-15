@@ -23,7 +23,7 @@
 
 # clmm
 
-clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, timings = FALSE, seed = NULL){
+clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL){
 
 default_scale = 0
 default_df = -2
@@ -127,7 +127,7 @@ if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) 
 ## FIXME check arguments
 
 if(timings) verbose = FALSE
-par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=verbose, timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
+par_mcmc = list(niter=niter, burnin=burnin, full_output=beta_posterior, verbose=verbose, timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
 
 #set.seed(seed)
 #cat(paste("\n seed: ",seed,"\n",sep="")) 
@@ -143,7 +143,7 @@ par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=verbose, t
 
 # clmm.CV
 
-clmm.CV <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, seed = NULL){
+clmm.CV <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, seed = NULL){
 
 default_scale = 0
 default_df = -2
@@ -244,7 +244,7 @@ if(is.null(random)) {
 if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
 ## Timings are not allowed here
-par_mcmc = list(niter=niter, burnin=burnin, full_output=TRUE, verbose=FALSE, timings = FALSE, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
+par_mcmc = list(niter=niter, burnin=burnin, full_output=beta_posterior, verbose=FALSE, timings = FALSE, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
 
 
 #set.seed(seed)
@@ -354,7 +354,6 @@ if(a=="matrix" | a=="dgCMatrix") { if(nrow(X) != n) stop(paste("Number of rows i
 return(1) 
 
 }
-
 
 
 
