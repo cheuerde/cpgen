@@ -38,6 +38,7 @@ public:
   int total_number_effects;
   int columns;
   int niter;
+  int n_samples;
   int burnin;
   double scale;
   double df;
@@ -46,6 +47,7 @@ public:
 //  double var_scalar;
   VectorXd var;
   vector<double> var_posterior;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> effects_posterior;
   VectorXd xtx;
   double * ycorr;
 //  MatrixXd mean_var;
@@ -60,7 +62,7 @@ public:
 
   effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, bool full_output_from_MCMC);
   inline void initialize(base_methods_abstract*& base_fun);  
-  inline void sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec); 
+  inline void sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec, int& niter_from_MCMC); 
   inline void sample_variance(sampler& mcmc_sampler, int& niter_from_MCMC); 
   inline void update_means();
   inline Eigen::VectorXd predict(int effiter);
@@ -119,14 +121,18 @@ void effects::initialize(base_methods_abstract*& base_fun){
   estimates = VectorXd::Zero(columns);
   mean_estimates = VectorXd::Zero(columns);
   var_posterior.resize(niter);
+// store posterior distribution of estimates
+  if(full_output) effects_posterior.resize(niter,columns);
+  n_samples = 0;
   initialized = true;
   
 
 }
 
-void effects::sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec){
+void effects::sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec, int& niter_from_MCMC){
 
   my_functions->sample_effects(base_fun,xtx,estimates, ycorr, var,var_e, mcmc_sampler,thread_vec);
+  if(full_output) effects_posterior.row(niter_from_MCMC).noalias() = estimates;
 
 }
 
@@ -174,10 +180,11 @@ Rcpp::List effects::get_summary(int effiter){
 			  	       Rcpp::Named("method") = method,
 			               Rcpp::Named("scale_prior") = scale,
 			               Rcpp::Named("df_prior") = df);
-  out["posterior"] = my_functions->summary(mean_estimates,mean_var,effiter, var_posterior);
+  Rcpp::List out_posterior = my_functions->summary(mean_estimates,mean_var,effiter, var_posterior);
+  if(full_output) out_posterior["estimates"] = effects_posterior;
+  out["posterior"] = out_posterior;
 
   return out;
 
 }
-
 
