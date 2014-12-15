@@ -165,7 +165,7 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
   MapVectorXd y_temp = MapVectorXd(as<MapVectorXd> (y_from_R));
 
   niter = Rcpp::as<int>(par["niter"]);
-  burnin = Rcpp::as<int>(par["burnin"]);
+  burnin = Rcpp::as<int>(par["burnin"]) - 1;
   full_output = Rcpp::as<bool>(par["full_output"]);
   verbose = Rcpp::as<bool>(par["verbose"]);
   timings = Rcpp::as<bool>(par["timings"]);
