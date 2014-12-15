@@ -381,7 +381,7 @@ vector<effects>::iterator it;
     if(timings) gettimeofday(&t0, NULL);
     for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-    it->sample_effects(mcmc_sampler,my_base_functions,thread_vec);
+    it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
 
     }
 
@@ -505,4 +505,3 @@ Rcpp::List MCMC<F>::get_summary() {
  return summary_list;
 
 }
-
