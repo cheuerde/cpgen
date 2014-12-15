@@ -32,6 +32,7 @@ burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, seed = NULL)
 \item{niter}{number of iterations}
 \item{burnin}{number of iterations to be discarded as burnin}
 \item{verbose}{prints progress to the screen}
+\item{beta_posterior}{save all posterior estimates of regression coefficients}
 \item{scale_e}{scale parameter for the inverse chi-square prior for the residuals}
 \item{df_e}{degrees of freedom for the inverse chi-square prior for the residuals}
 \item{seed}{seed for the random number generator. If omitted, a seed will be generated based on machine and time}
