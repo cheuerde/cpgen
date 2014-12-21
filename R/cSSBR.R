@@ -40,9 +40,9 @@ if(!is.null(X)) {
 if(!is.null(par_random)) {
   if(length(par_random)!=2) stop("'par_random' has to be of length 2")
   for(i in 1:length(par_random)) {
-    allowed_methods = c("fixed","random","BayesA")
+    allowed_methods = c("fixed","ridge","BayesA")
     if(is.null(par_random[[i]]$method)) stop(paste("Define a method for random-effect: ",i,sep=""))
-    if(par_random[[i]]$method %in% allowed_methods == FALSE) stop(paste("Method must be one of: ",allowed_methods,sep=""))
+    if(par_random[[i]]$method %in% allowed_methods == FALSE) stop(paste("Method must be one of: ",paste(allowed_methods,collapse=" , "),sep=""))
   }
 }
 

@@ -36,4 +36,4 @@ str(y)
 
 }
 
-\keyword{Genomic Prediction}
+\keyword{Tools}

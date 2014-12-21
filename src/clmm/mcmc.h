@@ -165,23 +165,22 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
   MapVectorXd y_temp = MapVectorXd(as<MapVectorXd> (y_from_R));
 
   niter = Rcpp::as<int>(par["niter"]);
-  burnin = Rcpp::as<int>(par["burnin"]) - 1;
+  burnin = Rcpp::as<int>(par["burnin"]);
   full_output = Rcpp::as<bool>(par["full_output"]);
   verbose = Rcpp::as<bool>(par["verbose"]);
   timings = Rcpp::as<bool>(par["timings"]);
   scale_e = Rcpp::as<double>(par["scale_e"]);
   df_e = Rcpp::as<double>(par["df_e"]);
   seed = Rcpp::as<std::string>(par["seed"]);
+  name = Rcpp::as<std::string>(par["name"]);
 
   par_fixed = Rcpp::List(par_fixed_from_R);
   par_random = Rcpp::List(par_design_matrices_from_R);
 
-  std::ostringstream oss; 
-  oss << phenotype_number + 1; 
-  name = "PHENOTYPE_" + oss.str();
-
 // this is to ensure that if a couple of models are run at the same time
 // that every instance has got a unique seed - openmp
+  std::ostringstream oss; 
+  oss << phenotype_number + 1;
   seed.append(oss.str());
   mcmc_sampler = sampler(seed);
 //  my_base_functions = new F;
@@ -218,7 +217,7 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
 //////////////////////
 
 template<class F>
-MCMC<F>::MCMC(const MyString& mcmc_source) {
+MCMC<F>::MCMC(const MCMC& mcmc_source) {
 
   niter = mcmc_source.niter;
   burnin = mcmc_source.burnin;
@@ -326,28 +325,18 @@ for(int i=0;i<n_threads;i++) {
 
 // populate with effects
 // include fixed effect
-
   model_effects.clear();
   model_effects.push_back(effects(X_design_matrix, ycorr.data(),par_fixed, &var_e, var_y,n_random,niter, burnin, full_output)); 
-
 // random effects
 
   for(int i=0;i<list_of_design_matrices.size();i++){
 
-    SEXP temp_list_sexp = par_random[i];
-
-    Rcpp::List temp_list(temp_list_sexp);
-
-    model_effects.push_back(effects(list_of_design_matrices[i],ycorr.data(),temp_list, &var_e, var_y,n_random,niter, burnin, full_output)); 
+    model_effects.push_back(effects(list_of_design_matrices[i], ycorr.data(), Rcpp::List(par_random[i]), &var_e, var_y, n_random, niter, burnin, full_output)); 
 
   }
 
 
-
-
 //  Rcout << endl << "MCMC I am single_thread" << endl;
-
-
 
 
 // initializing effects
@@ -375,6 +364,9 @@ vector<effects>::iterator it;
   if(verbose) { prog.initialize(); }
 
   for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
+
+// check for interrupt from R
+    if (omp_get_thread_num() == 0) R_CheckUserInterrupt();
 
 // timings
 //    if(timings) t0 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
@@ -406,7 +398,7 @@ vector<effects>::iterator it;
 
 // posterior means
 
-    if(gibbs_iter>burnin) {
+    if(gibbs_iter > (burnin - 1)) {
 
       for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
@@ -477,14 +469,18 @@ void MCMC<F>::summary() {
 
   for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
   
-    std::ostringstream oss; 
-    oss << count;
-    list_name = "Effect_" + oss.str();
-    summary_list[list_name] = it->get_summary(effiter);
+    summary_list[it->get_name()] = it->get_summary(effiter);
     count++;
+
   }
 
-  if(timings) summary_list["time_per_iter"] = mean_time_per_iter / niter;
+  Rcpp::List mcmc_out;
+  mcmc_out["niter"] = niter;
+  mcmc_out["burnin"] = burnin;
+  mcmc_out["number_of_samples"] = effiter;
+  mcmc_out["seed"] = seed;
+  if(timings) mcmc_out["time_per_iter"] = mean_time_per_iter / niter;
+  summary_list["mcmc"] = mcmc_out;
   
 }
 
@@ -505,3 +501,4 @@ Rcpp::List MCMC<F>::get_summary() {
  return summary_list;
 
 }
+

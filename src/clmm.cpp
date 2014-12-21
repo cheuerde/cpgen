@@ -49,6 +49,8 @@ int threads = as<int>(threadsR);
 int verbose = as<int>(verboseR); 
 
 Rcpp::List list_of_phenotypes(yR);
+Rcpp::List list_of_par_design_matrices(par_design_matricesR);
+Rcpp::List list_of_par_mcmc(par_mcmcR);
 int p = list_of_phenotypes.size();
 
 //omp_set_dynamic(0);
@@ -66,14 +68,12 @@ Rcpp::List summary_out;
 mcmc_st vec_mcmc_st;
 mcmc_mp vec_mcmc_mp;
 
-
 if((p>1) | (threads==1)) {
 
 // fill the container with mcmc_objects
   for(int i=0;i<p;i++) {
   
-
-    vec_mcmc_st.push_back(MCMC<base_methods_st>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,par_design_matricesR, par_mcmcR,i));
+    vec_mcmc_st.push_back(MCMC<base_methods_st>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,list_of_par_design_matrices[i], list_of_par_mcmc[i],i));
 
   }
 
@@ -89,24 +89,21 @@ if((p>1) | (threads==1)) {
 #pragma omp parallel for 
   for(unsigned int i=0;i<vec_mcmc_st.size();i++){
 
-    vec_mcmc_st.at(i).gibbs();
+      vec_mcmc_st.at(i).gibbs();
 
 // verbose
 
-  if((p>1) & verbose) { 
+    if((p>1) & verbose) { 
    
-    if(omp_get_thread_num()==0) {
+      if(omp_get_thread_num()==0) {
 
-      prog.DoProgress(); 
+        prog.DoProgress(); 
+
+      }
 
     }
 
   }
-
-
-
-  }
-
 
   Rcpp::List Summary;
   for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
@@ -126,7 +123,7 @@ if((p>1) | (threads==1)) {
 // fill the container with mcmc_objects
     for(int i=0;i<1;i++) {
   
-      vec_mcmc_mp.push_back(MCMC<base_methods_mp>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,par_design_matricesR, par_mcmcR,i));
+      vec_mcmc_mp.push_back(MCMC<base_methods_mp>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,list_of_par_design_matrices[i], list_of_par_mcmc[i],i));
 
     }
 
@@ -137,7 +134,6 @@ if((p>1) | (threads==1)) {
 
     }
 
-
     Rcpp::List Summary;
     for(mcmc_mp::iterator it = vec_mcmc_mp.begin(); it != vec_mcmc_mp.end(); it++) {
 
@@ -146,11 +142,9 @@ if((p>1) | (threads==1)) {
 
     }
 
-
     summary_out = Summary;
 
   }
-
 
 return summary_out;
 

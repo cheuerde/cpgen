@@ -6,7 +6,7 @@
 \description{
 This function prepares all model terms for SSBR using pedigree and marker information.
 The function is particularly useful for using the reported model terms on multiple 
-phenotypes, for cross validation (\code{\link{clmm.CV}}), for genomewide association studies
+phenotypes, for cross validation (\code{\link{clmm}}), for genomewide association studies
 or to pass them to alternative software.
 }
 
@@ -15,7 +15,7 @@ or to pass them to alternative software.
 cSSBR.setup(data, M, M.id, verbose=TRUE)
 }
 \arguments{
-\item{data}{\code{data.frame} with four columns: id, sire, dam, y}
+\item{data}{\code{data.frame} with four columns: \code{id, sire, dam, y}}
 \item{M}{Marker Matrix for genotyped individuals}
 \item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
 \item{verbose}{Prints progress to the screen}
@@ -81,7 +81,7 @@ var_m <- var_e / 10
 # put emphasis on the prior (reproducing results given in SSBR-paper)
 df = 500
 
-par_random=list(list(method="random",scale=var_m,df = df),list(method="random",scale=var_a,df=df))
+par_random=list(list(method="ridge",scale=var_m,df = df),list(method="ridge",scale=var_a,df=df))
 
 set_num_threads(1)
 

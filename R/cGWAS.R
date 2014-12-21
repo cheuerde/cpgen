@@ -103,7 +103,7 @@ Uy <- (t(UD$vectors) %c% y)[,1]
 D_sqrt <- sqrt(UD$values)
 Z <- sparseMatrix(i=1:n,j=1:n,x=D_sqrt)
 
-par_random <- list(list(scale=scale_a,df=df_a,sparse_or_dense="sparse",method="random"))
+par_random <- list(list(scale=scale_a,df=df_a,sparse_or_dense="sparse",method="ridge"))
 if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
 # set the number of threads to 1 for clmm

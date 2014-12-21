@@ -23,8 +23,8 @@
 
 #ifndef _cpgen_ctools_H
 #define _cpgen_ctools_H
-
 #include <RcppEigen.h>
+
 
 #ifdef _OPENMP
   #define has_openmp 1
@@ -130,6 +130,7 @@ for(int i=0;i<n_threads;i++) {
 #pragma omp parallel private(who)
 { 
   who = omp_get_thread_num(); 
+// Eigen's block operations do not trigger copies (rather something like an Eigen::Map<>)
   sol_map.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]).noalias() = W.solve(y.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]));
 }
     
@@ -142,6 +143,41 @@ for(int i=0;i<n_threads;i++) {
   return sol;
 
 };
+
+
+
+template<class T1>
+SEXP ccolmv(SEXP XR, SEXP varR)
+
+{
+
+  T1 X(Rcpp::as<T1> (XR));
+  bool var = Rcpp::as<bool>(varR);
+  uint64_t p = X.cols();
+  uint64_t n = X.rows();
+  Rcpp::NumericVector mu(p);
+
+  for(uint64_t i=0;i < p; ++i) {
+
+    mu(i) = X.col(i).sum() / n;
+
+  }
+
+  if(var) {
+
+    for(uint64_t i=0;i < p; ++i) {
+
+
+      mu(i) = (X.col(i).array() - mu(i)).matrix().squaredNorm() / (n - 1);
+
+    }
+
+  }
+
+  return mu;
+  
+};
+
 
 
 
@@ -166,7 +202,8 @@ RcppExport SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR);
 RcppExport SEXP csolve(SEXP XR, SEXP yR, SEXP threadsR);
 RcppExport SEXP csolve_sparse(SEXP XR, SEXP yR, SEXP threadsR);
 RcppExport SEXP cmaf(SEXP Xa);
-RcppExport SEXP ccolmv(SEXP XR,SEXP varR);
+RcppExport SEXP ccolmv_dense(SEXP XR,SEXP varR);
+RcppExport SEXP ccolmv_sparse(SEXP XR,SEXP varR);
 RcppExport SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR);
 
 #endif

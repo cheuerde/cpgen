@@ -379,24 +379,72 @@ SEXP cmaf(SEXP Xa){
 // ccolmv
 
 
-SEXP ccolmv(SEXP XR,SEXP varR){
+SEXP ccolmv_dense(SEXP XR,SEXP varR){
 
+  return(ccolmv<MapMatrixXd>(XR,varR));
 
-  Map<MatrixXd> X(as<Map<MatrixXd> >(XR));
-  bool var = as<bool>(varR);
+}
 
-  double n = X.rows();
+SEXP ccolmv_sparse(SEXP XR,SEXP varR){
 
-// colwise means and variances
-  RowVectorXd mu = X.colwise().sum() / n;
-  if(var) {
-    RowVectorXd var = (X.rowwise() - mu).colwise().squaredNorm() / (n-1);
-    return wrap(var); 
-  } else {
-    
-      return wrap(mu);
-	
+// due to some issues with Eigen's iterators I do this here
+
+/* this is the inner representation of a compressed column major sparse-matrix  
+   which is implemented in R (package Matrix) as the class "dgCMatrix" */	
+  Eigen::MappedSparseMatrix<double> X(Rcpp::as<Eigen::MappedSparseMatrix<double>>(XR));
+  int *InnerIndices = X.innerIndexPtr(),
+      *OuterStarts = X.outerIndexPtr();
+  double * x = X.valuePtr();
+       
+
+  bool var = Rcpp::as<bool>(varR);
+  uint64_t n = X.rows();
+  uint64_t p = X.cols();
+  uint64_t innerSize;
+  uint64_t rowindex;
+
+  Rcpp::NumericVector mu(p);
+  double temp;
+
+  for(uint64_t i=0;i < p; ++i) {
+
+    temp = 0;
+    innerSize = OuterStarts[i+1] - OuterStarts[i];
+
+    for(int rit = 0; rit < innerSize; rit++) {
+
+      temp += x[OuterStarts[i] + rit]; 
+
     }
+
+    mu(i) = temp / n ;
+
+  }
+
+  if(var) {
+
+    for(uint64_t i=0;i < p; ++i) {
+
+      temp = 0;
+      innerSize = OuterStarts[i+1] - OuterStarts[i];
+
+      for(int rit = 0; rit < innerSize; rit++) {
+
+        rowindex = OuterStarts[i] + rit;
+        temp += (x[rowindex] - mu(i)) * (x[rowindex] - mu(i)); 
+
+      }
+
+// the squared deviation from the zero-coefficients from the mean is simply the squared mean   
+      temp += (n - innerSize) * mu(i) * mu(i);
+      mu(i) = temp / (n - 1);
+
+    }
+
+  }
+
+  return mu;
+  
 }
 
 

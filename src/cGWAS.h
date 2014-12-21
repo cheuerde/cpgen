@@ -192,6 +192,9 @@ MapMatrixXd V2 = MapMatrixXd(as<MapMatrixXd> (V2_R));
 
     if(omp_get_thread_num()==0) {
 
+// check for interrupt from R
+      R_CheckUserInterrupt();
+
       if (verbose) {
 
         prog.DoProgress();

@@ -11,7 +11,7 @@ ccolmv(X,var=FALSE)
 }
 
 \arguments{
-  \item{X}{Matrix}
+  \item{X}{matrix of type: \code{matrix} or \code{dgCMatrix}}
   \item{var}{boolean, defines whether the colwise variances rather than the means will be returned}
 }
 

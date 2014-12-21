@@ -27,11 +27,14 @@ clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, bu
 
 default_scale = 0
 default_df = -2
+h2 = 0.3
+default_GWAS_window_size_proportion = 0.01
+default_GWAS_threshold = 0.01
 
-allowed=c("numeric")
+allowed=c("numeric", "list")
 a = class(y)
 
-if(sum(a%in%allowed)!=1) { stop("phenotypes must match one of the following types: 'numeric'") }
+if(!a %in% allowed) stop("phenotypes must match one of the following types: 'numeric' 'list'") 
 
 if(class(y) == "list") {
   p = length(y)
@@ -39,83 +42,156 @@ if(class(y) == "list") {
   n = unlist(lapply(y,length))
   if (sum(n[1]!=n) > 0) stop("phenoytpe vectors must have same length")
   n = n[1]
-  if(is.null(names(y))) names(y) <- paste("phenotype: ",1:p,sep="") 
+  if(is.null(names(y))) names(y) <- paste("Phenotype_",1:p,sep="") 
   } else {
     if(!is.vector(y)) stop("phenotype must be supplied as vector")
     n <- length(y) 
     y <- list(y)
-    names(y) <- "phenotype: 1"
+    names(y) <- "Phenotype_1"
   }
 #isy <- (1:n)[!is.na(y)]
 
 if(is.null(X)) {
   X = array(1,dim=c(n,1))
-  par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense="dense",method="fixed")
+  par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense="dense", name="fixed_effects", method="fixed")
   } else {                   
     if(X_is_ok(X,n,"fixed")) {
       if(class(X) == "matrix") { type = "dense" } else { type = "sparse" }
-      par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense=type,method="fixed")    
+      par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense=type,name="fixed_effects",method="fixed")    
     }
   }
 
+par_fixed$GWAS=FALSE    
+par_fixed$GWAS_threshold = 0.01 
+par_fixed$GWAS_window_size = 1
+
+par_random_all = list()
+par_temp = par_random
+
 if(is.null(random)) {
   random = list()
-  par_random = list()
+  par_random_all = list()
+  for(k in 1:length(y)) { par_random_all[[k]] = list(list()) }
+
   } else {
 
-  if(is.null(par_random)) {
-    par_random<-list(length(random))
-    if(is.null(names(random))) names(random) = 1:length(random)
-    for(i in 1:length(random)){
+  if(is.null(names(random))) names(random) = paste("Effect_",1:length(random),sep="")
 
-      if(X_is_ok(random[[i]],n,names(random)[i])) {
-      method = "random"
-      if(class(random[[i]]) == "matrix") type = "dense"
-      if(class(random[[i]]) == "dgCMatrix") type = "sparse"
-      par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method) }
-    }
+  for(k in 1:length(y)) {
 
-    } else {
+    par_random=par_temp
 
-      if(length(par_random) != length(random)) stop(" 'par_effects' must have as many items as 'random' ")
+    if(is.null(par_random)) {
 
-      for(i in 1:length(par_random)) {
-        X_is_ok(random[[i]],n,names(random)[i])
-        allowed_methods = c("fixed","random","BayesA")
-        if(is.null(par_random[[i]]$method)) stop(paste("Define a method for random-effect: ",i,sep=""))
-        if(par_random[[i]]$method %in% allowed_methods == FALSE) stop(paste("Method must be one of: ",allowed_methods,sep=""))
+      par_random<-list(length(random))
 
-        if(is.null(par_random[[i]]$df) | !is.numeric(par_random[[i]]$df) | length(par_random[[i]]$df) > 1)  {
+      for(i in 1:length(random)){
 
-          if(par_random[[i]]$method == "BayesA") { 
-
-            par_random[[i]]$df = 4.0 } else { 
-
-              par_random[[i]]$df = default_df }
-        
-          }
-
-        if(is.null(par_random[[i]]$scale) | !is.numeric(par_random[[i]]$scale) | length(par_random[[i]]$scale) > 1) {
-
-          if(par_random[[i]]$method == "BayesA") { 
-
-## FIXME the scale for BayesA doesnt make sense for more than one phenotype
-            dfA = par_random[[i]]$df
-            par_random[[i]]$scale = (((dfA-2)/dfA) * (var(y[[1]],na.rm=T) / 5)) / (ncol(random[[i]]) * sum(ccolmv(random[[i]])**2,na.rm=T)) } else {
-
-            par_random[[i]]$scale = default_scale }
-     
-        }
-
-
-
-          if(class(random[[i]]) == "matrix") { type = "dense" } else { type = "sparse" }
-          par_random[[i]]$sparse_or_dense = type 
-
-        }   
+        if(X_is_ok(random[[i]],n,names(random)[i])) {
+        method = "ridge"
+        if(class(random[[i]]) == "matrix") type = "dense"
+        if(class(random[[i]]) == "dgCMatrix") type = "sparse"
+        par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method, name=as.character(names(random)[i]), GWAS=FALSE, GWAS_threshold = 0.01, GWAS_window_size = 1) }
       }
 
-    }
+      } else {
+
+          if(length(par_random) != length(random)) stop(" 'par_effects' must have as many items as 'random' ")
+
+            for(i in 1:length(par_random)) {
+
+              if(!is.list(par_random[[i]])) par_random[[i]] <- list()
+              X_is_ok(random[[i]],n,names(random)[i])
+              allowed_methods = c("fixed","ridge","BayesA")
+              if(is.null(par_random[[i]]$method)) par_random[[i]]$method <- "ridge"
+              if(is.null(par_random[[i]]$name)) par_random[[i]]$name = as.character(names(random)[i])
+              if(!par_random[[i]]$method %in% allowed_methods) stop(paste("Method must be one of: ",paste(allowed,collapse=" , "),sep=""))
+
+              if(is.null(par_random[[i]]$df[k]) | !is.numeric(par_random[[i]]$df[k]) | length(par_random[[i]]$df[k]) > 1)  {
+
+                if(par_random[[i]]$method == "BayesA") { 
+
+                  par_random[[i]]$df = 4.0 
+
+                } else { 
+
+                    par_random[[i]]$df = default_df 
+
+                 }  
+        
+              } else {
+
+                  par_random[[i]]$df = par_random[[i]]$df[k]
+
+                } 
+
+              if(is.null(par_random[[i]]$scale[k]) | !is.numeric(par_random[[i]]$scale[k]) | length(par_random[[i]]$scale[k]) > 1) {
+
+                if(par_random[[i]]$method == "BayesA") { 
+
+## Fernando et al. 2012
+                  dfA = par_random[[i]]$df
+                  meanVar = mean(ccolmv(random[[i]],var=T))
+                  varG = h2*var(y[[k]],na.rm=TRUE)
+                  varMarker = varG / ncol(random[[i]]) * meanVar
+                  par_random[[i]]$scale = varMarker * (dfA -2) / dfA 
+
+                } else {
+
+                    par_random[[i]]$scale = default_scale 
+
+                 } 
+     
+              } else {
+
+                  par_random[[i]]$scale = par_random[[i]]$scale[k]
+
+                } 
+
+                if(class(random[[i]]) == "matrix") { type = "dense" } else { type = "sparse" }
+                par_random[[i]]$sparse_or_dense = type
+# GWAS
+                if(is.null(par_random[[i]]$GWAS)) {
+
+                  par_random[[i]]$GWAS=FALSE    
+                  par_random[[i]]$GWAS_threshold = 0.01 
+                  par_random[[i]]$GWAS_window_size = 1
+
+                } else {
+
+                    if(is.null(par_random[[i]]$GWAS$threshold)) { 
+
+                      par_random[[i]]$GWAS_threshold = default_GWAS_threshold
+      
+                    } else { 
+ 
+                      par_random[[i]]$GWAS_threshold = as.numeric(par_random[[i]]$GWAS$threshold) 
+
+                    }
+
+                  if(is.null(par_random[[i]]$GWAS$window_size)) { 
+
+                    par_random[[i]]$GWAS_window_size = as.integer(ncol(random[[i]]) *  default_GWAS_window_size_proportion)
+      
+                  } else { 
+ 
+                      par_random[[i]]$GWAS_window_size = as.integer(par_random[[i]]$GWAS$window_size) 
+
+                    }
+
+                  par_random[[i]]$GWAS = TRUE
+ 
+                  }
+   
+            }
+
+        }
+
+    par_random_all[[k]] = par_random
+
+  }
+
+}
   
 
 
@@ -124,136 +200,26 @@ if(is.null(random)) {
 # Taken from: http://stackoverflow.com/questions/8810338/same-random-numbers-every-time
 if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
 
-## FIXME check arguments
+par_mcmc = list()
+verbose_single = verbose
+if(timings | length(y) > 1) verbose_single = FALSE
 
-if(timings) verbose = FALSE
-par_mcmc = list(niter=niter, burnin=burnin, full_output=beta_posterior, verbose=verbose, timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
+for(i in 1:length(y)) {
 
-#set.seed(seed)
-#cat(paste("\n seed: ",seed,"\n",sep="")) 
- .Call("clmm",y, X , par_fixed ,random, par_random ,par_mcmc, verbose=verbose, options()$cpgen.threads, PACKAGE = "cpgen" )[[1]]
+  par_mcmc[[i]] = list(niter=niter, burnin=burnin, full_output=beta_posterior, verbose=verbose_single,
+  timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed), name=as.character(names(y)[i]))
 
-#return(list(X=X,par_fixed=par_fixed,random=random,par_random=par_random,par_mcmc=par_mcmc))
+}
+
+ mod <- .Call("clmm",y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, PACKAGE = "cpgen" )
+
+ if(length(y) == 1) { return(mod[[1]]) } else { return(mod) }
 
 }
 
 
 
 
-
-# clmm.CV
-
-clmm.CV <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, seed = NULL){
-
-default_scale = 0
-default_df = -2
-
-allowed=c("numeric","list")
-a = class(y)
-
-if(sum(a%in%allowed)!=1)  stop(paste("phenotypes must match one of the following types: ",allowed,sep="")) 
-
-if(class(y) == "list") {
-  p = length(y)
-  if (sum(unlist(lapply(y,is.vector))) != p) stop("phenotypes must be supplied as vectors")
-  n = unlist(lapply(y,length))
-  if (sum(n[1]!=n) > 0) stop("phenoytpe vectors must have same length")
-  n = n[1]
-  if(is.null(names(y))) names(y) <- paste("phenotype: ",1:p,sep="") 
-  } else {
-    if(!is.vector(y)) stop("phenotype must be supplied as vector")
-    n <- length(y) 
-    y <- list(y)
-    names(y) <- "phenotype: 1"
-  }
-#isy <- (1:n)[!is.na(y)]
-
-if(is.null(X)) {
-  X = array(1,dim=c(n,1))
-  par_fixed <- list(scale=0,df=0,sparse_or_dense="dense",method="fixed")
-  } else {                   
-    if(X_is_ok(X,n,"fixed")) {
-      if(class(X) == "matrix") { type = "dense" } else { type = "sparse" }
-      par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense=type,method="fixed")    
-    }
-  }
-
-if(is.null(random)) {
-  random = list()
-  par_random = list()
-  } else {
-
-  if(is.null(par_random)) {
-    par_random<-list(length(random))
-    if(is.null(names(random))) names(random) = 1:length(random)
-    for(i in 1:length(random)){
-
-      if(X_is_ok(random[[i]],n,names(random)[i])) {
-      method = "random"
-      if(class(random[[i]]) == "matrix") type = "dense"
-      if(class(random[[i]]) == "dgCMatrix") type = "sparse"
-      par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method) }
-    }
-
-    } else {
-
-      if(length(par_random) != length(random)) stop(" 'par_effects' must have as many items as 'random' ")
-
-      for(i in 1:length(par_random)) {
-        X_is_ok(random[[i]],n,names(random)[i])
-        allowed_methods = c("fixed","random","BayesA")
-        if(is.null(par_random[[i]]$method)) stop(paste("Define a method for random-effect: ",i,sep=""))
-        if(par_random[[i]]$method %in% allowed_methods == FALSE) stop(paste("Method must be one of: ",allowed_methods,sep=""))
-
-        if(is.null(par_random[[i]]$df) | !is.numeric(par_random[[i]]$df) | length(par_random[[i]]$df) > 1)  {
-
-          if(par_random[[i]]$method == "BayesA") { 
-
-            par_random[[i]]$df = 4.0 } else { 
-
-              par_random[[i]]$df = default_df }
-        
-          }
-
-        if(is.null(par_random[[i]]$scale) | !is.numeric(par_random[[i]]$scale) | length(par_random[[i]]$scale) > 1) {
-
-          if(par_random[[i]]$method == "BayesA") { 
-
-## FIXME the scale for BayesA doesnt make sense for more than one phenotype
-            dfA = par_random[[i]]$df
-            par_random[[i]]$scale = (((dfA-2)/dfA) * (var(y[[1]],na.rm=T) / 5)) / (ncol(random[[i]]) * sum(ccolmv(random[[i]])**2,na.rm=T)) } else {
-
-            par_random[[i]]$scale = default_scale }
-     
-        }
-
-          if(class(random[[i]]) == "matrix") { type = "dense" } else { type = "sparse" }
-          par_random[[i]]$sparse_or_dense = type 
-
-        }   
-
-      }
-
-    }
-  
-
-
-
-# RNG Seed based on system time and process id
-# Taken from: http://stackoverflow.com/questions/8810338/same-random-numbers-every-time
-if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
-
-## Timings are not allowed here
-par_mcmc = list(niter=niter, burnin=burnin, full_output=beta_posterior, verbose=FALSE, timings = FALSE, scale_e = scale_e, df_e = df_e, seed = as.character(seed))
-
-
-#set.seed(seed)
-#cat(paste("\n seed: ",seed,"\n",sep="")) 
-.Call("clmm",y, X , par_fixed ,random, par_random ,par_mcmc, verbose=verbose, options()$cpgen.threads, PACKAGE = "cpgen" )
-
-#return(list(X=X,par_fixed=par_fixed,random=random,par_random=par_random,par_mcmc=par_mcmc))
-
-}
 
 
 get_pred <- function(mod) {
@@ -302,7 +268,7 @@ UX <- t(UD$vectors)%c%X
 D_sqrt <- sqrt(UD$values)
 Z<-sparseMatrix(i=1:n,j=1:n,x=D_sqrt)
 
-par_random <- list(list(scale=scale_a,df=df_a,sparse_or_dense="sparse",method="random"))
+par_random <- list(list(scale=scale_a,df=df_a,sparse_or_dense="sparse",method="ridge"))
 
 if(verbose) cat("Running Model\n")
 if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
@@ -344,7 +310,7 @@ X_is_ok <- function(X,n,name) {
 allowed=c("matrix","dgCMatrix")
 a = class(X)
 #if(sum(a%in%allowed)!=1) stop(paste(c("lol","rofl"))) 
-if(sum(a%in%allowed)!=1) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" or "),sep="")) 
+if(sum(a%in%allowed)!=1) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" , "),sep="")) 
 
 if(anyNA(X)) { stop(paste("No NAs allowed in design matrix '", name,"'", sep="")) } 
       
@@ -354,6 +320,7 @@ if(a=="matrix" | a=="dgCMatrix") { if(nrow(X) != n) stop(paste("Number of rows i
 return(1) 
 
 }
+
 
 
 

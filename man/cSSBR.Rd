@@ -12,7 +12,7 @@ cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0,
       niter=5000, burnin=2500, seed=NULL, verbose=TRUE)
 }
 \arguments{
-\item{data}{\code{data.frame} with four columns: id, sire, dam, y}
+\item{data}{\code{data.frame} with four columns: \code{id, sire, dam, y}}
 \item{M}{Marker Matrix for genotyped individuals}
 \item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
 \item{X}{Fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}.
@@ -40,15 +40,15 @@ The residual imputation error has variance: \eqn{(\mathbf{A}^{11})^{-1}\sigma_{\
 }
 
 \value{
-List of 3 + number of random effects as in \code{\link{clmm}} +
+List of 4 + number of random effects as in \code{\link{clmm}} +
   \item{SSBR}{List of 4:
      \itemize{
-       \item{ids - ids used in the model (ordered as in other model terms)}
-       \item{y - phenotype vector}
-       \item{X - Design matrix for fixed effects}
-       \item{Marker_Matrix - Combined Marker Matrix including imputed and genotyped individuals}
-       \item{Z_residual - Design Matrix used to model the residual error for the imputed individuals}
-       \item{Breeding_Values - Predicted Breeding Values for all animals in \code{data} that have
+       \item{\code{ids} - ids used in the model (ordered as in other model terms)}
+       \item{\code{y} - phenotype vector}
+       \item{\code{X} - Design matrix for fixed effects}
+       \item{\code{Marker_Matrix} - Combined Marker Matrix including imputed and genotyped individuals}
+       \item{\code{Z_residual} - Design Matrix used to model the residual error for the imputed individuals}
+       \item{\code{Breeding_Values} - Predicted Breeding Values for all animals in \code{data} that have
              genotypes and/or phenotypes}
       }
    }
@@ -103,7 +103,7 @@ var_m <- var_e / 10
 # put emphasis on the prior (reproducing results given in SSBR-paper)
 df = 500
 
-par_random=list(list(method="random",scale=var_m,df = df),list(method="random",scale=var_a,df=df))
+par_random=list(list(method="ridge",scale=var_m,df = df),list(method="ridge",scale=var_a,df=df))
 
 set_num_threads(1)
 mod<-cSSBR(data = dat,

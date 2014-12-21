@@ -24,6 +24,7 @@ cCV(y,folds=5,reps=1,matrix=FALSE,seed=NULL)
 List (matrix) with as many items (columns) as \code{folds * reps}
 }
 
+\seealso{\code{\link{clmm}, \link{get_pred}, \link{get_cor}}}
 
 \examples{
 \dontrun{

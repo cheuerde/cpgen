@@ -70,7 +70,7 @@ Kang, H. M., N. A. Zaitlen, C. M. Wade, A. Kirby, D. Heckerman, M. J. Daly, and 
 }
 
 
-\seealso{\code{\link{clmm}}, \code{\link{clmm.CV}}, \code{\link{cGWAS.emmax}}}
+\seealso{\code{\link{clmm}}, \code{\link{cgrm}}, \code{\link{cGWAS.emmax}}}
 
 \examples{
 \dontrun{

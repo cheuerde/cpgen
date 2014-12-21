@@ -51,7 +51,7 @@ get_num_threads <- function() options()$cpgen.threads
 
 # set.threads
 
-set_num_threads <- function(x,silent=FALSE) {
+set_num_threads <- function(x, silent=FALSE, global=FALSE) {
 
 if(!.Call("check_openmp",PACKAGE="cpgen")) { if(!silent) cat("OpenMP is not available, threads set to 1 \n") } else {
   if(length(x)!=1) stop("must be a scalar")
@@ -60,7 +60,7 @@ if(!.Call("check_openmp",PACKAGE="cpgen")) { if(!silent) cat("OpenMP is not avai
 
   options(cpgen.threads=t)
 # this allows using the function to control other openmp functions in R also (MKL,...)
-  .Call("set_num_threads",t,PACKAGE="cpgen")
+  if(global) .Call("set_num_threads",t,PACKAGE="cpgen")
   if(!silent) cat("Number of threads set to ",t,"\n")
   }
 
@@ -305,19 +305,11 @@ ccolmv <- function(X,var=FALSE){
  
  if(a=="dgCMatrix") {
  
-   if(var) {
-   
-     return(apply(X,2,var))
-     
-   } else {
-   
-       return(colMeans(X))
-       
-     }
+   .Call("ccolmv_sparse", X, var, PACKAGE = "cpgen")
      
   } else {
  
-      .Call( "ccolmv", X,var ,PACKAGE = "cpgen" )[1,]
+      .Call( "ccolmv_dense", X, var, PACKAGE = "cpgen" )
  
     } 
 
