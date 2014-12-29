@@ -194,8 +194,12 @@ Fernando, Rohan L., and Dorian Garrick. "Bayesian methods applied to GWAS." Geno
 
 \examples{
 
-### Running a model with an additive and dominance effect
 \dontrun{
+
+############################################################# 
+### Running a model with an additive and dominance effect ###
+############################################################# 
+
 # generate random data
 rand_data(500,5000)
 
@@ -217,6 +221,80 @@ fit <- clmm(y,random=random,par_random=par_random,niter=5000,burnin=2500)
 
 ### inspect results
 str(fit)
+
+
+########################
+### Cross Validation ###
+########################
+ 
+### 4-fold cross-validation with one repetition:
+# generate random data
+rand_data(500,5000)
+
+### compute the list of masked phenotype-vectors for CV
+y_CV <- cCV(y,fold=4,reps=1)
+
+
+### Cross Validation using GBLUP
+G.A <- cgrm.A(M,lambda=0.01)
+
+
+### generate the list of design matrices for clmm
+random = list(t(chol(G.A)))
+
+### specify options
+h2 = 0.3
+scale = unlist(lapply(y_CV,function(x)var(x,na.rm=T))) * h2
+df = rep(5,length(y_CV))
+par_random = list(list(method="ridge",scale=scale,df=df, name="animal"))
+
+### run model with 4 threads
+set_num_threads(4)
+fit <- clmm(y_CV,random=random,par_random=par_random,niter=5000,burnin=2500)
+
+### inspect results
+str(fit)
+
+### obtain predictions
+pred <- get_pred(fit)
+
+### prediction accuracy
+get_cor(pred,y_CV,y)
+
+########################################################
+### GWAS using Bayesian Regression on marker windows ###
+########################################################
+ 
+# generate random data
+rand_data(500,5000)
+
+### generate the list of design matrices for clmm
+random = list(M)
+
+### specify options
+h2 = 0.3
+scale = var(y) * h2
+df = 5
+# specifying the model
+# Here we use ridge regression on the marker covariates
+# and define a window size of 100 and a threshold of 0.01
+# which defines the proportion of genetic variance accounted
+# for by a single window
+par_random = list(list(method="ridge",scale=scale,df=df, GWAS=list(window_size=100, threshold=0.01), name="markers"))
+
+### run 
+set_num_threads(1)
+fit <- clmm(y,random=random,par_random=par_random,niter=2000,burnin=1000)
+
+### inspect results
+str(fit)
+
+### extract GWAS part
+gwas <- fit$markers$GWAS
+
+# plot window variance proportions
+plot(gwas$window_variance_proportion)
+
 }
 }
 \keyword{Genomic Prediction}
