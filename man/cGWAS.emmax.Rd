@@ -28,9 +28,9 @@ The dominance coefficient is computed as: \code{1-abs(M)}}
 \item{df_a}{prior degrees of freedom for \eqn{a}}
 \item{scale_e}{prior scale parameter for \eqn{e}}
 \item{df_e}{prior degrees of freedom for \eqn{e}}
-\item{niter}{Number of iterations}
-\item{burnin}{Burnin}
-\item{seed}{Seed}
+\item{niter}{Number of iterations used by \code{\link{clmm}}}
+\item{burnin}{Burnin for \code{\link{clmm}}}
+\item{seed}{Seed used by \code{\link{clmm}}}
 }
 
 

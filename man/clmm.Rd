@@ -51,9 +51,13 @@ df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL)
 \details{
 \strong{Single Model run}
 
-At this point the function allows to specify the method for any random term as: 'ridge' or 'BayesA'. 'ridge' assumes a common variance for all levels of the 
-random effect, 'BayesA' assumes every level of the random effect to have its own distribution and variance as described in Meuwissen et al. (2001).
-A wider range of methods is available in the excellent BGLR-package, which also allows phenotypes to be discrete (de los Campos et al. 2013). 
+At this point the function allows to specify the method for any random term as: 'ridge' or 'BayesA'.
+In Ridge Regression the prior distribution of the random
+effects is assumed to be normal with a constant variance component, while in
+BayesA the marginal prior is a t-distribution, resulting from locus specific
+variances with inverse chi-square priors (Gianola et al., 2009).
+A wider range of methods is available in the excellent BGLR-package, which also allows 
+phenotypes to be discrete (de los Campos et al. 2013). 
 
 The focus of this function is to allow solving high-dimensional problems that are mixtures of sparse and dense features in the design matrices.
 The computational expensive parts of the Gibbs Sampler are parallelized as described in Fernando et al. (2014).
@@ -85,13 +89,23 @@ results.
 
 The function allows to specify options to any random effect for conducting genomewide association
 studies using prediction vector variances of marker windows as described in Fernando et al. (2013).
-In every effective sample of the gibbs sampler the total variance of the prediciton vector
-of the particular random effect is computed as: \eqn{\tilde{\sigma}_{g}^2 = var(\mathbf{Zu})}.
-Then for any window \eqn{w} its variance is obtained as: \eqn{\tilde{\sigma}_{g_{w}}^2 = var(\mathbf{Z}_w\mathbf{u}_w)},
-where \eqn{w} indicates the range over the columns of \eqn{\mathbf{Z}} that forms the window \eqn{w}.
-The probability that a window exceeds a threshold of total variance proportion is computed as 
-the sum of samples in which: \eqn{\frac{\tilde{\sigma}_{g_{w}}^2}{\tilde{\sigma}_{g}^2} > threshold} divided by the 
-number of samples. 
+In every effective sample of the Gibbs Sampler the sampling variance of the
+genotypic value vector \eqn{\mathbf{g} = \mathbf{Zu}} of the particular random 
+effect is computed as:
+\eqn{\tilde{\sigma}_{g}^2 = \left(\sum_{j=1}^{n} (g_j - \mu_g)^2\right) (n -1)^{-1}}
+, with \eqn{\mu_g} being the mean of \eqn{\mathbf{g}} and \eqn{n} the number of observations. 
+Then for any window \eqn{w} the sampling variance of \eqn{\mathbf{g_w} =
+\mathbf{Z}_w\mathbf{u}_w} is obtained as:
+\eqn{\tilde{\sigma}_{g_{w}}^2 = \left(\sum_{j=1}^{n} (g_{w_j} - \mu_{g_w})^2\right) (n -1)^{-1}}, where \eqn{w} indicates the range over the
+columns of \eqn{\mathbf{Z}} that forms the window \eqn{w}. The posterior
+probability that a window exceeds a specified proportion \eqn{\delta} of
+the total variance is estimated by the number of samples in which
+\eqn{\frac{\tilde{\sigma}_{g_{w}}^2}{\tilde{\sigma}_{g}^2} > \delta}
+divided by the total number of samples. It can be shown that among
+marker windows that have a posterior probability \eqn{p} or greater for
+having a variance greater than \eqn{\delta} of the total variance, the
+proportion of false positive signals (PFP) are expected to be lower
+than \eqn{1-p} (Fernando et al. 2004, Fernando et al., 2013). 
 
 }
 
@@ -100,7 +114,7 @@ List of 4 + number of random effects:
   \item{Residual_Variance}{List of 4:
      \itemize{
        \item{\code{Posterior_Mean} - Mean estimate of the residual variance}
-       \item{\code{Posterior} - Distribution of residual variance}
+       \item{\code{Posterior} - posterior samples of residual variance}
        \item{\code{scale_prior} - scale parameter that has been assigned}
        \item{\code{df_prior} - degrees of freedom that have been assigned}
       }
@@ -111,9 +125,12 @@ List of 4 + number of random effects:
      \itemize{
        \item{\code{type} - dense or sparse design matrix}
        \item{\code{method} - method that has been used = "fixed"}
-       \item{\code{scale_prior} - scale parameter that has been assigned}
-       \item{\code{df_prior} - degrees of freedom that have been assigned}
-       \item{\code{posterior} - list = mean (posterior) of the solution for fixed effects}
+       \item{\code{posterior} - list of 1 + 1 (if \code{beta_posterior=TRUE}) 
+          \itemize{
+            \item{\code{estimates_mean} - mean solutions for random effects}
+            \item{\code{estimates} - posterior samples of random effects}
+          }
+        }
       }
    }
 
@@ -128,12 +145,12 @@ Susequently as many additional items as random effects of the following form
           \itemize{
             \item{\code{estimates_mean} - mean solutions for random effects}
             \item{\code{variance_mean} - mean variance}
-            \item{\code{variance} - distribution of variance}
-            \item{\code{estimates} - distribution of random effects}
+            \item{\code{variance} - posterior samples of variance}
+            \item{\code{estimates} - posterior samples of random effects}
           }
         }
 
-       \item{\code{GWAS} - list of 9 
+       \item{\code{GWAS} - list of 9 (if specified)
           \itemize{
             \item{\code{window_size} - number of features (markers) used to form a single window}
             \item{\code{threshold} - window porportion of total variance, used to determine presents of association}
@@ -150,12 +167,13 @@ Susequently as many additional items as random effects of the following form
   }
 
 
-  \item{mcmc}{List of 4:
+  \item{mcmc}{List of 4 + 1 (if \code{timings=TRUE}):
      \itemize{
        \item{\code{niter} - number of iterations}
        \item{\code{burnin} - number of samples discarded as burnin}
        \item{\code{number_of_samples} - number of samples used to estimate posterior means}
        \item{\code{seed} - seed used for the random number generator}
+       \item{\code{time_per_iter} - average seconds per iteration}
       }
    }
 
@@ -174,6 +192,10 @@ The idea of how to parallelize the single site Gibbs Sampler came from Rohan Fer
 }
 
 \references{
+
+Gianola, D., de Los Campos, G., Hill, W.G., Manfredi, E., Fernando, R.: "Additive genetic variability and the
+bayesian alphabet." Genetics 183(1), 347–363 (2009)
+
 de los Campos, G., H. Naya, D. Gianola, J. Crossa, A. Legarra, E. Manfredi, K. Weigel, and J. M. Cotes. "Predicting Quantitative Traits With Regression Models for Dense Molecular Markers and Pedigree." Genetics 182, no. 1 (May 1, 2009): 375-85. doi:10.1534/genetics.109.101501.
 
 Waldmann, Patrik, Jon Hallander, Fabian Hoti, and Mikko J. Sillanpaa. "Efficient Markov Chain Monte Carlo Implementation of Bayesian Analysis of Additive and Dominance Genetic Variances in Noninbred Pedigrees." Genetics 179, no. 2 (June 1, 2008): 1101-12. doi:10.1534/genetics.107.084160.
@@ -182,8 +204,11 @@ Meuwissen, T., B. J. Hayes, and M. E. Goddard. "Prediction of Total Genetic Valu
 
 de los Campos, Gustavo, Paulino Perez Rodriguez, and Maintainer Paulino Perez Rodriguez. "Package 'BGLR,'" 2013. ftp://128.31.0.28/pub/CRAN/web/packages/BGLR/BGLR.pdf.
 
-Fernando, R.L., Dekkers, J.C., Garrick, D.J.: A class of bayesian methods to combine large numbers of
-genotyped and non-genotyped animals for whole-genome analyses. Genetics Selection Evolution 46(1), 50 (2014)
+Fernando, R.L., Dekkers, J.C., Garrick, D.J. "A class of bayesian methods to combine large numbers of
+genotyped and non-genotyped animals for whole-genome analyses." Genetics Selection Evolution 46(1), 50 (2014)
+
+Fernando, R., Nettleton, D., Southey, B., Dekkers, J., Rothschild, M., Soller, M. "Controlling the proportion of
+false positives in multiple dependent tests." Genetics 166(1), 611–619 (2004)
 
 Fernando, Rohan L., and Dorian Garrick. "Bayesian methods applied to GWAS." Genome-Wide Association Studies and Genomic Prediction. Humana Press, 2013. 237-274.
 
@@ -280,7 +305,8 @@ df = 5
 # and define a window size of 100 and a threshold of 0.01
 # which defines the proportion of genetic variance accounted
 # for by a single window
-par_random = list(list(method="ridge",scale=scale,df=df, GWAS=list(window_size=100, threshold=0.01), name="markers"))
+par_random = list(list(method="ridge",scale=scale,df=df,
+             GWAS=list(window_size=100, threshold=0.01), name="markers"))
 
 ### run 
 set_num_threads(1)

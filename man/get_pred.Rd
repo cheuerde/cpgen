@@ -5,7 +5,7 @@ Extract predictions vectors of an object returned by \code{\link{clmm}} using mu
 }
 \description{
 Takes an object returned by \code{\link{clmm}} using multpile phenotypes and returns a matrix
-of predicted values from every model. Every columns represents the prediction vector of one model
+of predicted values from every model. Every column represents the prediction vector of one model
 }
 \usage{
 get_pred(mod)

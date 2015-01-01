@@ -5,7 +5,7 @@ Generate random data for test purposes
 }
 \description{
 Generates a random marker-matrix in \{-1,0,1\} coding and a phenotype vector.
-Phenotypic variance times h2 (variance explained by markers) is equally spreaded among
+Phenotypic variance times h2 (variance explained by markers) is equally spread among
 all markers (sampled from uniform distribution).
 }
 \usage{

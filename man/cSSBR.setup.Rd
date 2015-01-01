@@ -52,7 +52,7 @@ genotyped and non-genotyped animals for whole-genome analyses. Genetics Selectio
 
 \examples{
 
-# this is the example dataset given in Fernando et al., 2014
+# example dataset
 
 id <- 1:6
 sire <- c(rep(NA,3),rep(1,3))
@@ -78,7 +78,7 @@ var_e <- (10*var_y / 21)
 var_a <- var_e 
 var_m <- var_e / 10
 
-# put emphasis on the prior (reproducing results given in SSBR-paper)
+# put emphasis on the prior
 df = 500
 
 par_random=list(list(method="ridge",scale=var_m,df = df),list(method="ridge",scale=var_a,df=df))

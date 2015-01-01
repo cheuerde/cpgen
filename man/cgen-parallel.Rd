@@ -21,7 +21,6 @@ The following functions are multithreaded and access the variable \code{cpgen.th
 \item{cGWAS}
 \item{cGWAS.emmax}
 \item{clmm}
-\item{clmm.CV}
 \item{cGBLUP}
 \item{ccross}
 \item{\%c\%}
