@@ -9,11 +9,11 @@ that can lead to false positive association signals can be accounted for
 by passing a Variance-covariance matrix of the phenotype vector (Kang et al., 2010).
 The GLS-solution for fixed effects is computed as:
 
-\deqn{\hat{\mathbf{\beta}} = (\mathbf{X'V}^{-1}\mathbf{X})^{-1}\mathbf{X'V}^{-1}\mathbf{y}}
+\deqn{\hat{\boldymbol{\beta}} = (\mathbf{X'V}^{-1}\mathbf{X})^{-1}\mathbf{X'V}^{-1}\mathbf{y}}
 
 Equivalent solutions are obtained by premultiplying the design matrix \eqn{\mathbf{X}} for fixed effects and the phenotype vector \eqn{\mathbf{y}}  by \eqn{\mathbf{V}^{-1/2}} :
 
-\deqn{\hat{\mathbf{\beta}} = (\mathbf{X}^{\ast\prime}\mathbf{X}^{\ast})^{-1}\mathbf{X}^{\ast\prime}\mathbf{y}^{\ast}} with \deqn{\mathbf{X}^{\ast} =\mathbf{V}^{-1/2}\mathbf{X}}    \deqn{\mathbf{y}^{\ast} =\mathbf{V}^{-1/2}\mathbf{y}}
+\deqn{\hat{\boldymbol{\beta}} = (\mathbf{X}^{\ast\prime}\mathbf{X}^{\ast})^{-1}\mathbf{X}^{\ast\prime}\mathbf{y}^{\ast}} with \deqn{\mathbf{X}^{\ast} =\mathbf{V}^{-1/2}\mathbf{X}}    \deqn{\mathbf{y}^{\ast} =\mathbf{V}^{-1/2}\mathbf{y}}
 
 
 }
