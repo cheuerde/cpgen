@@ -249,9 +249,14 @@ void effects::update_GWAS(){
 Rcpp::List effects::get_summary(int effiter){
 
   Rcpp::List out =  Rcpp::List::create(Rcpp::Named("type") = sparse_or_dense,
-			  	       Rcpp::Named("method") = method,
-			               Rcpp::Named("scale_prior") = scale,
-			               Rcpp::Named("df_prior") = df);
+			  	       Rcpp::Named("method") = method);
+  if(method != fixed) {
+  	
+    out["scale_prior"] = scale;
+    out["df_prior"] = df;
+  	
+  }			  	       
+
   Rcpp::List out_posterior = my_functions->summary(mean_estimates,mean_var,effiter, var_posterior);
   if(full_output) out_posterior["estimates"] = effects_posterior;
   out["posterior"] = out_posterior;
