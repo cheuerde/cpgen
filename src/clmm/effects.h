@@ -250,7 +250,7 @@ Rcpp::List effects::get_summary(int effiter){
 
   Rcpp::List out =  Rcpp::List::create(Rcpp::Named("type") = sparse_or_dense,
 			  	       Rcpp::Named("method") = method);
-  if(method != fixed) {
+  if(method != "fixed") {
   	
     out["scale_prior"] = scale;
     out["df_prior"] = df;
