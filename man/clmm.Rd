@@ -215,7 +215,7 @@ Fernando, Rohan L., and Dorian Garrick. "Bayesian methods applied to GWAS." Geno
 
 }
 
-\seealso{\code{\link{clmm.CV}, \link{cGBLUP}, \link{cGWAS.emmax}}}
+\seealso{\code{\link{cGBLUP}, \link{cSSBR}, \link{cGWAS.emmax}}}
 
 \examples{
 
