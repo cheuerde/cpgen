@@ -4,12 +4,10 @@
 \title{Genomic BLUP}
 
 \description{
-This function allows fitting a mixed model with one random effect besides the residual.
+This function allows fitting a mixed model with one random effect besides the residual using \code{\link{clmm}}.
 The random effect \eqn{\mathbf{a}} follows some covariance-structure \eqn{\mathbf{G}}
 
 }
-
-
 
 \usage{
 cGBLUP(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,
@@ -23,9 +21,9 @@ cGBLUP(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,
 \item{df_a}{prior degrees of freedom for \eqn{a}}
 \item{scale_e}{prior scale parameter for \eqn{e}}
 \item{df_e}{prior degrees of freedom for \eqn{e}}
-\item{niter}{Number of iterations used by \code{\link{clmm}}}
-\item{burnin}{Burnin for \code{\link{clmm}}}
-\item{seed}{Seed for \code{\link{clmm}}}
+\item{niter}{Number of iterations}
+\item{burnin}{Burnin}
+\item{seed}{Seed}}
 \item{verbose}{Prints progress to the screen}
 }
 
