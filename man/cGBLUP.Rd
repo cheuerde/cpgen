@@ -23,7 +23,7 @@ cGBLUP(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,
 \item{df_e}{prior degrees of freedom for \eqn{e}}
 \item{niter}{Number of iterations}
 \item{burnin}{Burnin}
-\item{seed}{Seed}}
+\item{seed}{Seed}
 \item{verbose}{Prints progress to the screen}
 }
 
