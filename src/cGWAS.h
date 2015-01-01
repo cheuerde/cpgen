@@ -184,6 +184,8 @@ MapMatrixXd V2 = MapMatrixXd(as<MapMatrixXd> (V2_R));
 
     for(int j = 0;j<number_effects;j++){
 
+// this is the one exception to the rule not to call R-functions in C++. R::pt has no 
+// side effects, so it is safe to call it here
       p_value(i,j) = R::pt(abs(b(Xstar.cols()+j))/se(i,j),df,0,0) * 2.0;
       beta(i,j) = b(Xstar.cols()+j);
 
