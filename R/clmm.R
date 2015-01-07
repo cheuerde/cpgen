@@ -50,7 +50,7 @@ if(class(y) == "list") {
     names(y) <- "Phenotype_1"
   }
   
-if(any(unlist(lapply(Y,function(x)var(x,na.rm=TRUE)))==0)) stop("one or more phenotypes with 0 variance detected")
+if(any(unlist(lapply(y,function(x)var(x,na.rm=TRUE)))==0)) stop("one or more phenotypes with 0 variance detected")
 
 if(is.null(X)) {
   X = array(1,dim=c(n,1))
