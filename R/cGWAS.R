@@ -26,6 +26,7 @@
 cGWAS <- function(y,M,X=NULL,V=NULL,dom=FALSE, verbose=TRUE){
 
 if(!is.vector(y) | !is.numeric(y)) stop("y must be a numeric vector")
+y <- as.numeric(y)
 id = 1:length(y)
 isy = id[!is.na(y)]
 n = length(isy)
