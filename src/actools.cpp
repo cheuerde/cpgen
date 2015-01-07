@@ -150,7 +150,7 @@ SEXP cscanx(SEXP path){
 
   std::string c_path = as<std::string>(path);
   std::ifstream f(c_path.c_str());
-  if (!f.is_open()) { Rcpp::stop(("error while opening file " + c_path).c_str()); }
+  if (!f.is_open()) { Rf_error(("error while opening file " + c_path).c_str()); }
 
 
 
