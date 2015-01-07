@@ -78,10 +78,11 @@ return(gwa)
 
 cGWAS.emmax <- function(y,M,A=NULL,X=NULL,dom=FALSE,verbose=TRUE,scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,niter=15000,burnin=7500,seed=NULL){
 
+if(!is.vector(y) | !is.numeric(y)) stop("y must be a numeric vector")
+y <- as.numeric(y)
 id = 1:length(y)
 isy = id[!is.na(y)]
 n = length(isy)
-if(!is.vector(y) | !is.numeric(y)) stop("y must be a numeric vector")
 if(n<length(y))   stop("NAs in y are not allowed")
 if(is.null(X)) X <- array(1,dim=c(n,1))
 
