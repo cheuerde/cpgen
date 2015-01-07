@@ -46,10 +46,10 @@ if(class(y) == "list") {
   } else {
     if(!is.vector(y)) stop("phenotype must be supplied as vector")
     n <- length(y) 
-    y <- list(y)
     names(y) <- "Phenotype_1"
   }
   
+y <- lapply(y,as.numeric)  
 if(any(unlist(lapply(y,function(x)var(x,na.rm=TRUE)))==0)) stop("one or more phenotypes with 0 variance detected")
 
 if(is.null(X)) {
