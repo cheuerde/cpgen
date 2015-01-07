@@ -292,7 +292,6 @@ void MCMC<F>::initialize() {
 // FIXME assign: if( y(i)!=y(i)  or if( y(i)!=0 ??
   for(int i=0;i<y.size();i++) { if( y(i)!=y(i) ) {y(i) = mu;} else {var_y += (y(i) - mu) * (y(i) - mu);} }
   var_y = var_y / (y.size() - isna.size() - 1);
-  if(var_y <= 0) var_y = 0.0000000001;
   var_e = var_y - (var_y / (2 * n_random));
 
   ycorr = y;
