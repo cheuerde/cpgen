@@ -45,6 +45,7 @@ if(class(y) == "list") {
   if(is.null(names(y))) names(y) <- paste("Phenotype_",1:p,sep="") 
   } else {
     if(!is.vector(y)) stop("phenotype must be supplied as vector")
+    y <- list(y)
     n <- length(y) 
     names(y) <- "Phenotype_1"
   }
