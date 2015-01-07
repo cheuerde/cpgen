@@ -193,7 +193,7 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
   post_var_e=0;
 
   n = y.size();
-  n_random = list_of_design_matrices.size() -1;
+  n_random = list_of_design_matrices.size();
   if(n_random<1) n_random=1;
 
 // check for NAs in pehnotype vector
