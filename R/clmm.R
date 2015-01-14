@@ -208,8 +208,8 @@ if(timings | length(y) > 1) verbose_single = FALSE
 
 if(length(y)>1) {
 
-  if(length(scale_e)!=length(y)) scale_e = rep(scale_e, length(y))
-  if(length(df_e)!=length(y)) df_e = rep(df_e, length(y))
+  if(length(scale_e)!=length(y)) scale_e = rep(scale_e[1], length(y))
+  if(length(df_e)!=length(y)) df_e = rep(df_e[1], length(y))
   
 }
 
