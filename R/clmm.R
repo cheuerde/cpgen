@@ -206,10 +206,18 @@ par_mcmc = list()
 verbose_single = verbose
 if(timings | length(y) > 1) verbose_single = FALSE
 
+if(length(y)>1) {
+
+  if(length(scale_e)!=length(y)) scale_e = rep(scale_e, length(y))
+  if(length(df_e)!=length(y)) df_e = rep(df_e, length(y))
+  
+}
+
+
 for(i in 1:length(y)) {
 
   par_mcmc[[i]] = list(niter=niter, burnin=burnin, full_output=beta_posterior, verbose=verbose_single,
-  timings = timings, scale_e = scale_e, df_e = df_e, seed = as.character(seed), name=as.character(names(y)[i]))
+  timings = timings, scale_e = scale_e[i], df_e = df_e[i], seed = as.character(seed), name=as.character(names(y)[i]))
 
 }
 
