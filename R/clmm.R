@@ -107,7 +107,7 @@ if(is.null(random)) {
               allowed_methods = c("fixed","ridge","BayesA")
               if(is.null(par_random[[i]]$method)) par_random[[i]]$method <- "ridge"
               if(is.null(par_random[[i]]$name)) par_random[[i]]$name = as.character(names(random)[i])
-              if(!par_random[[i]]$method %in% allowed_methods) stop(paste("Method must be one of: ",paste(allowed,collapse=" , "),sep=""))
+              if(!par_random[[i]]$method %in% allowed_methods) stop(paste("Method must be one of: ",paste(allowed_methods,collapse=" , "),sep=""))
 
               if(is.null(par_random[[i]]$df[k]) | !is.numeric(par_random[[i]]$df[k]) | length(par_random[[i]]$df[k]) > 1)  {
 
