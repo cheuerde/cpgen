@@ -17,7 +17,7 @@ that random effect as described in Waldmann et al. (2008): \eqn{\mathbf{F} = \ma
 
 \usage{
 clmm(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,
-df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL)
+df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE)
 }
 \arguments{
 \item{y}{vector or list of phenotypes}
@@ -44,6 +44,7 @@ df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL)
 \item{scale_e}{scale parameter for the inverse chi-square prior for the residuals}
 \item{df_e}{degrees of freedom for the inverse chi-square prior for the residuals}
 \item{seed}{seed for the random number generator. If omitted, a seed will be generated based on machine and time}
+\item{use_BLAS}{use BLAS library instead of Eigen}
 }
 
 

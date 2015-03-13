@@ -42,11 +42,13 @@
 
 typedef vector<MCMC<base_methods_st> > mcmc_st;
 typedef vector<MCMC<base_methods_mp> > mcmc_mp;
+typedef vector<MCMC<base_methods_st_BLAS> > mcmc_st_BLAS;
 
-SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par_design_matricesR, SEXP par_mcmcR, SEXP verboseR, SEXP threadsR){
+SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par_design_matricesR, SEXP par_mcmcR, SEXP verboseR, SEXP threadsR, SEXP use_BLAS){
 
 int threads = as<int>(threadsR); 
 int verbose = as<int>(verboseR); 
+bool BLAS = Rcpp::as<bool>(use_BLAS);
 
 Rcpp::List list_of_phenotypes(yR);
 Rcpp::List list_of_par_design_matrices(par_design_matricesR);
@@ -66,34 +68,37 @@ printer prog(max);
 Rcpp::List summary_out;
 
 mcmc_st vec_mcmc_st;
+mcmc_st_BLAS vec_mcmc_st_BLAS;
 mcmc_mp vec_mcmc_mp;
 
 if((p>1) | (threads==1)) {
 
+  if(!BLAS) {
+
 // fill the container with mcmc_objects
-  for(int i=0;i<p;i++) {
+    for(int i=0;i<p;i++) {
   
-    vec_mcmc_st.push_back(MCMC<base_methods_st>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,list_of_par_design_matrices[i], list_of_par_mcmc[i],i));
+      vec_mcmc_st.push_back(MCMC<base_methods_st>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,list_of_par_design_matrices[i], list_of_par_mcmc[i],i));
 
-  }
+    }
 
-  for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
+    for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
 
-    it->initialize();
+      it->initialize();
 
-  }
+    }
 
-  if ((p > 1) & verbose) { prog.initialize(); }
+    if ((p > 1) & verbose) { prog.initialize(); }
 
 // this looks easy - the work was to allow this step to be parallelized
 #pragma omp parallel for 
-  for(unsigned int i=0;i<vec_mcmc_st.size();i++){
+    for(unsigned int i=0;i<vec_mcmc_st.size();i++){
 
       vec_mcmc_st.at(i).gibbs();
 
 // verbose
 
-    if((p>1) & verbose) { 
+      if((p>1) & verbose) { 
    
       if(omp_get_thread_num()==0) {
 
@@ -105,15 +110,78 @@ if((p>1) | (threads==1)) {
 
   }
 
-  Rcpp::List Summary;
-  for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
+    Rcpp::List Summary;
+    for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
 
-    it->summary();
-    Summary[it->get_name()] = it->get_summary();     
+      it->summary();
+      Summary[it->get_name()] = it->get_summary();     
+
+    }
+
+    summary_out = Summary;
+
+  } else {   // BLAS
+
+// fill the container with mcmc_objects
+      for(int i=0;i<p;i++) {
+  
+      vec_mcmc_st_BLAS.push_back(MCMC<base_methods_st_BLAS>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,list_of_par_design_matrices[i], list_of_par_mcmc[i],i));
+
+      }
+
+      for(mcmc_st_BLAS::iterator it = vec_mcmc_st_BLAS.begin(); it != vec_mcmc_st_BLAS.end(); it++) {
+
+        it->initialize();
+
+      }
+
+      if ((p > 1) & verbose) { prog.initialize(); }
+
+// this looks easy - the work was to allow this step to be parallelized
+#pragma omp parallel for 
+      for(unsigned int i=0;i<vec_mcmc_st_BLAS.size();i++){
+
+        vec_mcmc_st_BLAS.at(i).gibbs();
+
+// verbose
+
+        if((p>1) & verbose) { 
+   
+        if(omp_get_thread_num()==0) {
+
+          prog.DoProgress(); 
+
+        }
+
+      }
+
+    }
+
+      Rcpp::List Summary;
+      for(mcmc_st_BLAS::iterator it = vec_mcmc_st_BLAS.begin(); it != vec_mcmc_st_BLAS.end(); it++) {
+
+        it->summary();
+        Summary[it->get_name()] = it->get_summary();     
+
+      }
+
+      summary_out = Summary;
 
   }
 
-  summary_out = Summary;
+
+
+
+
+
+
+
+
+
+
+
+
+////
 
 } else {
 

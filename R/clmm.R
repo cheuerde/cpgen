@@ -23,7 +23,7 @@
 
 # clmm
 
-clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL){
+clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE){
 
 default_scale = 0
 default_df = -2
@@ -221,7 +221,7 @@ for(i in 1:length(y)) {
 
 }
 
- mod <- .Call("clmm",y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, PACKAGE = "cpgen" )
+ mod <- .Call("clmm",y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, PACKAGE = "cpgen" )
 
  if(length(y) == 1) { return(mod[[1]]) } else { return(mod) }
 

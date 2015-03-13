@@ -22,6 +22,7 @@
 */
 
 #include "base_methods_abstract.h"
+#include <R_ext/Lapack.h>
 
 using namespace Eigen;
 using namespace Rcpp;
@@ -249,8 +250,116 @@ void base_methods_mp::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, Vector
 }
 
 
+/////////////////
+/// For BLAS ////
+/////////////////
 
 
+class base_methods_st_BLAS: public base_methods_abstract {
+public:
+inline void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns);
+inline void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns);
+inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
+inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
+
+};
+
+
+void base_methods_st_BLAS::initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns){
+
+  xtx = VectorXd(Z.cols());
+  xtx = Z.colwise().squaredNorm();
+  columns = Z.cols();
+
+}
+
+
+void base_methods_st_BLAS::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns){
+
+  xtx = VectorXd(Z.cols());
+// the loop is necessary as Eigen::Sparse doesnt support colwise() 
+  for(int i=0;i<Z.cols();i++) { xtx(i) = Z.col(i).squaredNorm(); }
+  columns = Z.cols();
+
+};
+
+
+void base_methods_st_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+
+
+  double b_temp,rhs,lhs,inv_lhs,mean;
+  MapVectorXd ycorr_map(ycorr,Z.rows());
+  int obs = ycorr_map.size();
+  int incr = 1;
+  double b_adj;
+
+  for(int i=0;i<Z.cols();i++) { 
+
+
+      b_temp=estimates(i);
+// this saves a lot of computation time, as we don't have to adjust ycorr
+// Taken from Rohan Fernando's BayesC implementation
+//      rhs = Z.col(i).dot(ycorr_map);
+      rhs=F77_NAME(ddot)(&obs,&Z(0,i),&incr, ycorr_map.data(),&incr);
+      rhs += xtx(i) * b_temp;
+      lhs = xtx(i) + *var_e / var(i);
+      inv_lhs = 1.0 / lhs;
+      mean = inv_lhs*rhs;
+      estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
+//      ycorr_map += Z.col(i)*(b_temp-estimates(i));
+      b_adj = b_temp - estimates(i);
+      F77_NAME(daxpy)(&obs, &b_adj,&Z(0,i),&incr, ycorr_map.data(),&incr);
+
+
+      }
+
+}
+
+
+
+
+
+// sparse specialization
+void base_methods_st_BLAS::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+
+  double b_temp,rhs,lhs,inv_lhs,mean;
+// FIXME the pointer to ycorr is a very crucial part
+  MapVectorXd ycorr_map(ycorr,Z.rows());
+//  InIterMat it_; 
+
+  for(int i=0;i<Z.cols();i++) { 
+
+
+      b_temp=estimates(i);
+
+// this sparse-dense operation is already very efficient
+// but an iterator would allow to parallelize it also
+//      rhs = Z.col(i).dot(ycorr_map);
+// iterator version
+
+      rhs=0;
+      for (InIterMat it_(Z, i); it_; ++it_){
+      rhs += it_.value() * ycorr_map(it_.index()); 
+      }
+
+
+      rhs += xtx(i) * b_temp;
+      lhs = xtx(i) + *var_e / var(i);
+      inv_lhs = 1.0 / lhs;
+      mean = inv_lhs*rhs;
+      estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
+
+// Iterate over the non-zero values in the i-th column of Z
+
+      for (InIterMat it_(Z, i); it_; ++it_){
+
+      ycorr_map(it_.index()) += it_.value() * (b_temp-estimates(i)); 
+
+      }
+
+  }
+
+}
 
 
 
