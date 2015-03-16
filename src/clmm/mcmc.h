@@ -372,6 +372,8 @@ void MCMC<F>::gibbs(Progress * prog) {
 //    if (omp_get_thread_num() == 0) R_CheckUserInterrupt();
 //    if(!multiple_phenos) R_CheckUserInterrupt();
       if ( ! Progress::check_abort() ) {
+      	
+        prog->increment();
 // timings
 //    if(timings) t0 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
         if(timings) gettimeofday(&t0, NULL);
@@ -415,12 +417,6 @@ void MCMC<F>::gibbs(Progress * prog) {
 
       }
 
-//    if (verbose) {
-
-//      prog.DoProgress();
-      prog->increment();
-
-//    }
 
 // timings
       if(timings) {
