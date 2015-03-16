@@ -213,6 +213,8 @@ if(length(y)>1) {
   
 }
 
+# for CV timings is not a good thing
+if(length(y) > 1) timings = FALSE
 
 for(i in 1:length(y)) {
 

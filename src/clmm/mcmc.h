@@ -63,6 +63,7 @@ typedef std::vector<std::map<std::string, int> > mp_container;
 // #include "R_sampler.h"
 //#endif
 
+#include "mcmc_abstract.h"
 #include "mt_sampler.h"
 #include "effects.h"
 #include "../printer.h"
@@ -72,12 +73,13 @@ typedef std::vector<std::map<std::string, int> > mp_container;
 // tradidtional C-Way:
 #include <sys/time.h>
 
+
 ////////////////
 // MCMC class //
 ////////////////
 
 template<class F>
-class MCMC {
+class MCMC : public MCMC_abstract {
 
 private:
 
@@ -139,7 +141,10 @@ public:
   double mean_time_per_iter;
 
 //  void populate(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
+  int get_niter() { return niter; };
+  bool get_verbose() { return verbose; };
   inline void initialize();
+  inline void gibbs(Progress * prog);
   inline void gibbs();
   inline void summary();
   std::string get_name();
@@ -267,7 +272,6 @@ MCMC<F>::MCMC(const MCMC& mcmc_source) {
 
 */
 
-
 template<class F>
 void MCMC<F>::initialize() {
 
@@ -336,9 +340,6 @@ for(int i=0;i<n_threads;i++) {
   }
 
 
-//  Rcout << endl << "MCMC I am single_thread" << endl;
-
-
 // initializing effects
 
     for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
@@ -352,49 +353,133 @@ for(int i=0;i<n_threads;i++) {
 
 }
 
+// gibbs for single run (just needed for verbosing stuff)
+
+template<class F>
+void MCMC<F>::gibbs(Progress * prog) {
+
+  if(!initialized) initialize();
+
+  vector<effects>::iterator it;  
+
+//  printer prog(niter);
+//  Progress prog(niter, verbose);
+//  if(verbose) { prog.initialize(); }
+
+    for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
+
+// check for interrupt from R
+//    if (omp_get_thread_num() == 0) R_CheckUserInterrupt();
+//    if(!multiple_phenos) R_CheckUserInterrupt();
+      if ( ! Progress::check_abort() ) {
+// timings
+//    if(timings) t0 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
+        if(timings) gettimeofday(&t0, NULL);
+
+        for(it = model_effects.begin(); it != model_effects.end(); it++) {
+
+          it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
+
+        }
+
+        for(it = model_effects.begin(); it != model_effects.end(); it++) {
+
+          it->sample_variance(mcmc_sampler, gibbs_iter);
+
+        }
+
+// sample residual variance
+
+     var_e = (ycorr.matrix().squaredNorm() + scale_e * df_e) / mcmc_sampler.rchisq(n + df_e);
+     mean_var_e(gibbs_iter)=var_e;
+
+// residual noise to NAs -- Reference: de los Campos (2009) - BLR
+      if(has_na) {
+     
+        for (unsigned int i=0;i<isna.size();i++) {ycorr(isna[i]) = mcmc_sampler.rnorm(0,sqrt(var_e));}
+
+      }
+
+// posterior means
+
+      if(gibbs_iter > (burnin - 1)) {
+
+        for(it = model_effects.begin(); it != model_effects.end(); it++) {
+
+          it->update_means();
+
+        }
+
+      post_var_e += var_e;
+      effiter++;
+
+      }
+
+//    if (verbose) {
+
+//      prog.DoProgress();
+      prog->increment();
+
+//    }
+
+// timings
+      if(timings) {
+
+//      t1 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
+//      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0; //FIXME TIMING
+        gettimeofday(&t1, NULL);
+// taken from here: http://stackoverflow.com/questions/16764276/measuring-time-in-millisecond-precision
+        time_temp = (t1.tv_sec - t0.tv_sec) + (t1.tv_usec - t0.tv_usec) / 1000000.0;
+        mean_time_per_iter += time_temp;
+        Rcpp::Rcout << std::endl 
+                    << " Iteration: |"   << gibbs_iter + 1 
+//                  << "|  var_e: |"     << var_e  
+                    << "|  secs/iter: |" << time_temp
+                    << "|"               << std::endl;
+
+      }
+
+    }
+
+  } 
+
+}
+
+
+// gibbs for multiple phenos run (just needed for verbosing stuff)
 
 template<class F>
 void MCMC<F>::gibbs() {
 
-if(!initialized) initialize();
+  if(!initialized) initialize();
 
-vector<effects>::iterator it;  
-
-  printer prog(niter);
-  if(verbose) { prog.initialize(); }
+  vector<effects>::iterator it;  
 
   for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
 
-// check for interrupt from R
-    if (omp_get_thread_num() == 0) R_CheckUserInterrupt();
-
-// timings
-//    if(timings) t0 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
-    if(timings) gettimeofday(&t0, NULL);
     for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-    it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
+      it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
 
     }
 
     for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-    it->sample_variance(mcmc_sampler, gibbs_iter);
+      it->sample_variance(mcmc_sampler, gibbs_iter);
 
     }
-
-
 
 // sample residual variance
 
-   var_e = (ycorr.matrix().squaredNorm() + scale_e * df_e) / mcmc_sampler.rchisq(n + df_e);
-   mean_var_e(gibbs_iter)=var_e;
+    var_e = (ycorr.matrix().squaredNorm() + scale_e * df_e) / mcmc_sampler.rchisq(n + df_e);
+    mean_var_e(gibbs_iter)=var_e;
 
 // residual noise to NAs -- Reference: de los Campos (2009) - BLR
-    if(has_na) 
-     {
-       for (unsigned int i=0;i<isna.size();i++) {ycorr(isna[i]) = mcmc_sampler.rnorm(0,sqrt(var_e));}
-     }
+    if(has_na) {
+     
+      for (unsigned int i=0;i<isna.size();i++) ycorr(isna[i]) = mcmc_sampler.rnorm(0,sqrt(var_e));
+
+    }
 
 // posterior means
 
@@ -402,7 +487,7 @@ vector<effects>::iterator it;
 
       for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-      it->update_means();
+        it->update_means();
 
       }
 
@@ -411,37 +496,10 @@ vector<effects>::iterator it;
 
     }
 
-    if (verbose) {
-
-      prog.DoProgress();
-
-    }
-
-// timings
-    if(timings) {
-
-//      t1 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
-//      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0; //FIXME TIMING
-      gettimeofday(&t1, NULL);
-// taken from here: http://stackoverflow.com/questions/16764276/measuring-time-in-millisecond-precision
-      time_temp = (t1.tv_sec - t0.tv_sec) + (t1.tv_usec - t0.tv_usec) / 1000000.0;
-      mean_time_per_iter += time_temp;
-      Rcpp::Rcout << std::endl 
-                  << " Iteration: |"   << gibbs_iter + 1 
-//                << "|  var_e: |"     << var_e  
-                  << "|  secs/iter: |" << time_temp
-                  << "|"               << std::endl;
-
-    }
-
-//    if(verbose) { Rcout << endl << "Iteration: " << gibbs_iter << "   s2e: " << var_e; }
-
-  }
-
-//  if(verbose) { Rcout << endl; }
-
+  } 
 
 }
+
 
 
 template<class F>

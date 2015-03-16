@@ -255,7 +255,7 @@ void base_methods_mp::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, Vector
 /////////////////
 
 
-class base_methods_st_BLAS: public base_methods_abstract {
+class base_methods_BLAS: public base_methods_abstract {
 public:
 inline void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns);
 inline void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns);
@@ -265,7 +265,7 @@ inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estima
 };
 
 
-void base_methods_st_BLAS::initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns){
+void base_methods_BLAS::initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns){
 
   xtx = VectorXd(Z.cols());
   xtx = Z.colwise().squaredNorm();
@@ -274,7 +274,7 @@ void base_methods_st_BLAS::initialize(MapMatrixXd& Z, VectorXd& xtx, int& column
 }
 
 
-void base_methods_st_BLAS::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns){
+void base_methods_BLAS::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns){
 
   xtx = VectorXd(Z.cols());
 // the loop is necessary as Eigen::Sparse doesnt support colwise() 
@@ -284,7 +284,7 @@ void base_methods_st_BLAS::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& 
 };
 
 
-void base_methods_st_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
 
 
   double b_temp,rhs,lhs,inv_lhs,mean;
@@ -320,7 +320,7 @@ void base_methods_st_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorX
 
 
 // sparse specialization
-void base_methods_st_BLAS::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_BLAS::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
 
   double b_temp,rhs,lhs,inv_lhs,mean;
 // FIXME the pointer to ycorr is a very crucial part

@@ -41,7 +41,8 @@
   #define omp_get_thread_num() 0
 #endif
 
-#include "printer.h"
+//#include "printer.h"
+#include <progress.hpp>
 
 
 using namespace Rcpp;
@@ -126,9 +127,17 @@ initialized=1;
 
 template<class T> void GWA<T>::run_GWAS(){
 
-MapMatrixXd M = MapMatrixXd(as<MapMatrixXd> (M_R));
-T V = T(as<T> (V_R));
-MapMatrixXd V2 = MapMatrixXd(as<MapMatrixXd> (V2_R));
+  MapMatrixXd M = MapMatrixXd(as<MapMatrixXd> (M_R));
+  T V = T(as<T> (V_R));
+  MapMatrixXd V2 = MapMatrixXd(as<MapMatrixXd> (V2_R));
+
+
+// for verbose
+  int n_threads = omp_get_num_threads();
+  int max = M.cols() / n_threads;
+  if(max < 1) max = 1;
+  Progress prog(max, verbose);
+//  printer prog(max); 
 
 
 #pragma omp parallel
@@ -151,59 +160,59 @@ MapMatrixXd V2 = MapMatrixXd(as<MapMatrixXd> (V2_R));
   xtx.block(0,0,Xstar.cols(),Xstar.cols()) = Xstar.transpose()*Xstar;
   xty.segment(0,Xstar.cols()) = Xstar.transpose()*ystar;
 
-// for verbose
-  int n_threads = omp_get_num_threads();
-  int max = M.cols() / n_threads;
-  if(max < 1) max = 1;
-  printer prog(max); 
+
+
 
   
 #pragma omp for
   for(int i=0;i<M.cols();i++){
 
+    if ( ! Progress::check_abort() ) {
+
 // this is for emmax - we need to perform the transformation: U'X on the markers before V2inv*Marker
-    if(second_transform){
-      X_marker.col(0) = V * (V2 * M.col(i));
-      if(dom) {X_marker.col(1) = V * (V2 * (1.0 - abs(M.col(i).array())).matrix());}
-    } else {
-        X_marker.col(0) = V * M.col(i);
-        if(dom) {X_marker.col(1) = V * (1.0 - abs(M.col(i).array())).matrix();}
-      }
+      if(second_transform){
+        X_marker.col(0) = V * (V2 * M.col(i));
+        if(dom) {X_marker.col(1) = V * (V2 * (1.0 - abs(M.col(i).array())).matrix());}
+      } else {
+          X_marker.col(0) = V * M.col(i);
+          if(dom) {X_marker.col(1) = V * (1.0 - abs(M.col(i).array())).matrix();}
+        }
 
-    xtx_temp = X_marker.transpose()*Xstar;
-    xtx.block(Xstar.cols(),Xstar.cols(),number_effects,number_effects) = X_marker.transpose()*X_marker;
-    xtx.block(Xstar.cols(),0,number_effects,Xstar.cols()) = xtx_temp;
-    xtx.block(0,Xstar.cols(),Xstar.cols(),number_effects) = xtx_temp.transpose();
-    xty.segment(Xstar.cols(),number_effects) = X_marker.transpose()*ystar;
+      xtx_temp = X_marker.transpose()*Xstar;
+      xtx.block(Xstar.cols(),Xstar.cols(),number_effects,number_effects) = X_marker.transpose()*X_marker;
+      xtx.block(Xstar.cols(),0,number_effects,Xstar.cols()) = xtx_temp;
+      xtx.block(0,Xstar.cols(),Xstar.cols(),number_effects) = xtx_temp.transpose();
+      xty.segment(Xstar.cols(),number_effects) = X_marker.transpose()*ystar;
 
-    xtx_inv = xtx.inverse();
-    b = xtx_inv*xty;
-    e = ystar - Xstar*b.segment(0,Xstar.cols()) - X_marker*b.segment(Xstar.cols(),number_effects);
-    res_se = e.squaredNorm()/df;
-    se.row(i) = (xtx_inv.diagonal().segment(Xstar.cols(),number_effects).array() * res_se).sqrt();
+      xtx_inv = xtx.inverse();
+      b = xtx_inv*xty;
+      e = ystar - Xstar*b.segment(0,Xstar.cols()) - X_marker*b.segment(Xstar.cols(),number_effects);
+      res_se = e.squaredNorm()/df;
+      se.row(i) = (xtx_inv.diagonal().segment(Xstar.cols(),number_effects).array() * res_se).sqrt();
 
-    for(int j = 0;j<number_effects;j++){
+      for(int j = 0;j<number_effects;j++){
 
 // this is the one exception to the rule not to call R-functions in C++. R::pt has no 
 // side effects, so it is safe to call it here
-      p_value(i,j) = R::pt(abs(b(Xstar.cols()+j))/se(i,j),df,0,0) * 2.0;
-      beta(i,j) = b(Xstar.cols()+j);
+        p_value(i,j) = R::pt(abs(b(Xstar.cols()+j))/se(i,j),df,0,0) * 2.0;
+        beta(i,j) = b(Xstar.cols()+j);
 
-      }  
+        }  
 
+      prog.increment();
 
-    if(omp_get_thread_num()==0) {
+//    if(omp_get_thread_num()==0) {
 
 // check for interrupt from R
-      R_CheckUserInterrupt();
+//      R_CheckUserInterrupt();
 
-      if (verbose) {
+//      if (verbose) {
 
-        prog.DoProgress();
+//        prog.DoProgress();
 
-      }
+ //     }
 
-    }
+ //   }
 
 
 //    if(omp_get_thread_num()==0) {
@@ -213,7 +222,9 @@ MapMatrixXd V2 = MapMatrixXd(as<MapMatrixXd> (V2_R));
 //        }
 //      }  
 
-    }
+      }
+
+    } 
 
   }
 
