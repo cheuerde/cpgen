@@ -103,29 +103,29 @@ SEXP eigensolver(SEXP XR, SEXP yR, SEXP threadsR) {
   MapMatrixXd sol_map(sol.begin(),n,p);
 
 // only use omp if threads > 1
-mp_container thread_vec;
-int n_threads;
-int who;
+  mp_container thread_vec;
+  int n_threads;
+  int who;
 
-if(threads >1) {
+  if(threads >1) {
 
 // container to store start and length for OpenMP threads - Credit: Hao Cheng (Iowa State University)
 // get the number of threads
 #pragma omp parallel
 {
-if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
+  if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
 }
 
-thread_vec = mp_container(n_threads);
+  thread_vec = mp_container(n_threads);
 
-for(int i=0;i<n_threads;i++) {
+  for(int i=0;i<n_threads;i++) {
 
-  thread_vec.at(i)["start"] = i * p / n_threads;
-  if(i==(n_threads-1)){thread_vec.at(i)["end"] = p;} else {
-  thread_vec.at(i)["end"] = (i+1) * p / n_threads;}
-  thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
+    thread_vec.at(i)["start"] = i * p / n_threads;
+    if(i==(n_threads-1)){thread_vec.at(i)["end"] = p;} else {
+    thread_vec.at(i)["end"] = (i+1) * p / n_threads;}
+    thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
 
-}
+  }
 
 #pragma omp parallel private(who)
 { 
@@ -153,11 +153,11 @@ SEXP ccolmv(SEXP XR, SEXP varR)
 
   T1 X(Rcpp::as<T1> (XR));
   bool var = Rcpp::as<bool>(varR);
-  uint64_t p = X.cols();
-  uint64_t n = X.rows();
+  size_t p = X.cols();
+  size_t n = X.rows();
   Rcpp::NumericVector mu(p);
 
-  for(uint64_t i=0;i < p; ++i) {
+  for(size_t i=0;i < p; ++i) {
 
     mu(i) = X.col(i).sum() / n;
 
@@ -165,7 +165,7 @@ SEXP ccolmv(SEXP XR, SEXP varR)
 
   if(var) {
 
-    for(uint64_t i=0;i < p; ++i) {
+    for(size_t i=0;i < p; ++i) {
 
 
       mu(i) = (X.col(i).array() - mu(i)).matrix().squaredNorm() / (n - 1);
@@ -201,6 +201,7 @@ RcppExport SEXP cgrm(SEXP XR,SEXP wR, SEXP iswR, SEXP lambdaR, SEXP threadsR);
 RcppExport SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR);
 RcppExport SEXP csolve(SEXP XR, SEXP yR, SEXP threadsR);
 RcppExport SEXP csolve_sparse(SEXP XR, SEXP yR, SEXP threadsR);
+RcppExport SEXP cinverse_dense(SEXP XR);
 RcppExport SEXP cmaf(SEXP Xa);
 RcppExport SEXP ccolmv_dense(SEXP XR,SEXP varR);
 RcppExport SEXP ccolmv_sparse(SEXP XR,SEXP varR);

@@ -316,6 +316,7 @@ SEXP cgrm(SEXP XR,SEXP wR, SEXP iswR, SEXP lambdaR, SEXP threadsR){
 }
 
 
+
 // ccross
 
 
@@ -359,6 +360,23 @@ SEXP csolve_sparse(SEXP XR, SEXP yR, SEXP threadsR) {
 }
 
 
+// just for a dense inverse
+SEXP cinverse_dense(SEXP XR) {
+
+  Rcpp::NumericMatrix XRcpp(XR);
+  Eigen::Map<Eigen::MatrixXd> X(XRcpp.begin(), XRcpp.rows(), XRcpp.cols());
+
+  Rcpp::NumericMatrix G_out(X.rows(),X.rows());
+  Eigen::Map<Eigen::MatrixXd> G(G_out.begin(),X.rows(),X.rows());
+  G.setIdentity();
+
+  X.selfadjointView<Eigen::Lower>().llt().solveInPlace(G);
+
+  return G_out;
+
+}
+
+
 
 // cmaf
 
@@ -398,15 +416,15 @@ SEXP ccolmv_sparse(SEXP XR,SEXP varR){
        
 
   bool var = Rcpp::as<bool>(varR);
-  uint64_t n = X.rows();
-  uint64_t p = X.cols();
-  uint64_t innerSize;
-  uint64_t rowindex;
+  size_t n = X.rows();
+  size_t p = X.cols();
+  size_t innerSize;
+  size_t rowindex;
 
   Rcpp::NumericVector mu(p);
   double temp;
 
-  for(uint64_t i=0;i < p; ++i) {
+  for(size_t i=0;i < p; ++i) {
 
     temp = 0;
     innerSize = OuterStarts[i+1] - OuterStarts[i];
@@ -423,7 +441,7 @@ SEXP ccolmv_sparse(SEXP XR,SEXP varR){
 
   if(var) {
 
-    for(uint64_t i=0;i < p; ++i) {
+    for(size_t i=0;i < p; ++i) {
 
       temp = 0;
       innerSize = OuterStarts[i+1] - OuterStarts[i];

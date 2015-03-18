@@ -91,23 +91,38 @@ csolve <- function(X,y=NULL){
 
  allowed=c("matrix","numeric", "array", "dgCMatrix")
  a = class(X)
- if(is.null(y)) y = diag(nrow(X)) 
- b = class(y)
- 
- if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'array', 'dgCMatrix'") 
- if(!b%in%allowed[c(1,2,3)]) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
- if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
 
- if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
- if(is.vector(y) | is.array(y)) { y = as.matrix(y); b = "matrix" } 
+# this is just the dense inverse
+ if(a == "matrix" & is.null(y) & get_num_threads()==1) {
 
- if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
+   .Call( "cinverse_dense", X, PACKAGE = "cpgen" ) 
 
- if(a == "matrix") {
-   .Call( "csolve", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
  } else {
-     .Call( "csolve_sparse", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
-   }
+
+
+     if(is.null(y)) y = diag(nrow(X)) 
+     b = class(y)
+ 
+     if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'array', 'dgCMatrix'") 
+     if(!b%in%allowed[c(1,2,3)]) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
+     if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
+
+     if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
+     if(is.vector(y) | is.array(y)) { y = as.matrix(y); b = "matrix" } 
+
+     if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
+
+     if(a == "matrix") {
+
+       .Call( "csolve", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
+
+     } else {
+
+         .Call( "csolve_sparse", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
+
+       }
+
+  }
 
 }
 
@@ -156,7 +171,7 @@ cgrm <- function(X, w = NULL, lambda=0){
            vars = ccolmv(X,var=T)
            var_zero = sum(vars==0)
            if(var_zero>0) {
-             cat(paste(var_zero," Columns with zero variance (non-polymorphic) omitted - this triggers a copy of X\n",sep=""))
+             cat(paste(var_zero," Columns with zero variance (non-polymorphic) omitted\n",sep=""))
 	     X = X[,vars>0]
 	     w = w[vars>0]
            }
