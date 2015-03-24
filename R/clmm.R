@@ -335,7 +335,44 @@ return(1)
 
 
 
+#### function for window-variance GWAS
 
+cGWAS.BR <- function(mod, M, window_size, threshold, verbose=TRUE) {
+
+niter = mod$mcmc$niter
+burnin = mod$mcmc$burnin
+n_windows = as.integer(ncol(M) / window_size)
+ 
+posterior = mod[[4]]$posterior$estimates[(burnin+1):niter,]
+
+genetic_values = tcrossprod(M, posterior)
+genetic_variance = apply(genetic_values,2,var)
+
+res = array(0, dim=c(n_windows,4))
+colnames(res) <- c("window","mean_var","mean_var_proportion","prob_var_bigger_threshold")
+end=0
+
+for(i in 1:n_windows) {
+
+  if(verbose) print(paste("window: ", i, " out of ", n_windows,sep=""))
+  start = end + 1
+  end = end + window_size
+  if(i == n_windows) end = ncol(M)  
+  window_genetic_values = tcrossprod(M[,start:end], posterior[,start:end])
+  window_genetic_variance = apply(window_genetic_values,2,var)
+  post_var_proportion = window_genetic_variance / genetic_variance
+  
+
+  res[i,"window"] = i
+  res[i,"mean_var"] = mean(window_genetic_variance)
+  res[i,"mean_var_proportion"] = mean(post_var_proportion)
+  res[i,"prob_var_bigger_threshold"] = sum(post_var_proportion > threshold) / nrow(posterior)
+
+}
+
+return(res)
+
+}
 
 
 
