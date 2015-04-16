@@ -37,7 +37,6 @@
 //    a Mersenne-Twister Engine and distribution functions (adopted from the Boost-libraries). 
 // 
 
-#include <RcppParallel.h>
 #include "clmm.h"
 
 //#include "printer.h"
