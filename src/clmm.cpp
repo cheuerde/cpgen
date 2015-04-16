@@ -60,8 +60,6 @@ omp_set_num_threads(threads);
 Eigen::setNbThreads(1);
 Eigen::initParallel();
 
-tbb::task_scheduler_init init(threads);
-
 int max = p / threads;
 if(max < 1) max = 1;
 //printer prog(max);
