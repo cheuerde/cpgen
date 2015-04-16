@@ -21,6 +21,10 @@
 // <http://www.gnu.org/licenses/>.
 */
 
+#include <R_ext/Lapack.h>
+#include <thread>
+#include "ThreadPool.h"
+
 using namespace Eigen;
 using namespace Rcpp;
 using namespace std;

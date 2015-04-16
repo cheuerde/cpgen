@@ -22,7 +22,6 @@
 */
 
 #include "base_methods_abstract.h"
-#include <R_ext/Lapack.h>
 
 using namespace Eigen;
 using namespace Rcpp;
@@ -339,7 +338,164 @@ void base_methods_BLAS::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, Vect
 }
 
 
+///////////////////////
+/// C++11 threads /////
+//////////////////////
 
+inline double dot_cpp_threads(Eigen::Map<Eigen::MatrixXd> &Z, Eigen::Map<Eigen::VectorXd> &y, int col, int start, int length) {
+
+      MapVectorXd x_mp(MapVectorXd(&Z(start,col),length,1));
+      MapVectorXd y_mp(MapVectorXd(&y(start),length)); 
+      return x_mp.dot(y_mp);
+
+}
+
+inline void axpy_cpp_threads(Eigen::Map<Eigen::MatrixXd> &Z, Eigen::Map<Eigen::VectorXd> &y, double b_adj, int col, int start, int length) {
+
+      MapVectorXd x_mp(MapVectorXd(&Z(start,col),length,1));
+      MapVectorXd y_mp(MapVectorXd(&y(start),length)); 
+      y_mp += x_mp * b_adj;
+
+}
+
+
+class base_methods_mp_cpp_threads: public base_methods_abstract {
+public:
+inline void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns);
+inline void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns);
+inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
+inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
+
+};
+
+
+void base_methods_mp_cpp_threads::initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns){
+
+  xtx = VectorXd(Z.cols());
+//#pragma omp parallel for
+  for(int i=0;i<Z.cols();i++) { xtx(i) = Z.col(i).squaredNorm(); }
+  columns = Z.cols();
+
+}
+
+
+void base_methods_mp_cpp_threads::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns){
+
+  xtx = VectorXd(Z.cols());
+// the loop is necessary as Eigen::Sparse doesnt support colwise() 
+//#pragma omp parallel for
+  for(int i=0;i<Z.cols();i++) { xtx(i) = Z.col(i).squaredNorm(); }
+  columns = Z.cols();
+
+}
+
+
+void base_methods_mp_cpp_threads::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+
+
+  double b_temp,rhs,lhs,inv_lhs,mean;
+  int n_threads = thread_vec.size();
+  MapVectorXd ycorr_map(ycorr,Z.rows());
+  double b_adj;
+  size_t start,length;
+//  std::vector<std::thread> workers(n_threads);  
+  Eigen::VectorXd sum_vec(n_threads);
+//  ThreadPool pool(n_threads);
+  tbb::task_arena limited(n_threads);
+  tbb::task_group g;
+  int col;
+
+
+  for(int i=0;i<Z.cols();i++) { 
+
+    b_temp=estimates(i);
+
+// using c++11 threads for parallel dot product
+    for(int t=0; t < n_threads; ++t) {
+
+      start = thread_vec.at(t)["start"];
+      length = thread_vec.at(t)["length"];
+      limited.enqueue([&] {g.run([&Z, &ycorr_map, &sum_vec, t, i, start, length](){
+
+        sum_vec(t) = Z.col(i).segment(start,length).dot(ycorr_map.segment(start,length));
+//        sum_vec(i) = dot_cpp_threads(Z, ycorr_map, i, start, length);});
+
+      });});
+
+    }
+
+      
+
+    limited.execute([&]{ g.wait(); });    
+        
+    rhs = sum_vec.sum() + xtx(i) * b_temp;
+//    rhs = Z.col(i).dot(ycorr_map) + xtx(i) *b_temp;
+    lhs = xtx(i) + *var_e / var(i);
+    inv_lhs = 1.0 / lhs;
+    mean = inv_lhs*rhs;
+    estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
+    b_adj = b_temp - estimates(i);
+
+// using c++11 threads for parallel axpy
+    for(int t=0; t < n_threads; ++t) {
+
+      start = thread_vec.at(t)["start"];
+      length = thread_vec.at(t)["length"];
+      limited.enqueue([&] {g.run([&Z, &ycorr_map, b_adj, t, i, start, length](){
+
+        ycorr_map.segment(start, length) += Z.col(i).segment(start,length) * b_adj;
+//        axpy_cpp_threads(Z, ycorr_map, b_adj, i, start, length);});
+   
+      });});
+
+    }
+
+    limited.execute([&]{ g.wait(); });  
+
+//    ycorr_map += Z.col(i) * b_adj;
+ 
+
+  }
+
+}
+
+
+
+// sparse specialization
+void base_methods_mp_cpp_threads::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+
+  double b_temp,rhs,lhs,inv_lhs,mean;
+  MapVectorXd ycorr_map(ycorr,Z.rows());
+  double b_adj;
+
+  for(int i=0;i<Z.cols();i++) { 
+
+    b_temp=estimates(i);
+    rhs=0;
+
+// Iterate over the non-zero values in the i-th column of Z
+    for (InIterMat it_(Z, i); it_; ++it_){
+
+      rhs += it_.value() * ycorr_map(it_.index()); 
+
+    }
+
+    rhs += xtx(i) * b_temp;
+    lhs = xtx(i) + *var_e / var(i);
+    inv_lhs = 1.0 / lhs;
+    mean = inv_lhs*rhs;
+    estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
+    b_adj = b_temp - estimates(i);
+
+    for (InIterMat it_(Z, i); it_; ++it_){
+
+      ycorr_map(it_.index()) += it_.value() * b_adj; 
+
+    }
+
+  }
+
+}
 
 
 

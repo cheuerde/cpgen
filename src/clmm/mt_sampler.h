@@ -45,6 +45,12 @@ public:
 
   };
 
+  int rbinom(size_t trials, double prob){
+
+    return std::binomial_distribution<int>(trials, prob)(gen);
+
+  };
+
 
 
   void set_seed(std::string string_seed){

@@ -155,7 +155,7 @@ public:
    MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, 
    SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
 //   MCMC(const MyString& mcmc_source);
-  ~MCMC(){ delete my_base_functions; };
+  ~MCMC(){ delete my_base_functions;};
 
 };
 
@@ -209,6 +209,7 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
   var_y=0;
   isna = vector<int>();
   model_effects = vector<effects>();
+
   initialized = false;
 
 }
@@ -281,7 +282,6 @@ void MCMC<F>::initialize() {
 // derived class
 
   delete my_base_functions;
-
   my_base_functions = new F; 
 
 //  isna.clear();

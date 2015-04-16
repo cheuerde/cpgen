@@ -37,8 +37,9 @@
 //    a Mersenne-Twister Engine and distribution functions (adopted from the Boost-libraries). 
 // 
 
-
+#include <RcppParallel.h>
 #include "clmm.h"
+
 //#include "printer.h"
 
 typedef vector<MCMC<base_methods_st> > mcmc_st;
@@ -60,6 +61,8 @@ omp_set_num_threads(threads);
 Eigen::setNbThreads(1);
 Eigen::initParallel();
 
+tbb::task_scheduler_init init(threads);
+
 int max = p / threads;
 if(max < 1) max = 1;
 //printer prog(max);
@@ -73,12 +76,10 @@ Rcpp::List Summary;
 
 bool multiple_phenos = false;
 
-
 // CV
 if(p > 1) {
 
   multiple_phenos = true;
-
 // fill the container with mcmc_objects
   for(int i=0;i<p;i++) {
   
@@ -95,21 +96,20 @@ if(p > 1) {
 //  if ((p > 1) & verbose) { prog.initialize(); }
 
 // this looks easy - the work was to allow this step to be parallelized
-
 // verbose
   Progress * prog = new Progress(vec_mcmc_st.size(), verbose);
 
 #pragma omp parallel for 
-  for(unsigned int i=0;i<vec_mcmc_st.size();i++){
+      for(unsigned int i=0;i<vec_mcmc_st.size();i++){
 
-    if ( ! Progress::check_abort() ) {
+        if ( ! Progress::check_abort() ) {
 
-      vec_mcmc_st.at(i).gibbs();
-      prog->increment();
+          vec_mcmc_st.at(i).gibbs();
+          prog->increment();
 
-    }
+        }
 
-  }
+      }
 
 
   for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
@@ -125,7 +125,6 @@ if(p > 1) {
 
 
 } else {
-
 
 // Dont know whether it is possible to control threads for OMP and BLAS seperately
 // Single Model Run
@@ -153,6 +152,7 @@ if(p > 1) {
 
     single_mcmc->initialize();
     Progress * prog = new Progress(single_mcmc->get_niter() , single_mcmc->get_verbose());
+//    single_mcmc->gibbs(prog);
     single_mcmc->gibbs(prog);
     single_mcmc->summary();
     Summary[single_mcmc->get_name()] = single_mcmc->get_summary();  
@@ -162,6 +162,7 @@ if(p > 1) {
     summary_out = Summary;
   
   }
+
 
     
 ////////////

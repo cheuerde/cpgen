@@ -291,6 +291,28 @@ ccross <- function(X,D=NULL){
 }
    
 
+# cscale_inplace
+
+cscale_inplace <- function(X,means=NULL, vars=NULL, scale=FALSE){
+
+   if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+   if(anyNA(X)) stop("No NAs allowed in X")
+
+   if(is.null(means))  means = ccolmv(X)
+   if(!is.vector(means) | !is.numeric(means)) stop("'means' must be passed as a numeric vector")
+   if(length(means)!=ncol(X)) stop("vector 'means' must have as many items as columns in X") 
+   if(anyNA(means)) stop("vector 'means' has NAs") 
+
+   if(is.null(vars)) if(scale) { vars = ccolmv(X,var=T) } else { vars = rep(1,ncol(X)) } 
+   if(!is.vector(vars) | !is.numeric(vars)) stop("'vars' must be passed as a numeric vector") 
+   if(length(vars)!=ncol(X)) stop("vector 'vars' must have as many items as columns in X") 
+   if(anyNA(vars)) stop("vector 'vars' has NAs") 
+   if(any(vars==0)) stop("vector 'vars' has zeros") 
+
+   ans <- .Call( "cscale_inplace", X, means, vars, scale, options()$cpgen.threads, PACKAGE = "cpgen" )
+}
+   
+
 
 # Symmetrix Matrix Power operator %^% - taken from: http://stackoverflow.com/questions/16172731/how-to-compute-the-power-of-a-matrix-in-r
 

@@ -342,6 +342,7 @@ SEXP ccross(SEXP Xa, SEXP Da, SEXP threadsR){
 
 
 
+
 // csolve
 
 
@@ -464,6 +465,48 @@ SEXP ccolmv_sparse(SEXP XR,SEXP varR){
   return mu;
   
 }
+
+// cscale_inplace
+
+SEXP cscale_inplace(SEXP Xa, SEXP meansR, SEXP varsR, SEXP scaleR, SEXP threadsR){
+
+
+  int nt = Rcpp::as<int>(threadsR);
+  bool scale = Rcpp::as<bool>(scaleR);
+  omp_set_num_threads(nt);
+  Eigen::setNbThreads(1);
+  Eigen::initParallel();
+
+  Eigen::Map<Eigen::MatrixXd> X(Rcpp::as<Eigen::Map<Eigen::MatrixXd> >(Xa));
+  size_t p = X.cols();
+  Eigen::Map<Eigen::RowVectorXd> means(Rcpp::NumericVector(meansR).begin(), p);
+  Eigen::Map<Eigen::RowVectorXd> vars(Rcpp::NumericVector(varsR).begin(), p);
+
+# pragma omp parallel for
+  for(size_t i=0; i< X.cols(); ++i){
+
+    X.col(i).array() -= means(i);
+
+  }
+
+
+//  X.rowwise() -= means;
+  if(scale){
+
+# pragma omp parallel for
+    for(size_t i=0; i< X.cols(); ++i){
+
+      X.col(i).array() /= sqrt(vars(i));
+
+    }
+
+  }
+  
+   return Rcpp::wrap(0);
+
+}
+
+
 
 
 // cSSBR_impute

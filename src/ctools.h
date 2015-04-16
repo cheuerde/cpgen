@@ -205,6 +205,7 @@ RcppExport SEXP cinverse_dense(SEXP XR);
 RcppExport SEXP cmaf(SEXP Xa);
 RcppExport SEXP ccolmv_dense(SEXP XR,SEXP varR);
 RcppExport SEXP ccolmv_sparse(SEXP XR,SEXP varR);
+RcppExport SEXP cscale_inplace(SEXP Xa, SEXP meansR, SEXP varsR, SEXP scaleR, SEXP threadsR);
 RcppExport SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR);
 
 #endif
