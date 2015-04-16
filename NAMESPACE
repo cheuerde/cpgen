@@ -1,7 +1,7 @@
 useDynLib(cpgen)
 #exportPattern("^[[:alpha:]]+")
 #importFrom(Rcpp, evalCpp)
-importFrom(RcppParallel, RcppParallelLibs)
+#importFrom(RcppParallel, RcppParallelLibs)
 import(Matrix)
 import(pedigreemm)
 

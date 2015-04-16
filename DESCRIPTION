@@ -9,6 +9,6 @@ Description: Frequently used methods in genomic applications with emphasis on pa
 License: GPL (>= 2)
 SystemRequirements: C++11
 Imports: RcppParallel
-Depends: R(>= 3.1.0), Matrix(>= 1.0-5), pedigreemm(>= 0.3-3), RcppParallel(>= 4.3.6)
-LinkingTo: Rcpp, RcppEigen, RcppProgress, RcppParallel
+Depends: R(>= 3.1.0), Matrix(>= 1.0-5), pedigreemm(>= 0.3-3)
+LinkingTo: Rcpp, RcppEigen, RcppProgress
 Packaged: 2014-06-08 15:25:55 UTC; tower
