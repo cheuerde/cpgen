@@ -263,6 +263,7 @@ return(cor(mean_pred,y,use="pairwise.complete.obs"))
 cGBLUP <- function(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,niter = 10000, burnin = 5000, seed = NULL, verbose=TRUE){
 
 isy <- (1:length(y))[!is.na(y)]
+if(length(y) != nrow(G)) stop("dimension of y and G dont match")
 
 if(verbose) cat("\nComputing Eigen Decomposition\n")
 
