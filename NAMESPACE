@@ -31,3 +31,6 @@ export("%c%")
 export("%**%") 
 export("cSSBR")
 export("cSSBR.setup")
+# temp
+export(".ls.objects")
+export("lsos")
