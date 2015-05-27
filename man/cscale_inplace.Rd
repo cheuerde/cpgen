@@ -14,8 +14,8 @@ ccov(X, means = NULL, vars = NULL, scale=FALSE)
 
 \arguments{
   \item{X}{numeric matrix}
-  \item{means}{numeric vector, if ommitted will be computed using \link{\code{ccolmv}}}
-  \item{vars}{numeric vector, if ommitted will be computed using \link{\code{ccolmv}}}
+  \item{means}{numeric vector, if ommitted will be computed using code{ccolmv}}
+  \item{vars}{numeric vector, if ommitted will be computed using \code{ccolmv}}
   \item{scale}{boolean - scale the matrix}
 }
 
