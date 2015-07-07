@@ -64,7 +64,8 @@ void function_fixed<T>::initialize(base_methods_abstract*& base_fun,VectorXd& xt
 template<class T>
 void function_fixed<T>::sample_effects(base_methods_abstract*& base_fun,VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec) {
 
-  base_fun->sample_effects(design_matrix,xtx,estimates,ycorr,var,var_e, mcmc_sampler, thread_vec);
+
+  base_fun->sample_effects(design_matrix,xtx,estimates,ycorr,var,var_e, mcmc_sampler, thread_vec, 0.0);
 
 }
 

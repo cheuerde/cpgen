@@ -31,8 +31,8 @@ class base_methods_st: public base_methods_abstract {
 public:
 inline void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns);
 inline void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns);
-inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
-inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
+inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1);
+inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1);
 
 };
 
@@ -56,7 +56,7 @@ void base_methods_st::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& colum
 };
 
 
-void base_methods_st::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_st::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec, double lambda){
 
 
   double b_temp,rhs,lhs,inv_lhs,mean;
@@ -70,7 +70,8 @@ void base_methods_st::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& es
 // Taken from Rohan Fernando's BayesC implementation
     rhs = Z.col(i).dot(ycorr_map);
     rhs += xtx(i) * b_temp;
-    lhs = xtx(i) + *var_e / var(i);
+// here we can have fixed or random effects behaviour by doing shrinkage or not (lambda)
+    lhs = xtx(i) + (*var_e / var(i) * lambda);
     inv_lhs = 1.0 / lhs;
     mean = inv_lhs*rhs;
     estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
@@ -86,7 +87,7 @@ void base_methods_st::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& es
 
 
 // sparse specialization
-void base_methods_st::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_st::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec, double lambda){
 
   double b_temp,rhs,lhs,inv_lhs,mean;
   MapVectorXd ycorr_map(ycorr,Z.rows());
@@ -105,7 +106,7 @@ void base_methods_st::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, Vector
     }
 
     rhs += xtx(i) * b_temp;
-    lhs = xtx(i) + *var_e / var(i);
+    lhs = xtx(i) + (*var_e / var(i) * lambda);
     inv_lhs = 1.0 / lhs;
     mean = inv_lhs*rhs;
     estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
@@ -132,8 +133,8 @@ class base_methods_mp: public base_methods_abstract {
 public:
 inline void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns);
 inline void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns);
-inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
-inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
+inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1);
+inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1);
 
 };
 
@@ -159,7 +160,7 @@ void base_methods_mp::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& colum
 };
 
 
-void base_methods_mp::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_mp::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec, double lambda){
 
 
   double b_temp,rhs,lhs,inv_lhs,mean,sum_mp;
@@ -181,7 +182,7 @@ void base_methods_mp::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& es
 }
 
     rhs = sum_mp + xtx(i) * b_temp;
-    lhs = xtx(i) + *var_e / var(i);
+    lhs = xtx(i) + (*var_e / var(i) * lambda);
     inv_lhs = 1.0 / lhs;
     mean = inv_lhs*rhs;
     estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
@@ -203,7 +204,7 @@ void base_methods_mp::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& es
 
 
 // sparse specialization
-void base_methods_mp::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_mp::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec, double lambda){
 
   double b_temp,rhs,lhs,inv_lhs,mean;
   MapVectorXd ycorr_map(ycorr,Z.rows());
@@ -222,7 +223,7 @@ void base_methods_mp::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, Vector
     }
 
     rhs += xtx(i) * b_temp;
-    lhs = xtx(i) + *var_e / var(i);
+    lhs = xtx(i) + (*var_e / var(i) * lambda);
     inv_lhs = 1.0 / lhs;
     mean = inv_lhs*rhs;
     estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
@@ -248,8 +249,8 @@ class base_methods_BLAS: public base_methods_abstract {
 public:
 inline void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns);
 inline void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns);
-inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
-inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec);
+inline void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1);
+inline void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1);
 
 };
 
@@ -273,7 +274,7 @@ void base_methods_BLAS::initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& col
 };
 
 
-void base_methods_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec, double lambda){
 
 
   double b_temp,rhs,lhs,inv_lhs,mean;
@@ -287,7 +288,7 @@ void base_methods_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& 
     b_temp=estimates(i);
     rhs=F77_NAME(ddot)(&obs,&Z(0,i),&incr, ycorr_map.data(),&incr);
     rhs += xtx(i) * b_temp;
-    lhs = xtx(i) + *var_e / var(i);
+    lhs = xtx(i) + (*var_e / var(i) * lambda);
     inv_lhs = 1.0 / lhs;
     mean = inv_lhs*rhs;
     estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
@@ -302,7 +303,7 @@ void base_methods_BLAS::sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& 
 
 
 // sparse specialization
-void base_methods_BLAS::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec){
+void base_methods_BLAS::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler, mp_container& thread_vec, double lambda){
 
   double b_temp,rhs,lhs,inv_lhs,mean;
   MapVectorXd ycorr_map(ycorr,Z.rows());
@@ -321,7 +322,7 @@ void base_methods_BLAS::sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, Vect
     }
 
     rhs += xtx(i) * b_temp;
-    lhs = xtx(i) + *var_e / var(i);
+    lhs = xtx(i) + (*var_e / var(i) * lambda);
     inv_lhs = 1.0 / lhs;
     mean = inv_lhs*rhs;
     estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
