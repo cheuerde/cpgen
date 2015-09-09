@@ -9,7 +9,7 @@ big matrices that shall be scaled inplace, hence without creating a copy
 
 }
 \usage{
-ccov(X, means = NULL, vars = NULL, scale=FALSE)	
+cscale_inplace(X, means = NULL, vars = NULL, scale=FALSE)	
 }
 
 \arguments{

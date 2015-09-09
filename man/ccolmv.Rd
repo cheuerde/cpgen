@@ -7,12 +7,12 @@ Colwise means or variances
 Computes the colwise means or variances of a matrix - internal use
 }
 \usage{
-ccolmv(X,var=FALSE)
+ccolmv(X,compute_var=FALSE)
 }
 
 \arguments{
   \item{X}{matrix of type: \code{matrix} or \code{dgCMatrix}}
-  \item{var}{boolean, defines whether the colwise variances rather than the means will be returned}
+  \item{compute_var}{boolean, defines whether the colwise variances rather than the means will be returned}
 }
 
 \value{
@@ -23,7 +23,7 @@ Numeric Vector of colwise means or variances of X
 
 X <- matrix(rnorm(1000*500),1000,500)
 means <- ccolmv(X)
-vars <- ccolmv(X,var=TRUE)
+vars <- ccolmv(X,compute_var=TRUE)
 
 }
 

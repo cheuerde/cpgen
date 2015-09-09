@@ -16,8 +16,9 @@ that random effect as described in Waldmann et al. (2008): \eqn{\mathbf{F} = \ma
 
 
 \usage{
-clmm(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,
-df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE)
+clmm(y, X = NULL , random = NULL, par_random = NULL,
+niter=10000, burnin=5000,scale_e=0, df_e=-2, beta_posterior = FALSE,
+verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE)
 }
 \arguments{
 \item{y}{vector or list of phenotypes}
@@ -195,7 +196,7 @@ The idea of how to parallelize the single site Gibbs Sampler came from Rohan Fer
 \references{
 
 Gianola, D., de Los Campos, G., Hill, W.G., Manfredi, E., Fernando, R.: "Additive genetic variability and the
-bayesian alphabet." Genetics 183(1), 347–363 (2009)
+bayesian alphabet." Genetics 183(1), 347-363 (2009)
 
 de los Campos, G., H. Naya, D. Gianola, J. Crossa, A. Legarra, E. Manfredi, K. Weigel, and J. M. Cotes. "Predicting Quantitative Traits With Regression Models for Dense Molecular Markers and Pedigree." Genetics 182, no. 1 (May 1, 2009): 375-85. doi:10.1534/genetics.109.101501.
 
@@ -209,7 +210,7 @@ Fernando, R.L., Dekkers, J.C., Garrick, D.J. "A class of bayesian methods to com
 genotyped and non-genotyped animals for whole-genome analyses." Genetics Selection Evolution 46(1), 50 (2014)
 
 Fernando, R., Nettleton, D., Southey, B., Dekkers, J., Rothschild, M., Soller, M. "Controlling the proportion of
-false positives in multiple dependent tests." Genetics 166(1), 611–619 (2004)
+false positives in multiple dependent tests." Genetics 166(1), 611-619 (2004)
 
 Fernando, Rohan L., and Dorian Garrick. "Bayesian methods applied to GWAS." Genome-Wide Association Studies and Genomic Prediction. Humana Press, 2013. 237-274.
 

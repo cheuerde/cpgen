@@ -10,14 +10,14 @@ can be passed.
 
 }
 \usage{
-ccov(X,lambda=0, w=NULL, cor=FALSE)	
+ccov(X,lambda=0, w=NULL, compute_cor=FALSE)	
 }
 
 \arguments{
   \item{X}{matrix}
   \item{lambda}{numeric scalar, shrinkage parameter}
   \item{w}{numeric vector of weights with same lengths as rows in X}
-  \item{cor}{boolean - defines whether the functions returns a correlation- rather than a covariance matrix}
+  \item{compute_cor}{boolean - defines whether the functions returns a correlation- rather than a covariance matrix}
 }
 
 \value{
@@ -31,7 +31,7 @@ Covariance matrix with dimension ncol(X)
 rand_data(500,5000)
 
 # compute correlation matrix of t(M)
-corM <- ccov(t(M),cor=T)
+corM <- ccov(t(M),compute_cor=T)
 }
 }
 

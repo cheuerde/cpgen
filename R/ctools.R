@@ -68,7 +68,7 @@ if(!.Call("check_openmp",PACKAGE="cpgen")) { if(!silent) cat("OpenMP is not avai
 
 # ccov 
 
-ccov <- function(X,lambda=0, w=NULL, cor=FALSE){
+ccov <- function(X,lambda=0, w=NULL, compute_cor=FALSE){
 
   allowed=c("matrix","numeric")
   if(!class(X)%in%allowed) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
@@ -79,7 +79,7 @@ ccov <- function(X,lambda=0, w=NULL, cor=FALSE){
   if(lambda>1) lambda=1
   if(lambda<0) lambda=0
 
-  .Call( "ccov", X,lambda, as.numeric(w), as.integer(cor), options()$cpgen.threads, PACKAGE = "cpgen" )
+  .Call( "ccov", X,lambda, as.numeric(w), as.integer(compute_cor), options()$cpgen.threads, PACKAGE = "cpgen" )
 
 }
 
@@ -168,7 +168,7 @@ cgrm <- function(X, w = NULL, lambda=0){
 	 if(missing(w)) {w = rep(1,ncol(X)); isw = FALSE} else {
 	   if(!is.vector(w) | !is.numeric(w)) stop("weights must be passed as a numeric vector")
            if(length(w)!=ncol(X)) stop("weight vector must have as many items as columns in X") 
-           vars = ccolmv(X,var=T)
+           vars = ccolmv(X,compute_var=T)
            var_zero = sum(vars==0)
            if(var_zero>0) {
              cat(paste(var_zero," Columns with zero variance (non-polymorphic) omitted\n",sep=""))
@@ -303,7 +303,7 @@ cscale_inplace <- function(X,means=NULL, vars=NULL, scale=FALSE){
    if(length(means)!=ncol(X)) stop("vector 'means' must have as many items as columns in X") 
    if(anyNA(means)) stop("vector 'means' has NAs") 
 
-   if(is.null(vars)) if(scale) { vars = ccolmv(X,var=T) } else { vars = rep(1,ncol(X)) } 
+   if(is.null(vars)) if(scale) { vars = ccolmv(X,compute_var=T) } else { vars = rep(1,ncol(X)) } 
    if(!is.vector(vars) | !is.numeric(vars)) stop("'vars' must be passed as a numeric vector") 
    if(length(vars)!=ncol(X)) stop("vector 'vars' must have as many items as columns in X") 
    if(anyNA(vars)) stop("vector 'vars' has NAs") 
@@ -332,7 +332,7 @@ cscale_inplace <- function(X,means=NULL, vars=NULL, scale=FALSE){
 
 # ccolmv
 
-ccolmv <- function(X,var=FALSE){
+ccolmv <- function(X,compute_var=FALSE){
 
  allowed=c("matrix","dgCMatrix")
  a = class(X)
@@ -342,11 +342,11 @@ ccolmv <- function(X,var=FALSE){
  
  if(a=="dgCMatrix") {
  
-   .Call("ccolmv_sparse", X, var, PACKAGE = "cpgen")
+   .Call("ccolmv_sparse", X, compute_var, PACKAGE = "cpgen")
      
   } else {
  
-      .Call( "ccolmv_dense", X, var, PACKAGE = "cpgen" )
+      .Call( "ccolmv_dense", X, compute_var, PACKAGE = "cpgen" )
  
     } 
 
@@ -370,34 +370,34 @@ ctrace <- function(X){
 
 ## Credit: Taken from:  http://stackoverflow.com/questions/1358003/tricks-to-manage-the-available-memory-in-an-r-session
 # improved list of objects
-.ls.objects <- function (pos = 1, pattern, order.by,
-                        decreasing=FALSE, head=FALSE, n=5) {
-    napply <- function(names, fn) sapply(names, function(x)
-                                         fn(get(x, pos = pos)))
-    names <- ls(pos = pos, pattern = pattern)
-    obj.class <- napply(names, function(x) as.character(class(x))[1])
-    obj.mode <- napply(names, mode)
-    obj.type <- ifelse(is.na(obj.class), obj.mode, obj.class)
-    obj.prettysize <- napply(names, function(x) {
-                           capture.output(print(object.size(x), units = "auto")) })
-    obj.size <- napply(names, object.size)
-    obj.dim <- t(napply(names, function(x)
-                        as.numeric(dim(x))[1:2]))
-    vec <- is.na(obj.dim)[, 1] & (obj.type != "function")
-    obj.dim[vec, 1] <- napply(names, length)[vec]
-    out <- data.frame(obj.type, obj.size, obj.prettysize, obj.dim)
-    names(out) <- c("Type", "Size", "PrettySize", "Rows", "Columns")
-    if (!missing(order.by))
-        out <- out[order(out[[order.by]], decreasing=decreasing), ]
-    if (head)
-        out <- head(out, n)
-    out
-}
- 
-# shorthand
-lsos <- function(..., n=10) {
-    .ls.objects(..., order.by="Size", decreasing=TRUE, head=TRUE, n=n)
-}
+#.ls.objects <- function (pos = 1, pattern, order.by,
+#                        decreasing=FALSE, head=FALSE, n=5) {
+#    napply <- function(names, fn) sapply(names, function(x)
+#                                         fn(get(x, pos = pos)))
+#    names <- ls(pos = pos, pattern = pattern)
+#    obj.class <- napply(names, function(x) as.character(class(x))[1])
+#    obj.mode <- napply(names, mode)
+#    obj.type <- ifelse(is.na(obj.class), obj.mode, obj.class)
+#    obj.prettysize <- napply(names, function(x) {
+#                           capture.output(print(object.size(x), units = "auto")) })
+#    obj.size <- napply(names, object.size)
+#    obj.dim <- t(napply(names, function(x)
+#                        as.numeric(dim(x))[1:2]))
+#    vec <- is.na(obj.dim)[, 1] & (obj.type != "function")
+#    obj.dim[vec, 1] <- napply(names, length)[vec]
+#    out <- data.frame(obj.type, obj.size, obj.prettysize, obj.dim)
+#    names(out) <- c("Type", "Size", "PrettySize", "Rows", "Columns")
+#    if (!missing(order.by))
+#        out <- out[order(out[[order.by]], decreasing=decreasing), ]
+#    if (head)
+#        out <- head(out, n)
+#    out
+#}
+# 
+## shorthand
+#lsos <- function(..., n=10) {
+#    .ls.objects(..., order.by="Size", decreasing=TRUE, head=TRUE, n=n)
+#}
 
 
 #### randmatrix

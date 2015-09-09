@@ -133,7 +133,7 @@ if(is.null(random)) {
 
 ## Fernando et al. 2012
                   dfA = par_random[[i]]$df
-                  meanVar = mean(ccolmv(random[[i]],var=T))
+                  meanVar = mean(ccolmv(random[[i]],compute_var=T))
                   varG = h2*var(y[[k]],na.rm=TRUE)
                   varMarker = varG / ncol(random[[i]]) * meanVar
                   par_random[[i]]$scale = varMarker * (dfA -2) / dfA 
@@ -374,7 +374,7 @@ cGWAS.BR <- function(mod, M, window_size, threshold, sliding_window=FALSE, verbo
       }
  		
     window_genetic_values = tcrossprod(M[,start:end], posterior[,start:end])		
-    window_genetic_variance = ccolmv(window_genetic_values,var=TRUE)		
+    window_genetic_variance = ccolmv(window_genetic_values,compute_var=TRUE)		
     post_var_proportion = window_genetic_variance / genetic_variance		
   			
     res[i,"window"] = i		
