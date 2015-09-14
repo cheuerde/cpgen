@@ -399,7 +399,7 @@ niter = 10000
 burnin = 2500
 
 mod2 <- clmm(as.numeric(milk$milk), X = X, Z = list(Zpe,Z), ginverse = list(NULL, Ainv), 
-                        niter = niter, burnin = burnin))
+                        niter = niter, burnin = burnin)
 
 
 # run all phenotypes in the milk dataset at once in parallel
