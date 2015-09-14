@@ -41,7 +41,7 @@ G.A <- cgrm.A(M,lambda=0.01)
 
 
 ### generate the list of design matrices for clmm
-random = list(t(chol(G.A)))
+Z_list = list(t(chol(G.A)))
 
 ### specify options
 h2 = 0.3
@@ -50,7 +50,7 @@ df = rep(5,length(y_CV))
 par_random = list(list(method="ridge",scale=scale,df=df))
 
 ### run 
-fit <- clmm(y_CV,random=random,par_random=par_random,niter=5000,burnin=2500)
+fit <- clmm(y_CV, Z=Z_list, par_random=par_random, niter=5000, burnin=2500)
 
 ### inspect results
 str(fit)

@@ -2,6 +2,8 @@ useDynLib(cpgen)
 #exportPattern("^[[:alpha:]]+")
 #importFrom(Rcpp, evalCpp)
 #importFrom(RcppParallel, RcppParallelLibs)
+importFrom("methods", "as")
+import(stats)
 import(Matrix)
 import(pedigreemm)
 

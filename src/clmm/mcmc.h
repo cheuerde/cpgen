@@ -98,6 +98,8 @@ private:
 public:
 
   Rcpp::List list_of_design_matrices;
+// added 09/2015 - ginverse
+  Rcpp::List list_of_ginverse;
   SEXP X_design_matrix;
   Rcpp::List summary_list;
   Rcpp::List par_fixed;
@@ -153,19 +155,22 @@ public:
 //  ~MCMC() { while(!model_effects.empty()) delete model_effects.back(), model_effects.pop_back() ;};
 //  MCMC() : my_base_functions(new F) {};
    MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, 
-   SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
+   SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number, SEXP list_of_ginverse_from_R);
 //   MCMC(const MyString& mcmc_source);
   ~MCMC(){ delete my_base_functions;};
 
 };
 
 template<class F>
-MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number) : my_base_functions(0)  {
-
+MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, 
+              SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number, SEXP list_of_ginverse_from_R) : my_base_functions(0)  {
 
 // Initializing all members
   Rcpp::List par(par_from_R);
   list_of_design_matrices = Rcpp::List(list_of_design_matrices_from_R);
+
+// added 09/2015 - ginverse
+  list_of_ginverse = Rcpp::List(list_of_ginverse_from_R);
   X_design_matrix = X_from_R;
   MapVectorXd y_temp = MapVectorXd(as<MapVectorXd> (y_from_R));
 
@@ -329,22 +334,24 @@ for(int i=0;i<n_threads;i++) {
 
 // populate with effects
 // include fixed effect
+//
+// added 09/2015 - ginverse
+// this is just for passing something as ginverse to the fixed effects
+  SEXP ginverse_fixed;
   model_effects.clear();
-  model_effects.push_back(effects(X_design_matrix, ycorr.data(),par_fixed, &var_e, var_y,n_random,niter, burnin, full_output)); 
+  model_effects.push_back(effects(X_design_matrix, ycorr.data(),par_fixed, &var_e, var_y,n_random,niter, burnin, full_output, ginverse_fixed)); 
 // random effects
-
   for(int i=0;i<list_of_design_matrices.size();i++){
 
-    model_effects.push_back(effects(list_of_design_matrices[i], ycorr.data(), Rcpp::List(par_random[i]), &var_e, var_y, n_random, niter, burnin, full_output)); 
+    model_effects.push_back(effects(list_of_design_matrices[i], ycorr.data(), Rcpp::List(par_random[i]), &var_e, var_y, n_random, niter, burnin, full_output, list_of_ginverse[i])); 
 
   }
-
 
 // initializing effects
 
     for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
 
-    it->initialize(my_base_functions);
+      it->initialize(my_base_functions);
 
     }
 

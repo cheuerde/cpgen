@@ -58,7 +58,9 @@ X <- X[match(model_terms$ids,data$id),,drop=FALSE]
 if(verbose) cat(" Running Model\n")
 mod <- clmm(y=model_terms$y,
 	    X=X,
-	    random=list(model_terms$Marker_Matrix,model_terms$Z_residual),
+	    Z=list(model_terms$Marker_Matrix,model_terms$Z_residual),
+# update 14.09.2015: pass ginverse
+            ginverse = list(NULL, model_terms$ginverse_residual),
 	    par_random=par_random,
 	    scale_e=scale_e,
 	    df_e=df_e,
@@ -77,7 +79,9 @@ bv <- c(bv,gt_bv[!M.id %in% model_terms$ids])
 names(bv) <- c(model_terms$ids,gt_not_in_model)
 
 # add some important information concerning SSBR
-mod$SSBR <- list(ids = model_terms$ids, y=model_terms$y, X=X, Marker_Matrix=model_terms$Marker_Matrix, Z_residual = model_terms$Z_residual, Breeding_Values = bv)
+mod$SSBR <- list(ids = model_terms$ids, y=model_terms$y, X=X, Marker_Matrix=model_terms$Marker_Matrix, 
+                 Z_residual = model_terms$Z_residual, ginverse_residual = model_terms$ginverse_residual,  
+                 Breeding_Values = bv)
 
 return(mod)
 
@@ -132,11 +136,20 @@ if(length(marker_without_ped)>0) {
 # For a faster version install this modified package:
 # library(devtools)
 # install_github("cheuerde/pedigreemm", ref = "master", build_vignettes=FALSE)
-ped <- editPed(label=data$id,sire=data$sire,dam=data$dam,verbose=FALSE)
+
+# Update: 14.09.2015 - Dont force people to change pedigreem version, simply
+# call an internally provided version of 'editPed' = 'editPed_fast'. See below
+ped <- editPed_fast(label=data$id,sire=data$sire,dam=data$dam,verbose=FALSE)
 ped <- pedigreemm::pedigree(label=ped$label,sire=ped$sire,dam=ped$dam)
 
 # construct A-inverse
-Ainv <- as(getAInv(ped),"dgCMatrix")
+# Ainv <- as(getAInv(ped),"dgCMatrix")
+
+T_Inv <- as(ped, "sparseMatrix")
+D_Inv <- Diagonal(x=1/Dmat(ped))
+Ainv<-t(T_Inv) %*% D_Inv %*% T_Inv
+dimnames(Ainv)[[1]]<-dimnames(Ainv)[[2]] <-ped@label
+Ainv <- as(Ainv, "dgCMatrix")
 
 # now check which individuals have phenotypes and provide pedigree and/or marker information
 DAT <- data.frame(id=ped@label, y = as.numeric(NA), has_y = 0, has_gt = 0, has_ped = 0, stringsAsFactors=FALSE)
@@ -189,22 +202,98 @@ M_combined <- .Call("cSSBR_impute",Ainv[non_genotyped,non_genotyped],
 
 # obtain the cholesky factor for residual error of non_genotyped
 # using pedigreemm::relfactor
-L <- t(as(relfactor(ped),"dgCMatrix"))
+#L <- t(as(relfactor(ped),"dgCMatrix"))
 
 # set zeros for genotyped individuals
-if(nrow_gt > 0){
-  L[match(M.id[index_gt],DAT$id),] <- 0 
-}
+#if(nrow_gt > 0){
+#  L[match(M.id[index_gt],DAT$id),] <- 0 
+#}
 
 # remove individuals we dont need and order
-L <- L[match(model_ids,DAT$id),non_genotyped]
+#L <- L[match(model_ids,DAT$id),non_genotyped]
+
+# Update 14.09.2015: Insted of the cholesky we now use the
+# submatrix of Ainv directly and pass it as 'ginverse' argument
+# to clmm
+
+Ainv11 <- Ainv[non_genotyped, non_genotyped]
+
+Z <- sparse.model.matrix( ~ -1 + id, data=DAT, drop.unused.levels=FALSE)
+
+if(nrow_gt > 0){
+  Z[match(M.id[index_gt],DAT$id),] <- 0 
+}
+
+Z <- Z[match(model_ids,DAT$id),non_genotyped]
+
 
 # phenotype vector
 pheno <- DAT$y[match(model_ids,DAT$id)]
 
-return(list(ids = model_ids, y=pheno, Marker_Matrix=M_combined, Z_residual = L))
+return(list(ids = model_ids, y=pheno, Marker_Matrix=M_combined, Z_residual = Z, ginverse_residual = Ainv11))
 
 }
+
+
+
+
+# this is an internal function that improves 'editPed' from
+# 'pedigreemm' speed-wise.
+# main body is copied and modified from the pedigreemm function 'editPed'
+
+editPed_fast <- function(sire, dam, label, verbose = FALSE)
+{
+    nped <- length(sire)
+    if (nped != length(dam))  stop("sire and dam have to be of the same length")
+    if (nped != length(label)) stop("label has to be of the same length than sire and dam")
+    tmp <- unique(sort(c(as.character(sire), as.character(dam))))
+    
+    missingP <-NULL
+    if(any(completeId <- ! tmp %in% as.character(label))) missingP <- tmp[completeId]
+    labelOl <- c(as.character(missingP),as.character(label))
+    sireOl <- c(rep(NA, times=length(missingP)),as.character(sire))
+    damOl  <- c(rep(NA, times=length(missingP)),as.character(dam))
+    sire <- as.integer(factor(sireOl, levels = labelOl))
+    dam  <- as.integer(factor(damOl, levels = labelOl))
+    nped <-length(labelOl)
+    label <-1:nped
+    sire[!is.na(sire) & (sire<1 | sire>nped)] <- NA
+    dam[!is.na(dam) & (dam < 1 | dam > nped)] <- NA
+    pede <- data.frame(id= label, sire= sire, dam= dam, gene=rep(NA, times=nped))
+    noParents <- (is.na(pede$sire) & is.na(pede$dam))
+    pede$gene[noParents] <- 0
+    pede$gene<-as.integer(pede$gene)
+
+# new version that calls the C-function "get_generation"
+# Note: there is no return value, the R-objects are directly being changed
+
+    .Call("get_generation", pede$sire, pede$dam, pede$id, pede$gene, as.integer(verbose), package="cpgen")    
+
+    ord<- order(pede$gene)
+    ans<-data.frame(label=labelOl, sire=sireOl, dam=damOl, gene=pede$gene,
+                    stringsAsFactors =F)
+    ans[ord,]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

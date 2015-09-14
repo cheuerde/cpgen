@@ -8,22 +8,24 @@ This function runs linear mixed models of the following form:
 \deqn{
 \mathbf{y} = \mathbf{Xb} + \mathbf{Z}_{1}\mathbf{u}_1 + \mathbf{Z}_{2}\mathbf{u}_2 + \mathbf{Z}_{3}\mathbf{u}_3 + ... + \mathbf{Z}_{k}\mathbf{u}_k + \mathbf{e}
 }
-The function allows to include an arbitrary number of independent random effects with each of them being assumed to follow: \eqn{MVN(\mathbf{0},\mathbf{I}\sigma^2_{u_k})}. If the covariance structure of one random effect is assumed to follow some \eqn{\mathbf{G}} then it is necessary to construct the design matrix for
-that random effect as described in Waldmann et al. (2008): \eqn{\mathbf{F} = \mathbf{ZG}^{1/2}}.
-
-
+The function allows to include an arbitrary number of independent random effects with each of them being assumed to follow: \eqn{MVN(\mathbf{0},\mathbf{I}\sigma^2_{u_k})}. If the covariance structure of one random effect is assumed to follow some \eqn{\mathbf{G}} then the design matrix for 
+that random effect can be constructed as described in Waldmann et al. (2008): \eqn{\mathbf{F} = \mathbf{ZG}^{1/2}}.
+Alternatively, the argument \code{ginverse} can be passed.
 }
 
 
 \usage{
-clmm(y, X = NULL , random = NULL, par_random = NULL,
-niter=10000, burnin=5000,scale_e=0, df_e=-2, beta_posterior = FALSE,
+clmm(y, X = NULL, Z = NULL, ginverse = NULL, par_random = NULL,
+niter=10000, burnin=5000, scale_e=0, df_e=-2, beta_posterior = FALSE,
 verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE)
 }
 \arguments{
 \item{y}{vector or list of phenotypes}
-\item{X}{Fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}. If omitted a column-vector of ones will be assigned }
-\item{random}{list of design matrices for random effects - every element of the list represents one random effect and may be of type: \code{matrix} or \code{dgCMatrix}}
+\item{X}{fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}. If omitted a column-vector of ones will be assigned }
+\item{Z}{list of design matrices for random effects - every element of the list represents one random effect and may be of type: \code{matrix} or \code{dgCMatrix}}
+\item{ginverse}{list of inverse covariance matrices for random effects in \code{Z} (e.g. Inverse of numerator relationship matrix).
+                Every element of the list represents one random effect and may be of type: \code{matrix} or \code{dgCMatrix}. 
+                Note: If passed, \code{ginverse} must have as many items as \code{Z}. For no ginverse assign \code{NULL} for a particular random effect.}
 \item{par_random}{list of options for random effects. If passed, the list must have as many elements as \code{random}. Every element may be a list of 4:
   \itemize{
     \item{\code{scale} - (vector of) scale parameters for the inverse chi-square prior}
@@ -235,7 +237,7 @@ G.A <- cgrm.A(M,lambda=0.01)
 G.D <- cgrm.D(M,lambda=0.01)
 
 ### generate the list of design matrices for clmm
-random = list(t(chol(G.A)),t(chol(G.D)))
+Z_list = list(t(chol(G.A)),t(chol(G.D)))
 
 ### specify options
 par_random = list(list(method="ridge",scale=var(y)/2 ,df=5, name="add"),
@@ -244,7 +246,7 @@ par_random = list(list(method="ridge",scale=var(y)/2 ,df=5, name="add"),
 ### run 
 
 set_num_threads(1)
-fit <- clmm(y,random=random,par_random=par_random,niter=5000,burnin=2500)
+fit <- clmm(y = y, Z = Z_list, par_random=par_random, niter=5000, burnin=2500)
 
 ### inspect results
 str(fit)
@@ -259,7 +261,7 @@ str(fit)
 rand_data(500,5000)
 
 ### compute the list of masked phenotype-vectors for CV
-y_CV <- cCV(y,fold=4,reps=1)
+y_CV <- cCV(y, fold=4, reps=1)
 
 
 ### Cross Validation using GBLUP
@@ -267,7 +269,7 @@ G.A <- cgrm.A(M,lambda=0.01)
 
 
 ### generate the list of design matrices for clmm
-random = list(t(chol(G.A)))
+Z_list = list(t(chol(G.A)))
 
 ### specify options
 h2 = 0.3
@@ -277,7 +279,7 @@ par_random = list(list(method="ridge",scale=scale,df=df, name="animal"))
 
 ### run model with 4 threads
 set_num_threads(4)
-fit <- clmm(y_CV,random=random,par_random=par_random,niter=5000,burnin=2500)
+fit <- clmm(y = y_CV, Z = Z_list, par_random=par_random, niter=5000, burnin=2500)
 
 ### inspect results
 str(fit)
@@ -296,7 +298,7 @@ get_cor(pred,y_CV,y)
 rand_data(500,5000)
 
 ### generate the list of design matrices for clmm
-random = list(M)
+Z_list = list(M)
 
 ### specify options
 h2 = 0.3
@@ -312,7 +314,7 @@ par_random = list(list(method="ridge",scale=scale,df=df,
 
 ### run 
 set_num_threads(1)
-fit <- clmm(y,random=random,par_random=par_random,niter=2000,burnin=1000)
+fit <- clmm(y =y, Z = Z_list, par_random=par_random, niter=2000, burnin=1000)
 
 ### inspect results
 str(fit)
@@ -322,6 +324,121 @@ gwas <- fit$markers$GWAS
 
 # plot window variance proportions
 plot(gwas$window_variance_proportion)
+
+##########################################################
+### Sparse Animal Model using the pedigreemm milk data ###
+##########################################################
+
+# cpgen offers two ways of running models with random effects that
+# are assumed to follow some covariance structure.
+# 1) Construct the Covariance matrix and pass the cholesky of that
+#    as design matrix for that random effect
+# 2) Construct the inverse of the covariance matrix (ginverse) and pass the design
+#    matrix 'Z' that relates observations to factors in ginverse in conjunction
+#    with the symmetric ginverse.
+
+# This is approach 2) which is more convenient for pedigree based
+# animal models, as ginverse (Inverse of numerator relationship matrix) is 
+# very sparse and can be obtained very efficiently
+
+set_num_threads(1)
+
+# load the data
+data(milk)
+
+# get Ainverse
+# Ainv <- as(getAInv(pedCows),"dgCMatrix")
+
+T_Inv <- as(pedCows, "sparseMatrix")
+D_Inv <- Diagonal(x=1/Dmat(pedCows))
+Ainv<-t(T_Inv) %*% D_Inv %*% T_Inv
+dimnames(Ainv)[[1]]<-dimnames(Ainv)[[2]] <-pedCows@label
+Ainv <- as(Ainv, "dgCMatrix")
+
+# We need to construct the design matrix.
+# Therefore we create a second id column with factor levels
+# equal to the animals in the pedigree
+milk$id2 <- factor(as.character(milk$id), levels = pedCows@label)
+
+# set up the design matrix
+Z <- sparse.model.matrix(~ -1 + id2, data = milk, drop.unused.levels=FALSE)
+
+# run the model
+niter = 5000
+burnin = 2500
+
+modAinv <- clmm(y = as.numeric(milk$milk), Z = list(Z), ginverse = list(Ainv), 
+                niter = niter, burnin = burnin)
+
+# This is approach 1) run an equivalent model using the cholesky of A
+
+# get L from A = LL'
+L <- as(t(relfactor(pedCows)),"dgCMatrix")
+
+# match with ids
+ZL <- L[match(milk$id, pedCows@label),]
+
+# run the model
+modL <- clmm(as.numeric(milk$milk), Z= list(ZL), 
+             niter = niter, burnin = burnin)
+
+
+### a more advanced model
+
+# y = Xb + Zu + a + e
+#
+# u = permanent environment of animal
+# a = additive genetic effect of animal
+
+Zpe <- sparse.model.matrix(~ -1 + id2, drop.unused.levels = TRUE, data = milk)
+
+# make X and account for lactation and herd
+X <- sparse.model.matrix(~ 1 + lact + herd, data = milk)
+
+niter = 10000
+burnin = 2500
+
+mod2 <- clmm(as.numeric(milk$milk), X = X, Z = list(Zpe,Z), ginverse = list(NULL, Ainv), 
+                        niter = niter, burnin = burnin))
+
+
+# run all phenotypes in the milk dataset at once in parallel
+
+Y <- list(as.numeric(milk$milk),as.numeric(milk$fat),as.numeric(milk$prot),as.numeric(milk$scs))
+
+set_num_threads(4)
+
+# ginverse version
+model <- clmm(Y, X = X, Z = list(Zpe,Z), ginverse = list(NULL, Ainv), 
+              niter = niter, burnin = burnin)
+
+# get heritabilities and repeatabilities with their standard deviations
+
+heritabilities <- array(0, dim=c(length(Y),2))
+colnames(heritabilities) <- c("h2","sd")
+
+# only use post-burnin samples
+range <- (burnin+1):niter
+
+# h2
+heritabilities[,1] <- unlist(lapply(model, function(x)
+                                    mean(
+                                         x$Effect_2$posterior$variance[range] /
+                                         (x$Effect_1$posterior$variance[range] + 
+                                         x$Effect_2$posterior$variance[range] + 
+                                         x$Residual_Variance$Posterior[range]))
+                                        )
+                             )
+
+# standard deviation of h2
+heritabilities[,2] <- unlist(lapply(model, function(x)
+                                    sd(
+                                       x$Effect_2$posterior$variance[range] /
+                                       (x$Effect_1$posterior$variance[range] + 
+                                       x$Effect_2$posterior$variance[range] + 
+                                       x$Residual_Variance$Posterior[range]))
+                                      )
+                             )
 
 }
 }

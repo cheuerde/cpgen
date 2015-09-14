@@ -29,11 +29,13 @@ cSSBR.setup(data, M, M.id, verbose=TRUE)
 }
 
 \value{
-List of 4:
+List of 5:
   \item{ids}{ids for the model (ordered as in other model terms)}
   \item{y}{phenotype vector}
   \item{Marker_Matrix}{Combined Marker Matrix including imputed and genotyped individuals}
   \item{Z_residual}{Design Matrix used to model the residual error for the imputed individuals}
+  \item{\code{ginverse_residual}}{Submatrix of the inverse of the numerator relationship matrix. 
+                                  Used to model the residual error for the imputed individuals}
 }
 
 
@@ -87,7 +89,8 @@ set_num_threads(1)
 
 # passing model terms to 'clmm'
 mod<-clmm(y=model_terms$y, 
-          random=list(model_terms$Marker_Matrix,model_terms$Z_residual),
+          Z=list(model_terms$Marker_Matrix,model_terms$Z_residual),
+          ginverse = list(NULL, model_terms$ginverse_residual),
           par_random=par_random,
           scale_e = var_e,
           df_e=df,

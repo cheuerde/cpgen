@@ -2,12 +2,19 @@ Package: cpgen
 Type: Package
 Title: Parallel Genomic Evaluations
 Version: 0.1
-Date: 2014-07-22
+Date: 2015-09-14
 Author: Claas Heuer
 Maintainer: Claas Heuer <cheuer@tierzucht.uni-kiel.de>
 Description: Frequently used methods in genomic applications with emphasis on parallel computing.
+ At its core, the package has a Gibbs Sampler that allows running univariate linear
+ mixed models that have both, sparse and dense design matrices. The parallel sampling method
+ in case of dense design matrices (e.g. Genotypes) allows running Ridge Regression or BayesA for
+ a very large number of individuals. The package therefor explicitly allows running Single 
+ Step Genomic Prediction models.
+ In addition, the package offers parallelized functions for common tasks like genome-wide
+ association studies and Cross Validation in a memory efficient way.
 License: GPL (>= 2)
 SystemRequirements: C++11
+Imports: methods, stats
 Depends: R(>= 3.1.0), Matrix(>= 1.0-5), pedigreemm(>= 0.3-3)
 LinkingTo: Rcpp, RcppEigen, RcppProgress
-Packaged: 2014-06-08 15:25:55 UTC; tower

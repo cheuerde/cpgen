@@ -19,7 +19,7 @@
 #include "clmm/mcmc.h"
 
 
-RcppExport SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par_design_matricesR, SEXP par_mcmcR, SEXP verboseR, SEXP threadsR, SEXP use_BLAS);
+RcppExport SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par_design_matricesR, SEXP par_mcmcR, SEXP verboseR, SEXP threadsR, SEXP use_BLAS, SEXP ginverse);
 
 #endif
 

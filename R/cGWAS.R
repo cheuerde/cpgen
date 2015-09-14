@@ -112,7 +112,7 @@ if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) 
 old_threads <- get_num_threads()
 set_num_threads(1,silent=TRUE)
 
-mod <- clmm(Uy,X=UX,random=list(Z),par_random ,scale_e=scale_e,df_e=df_e,niter=niter, burnin=burnin,seed=seed,verbose=FALSE)
+mod <- clmm(y = Uy, X = UX, Z = list(Z), par_random = par_random, scale_e=scale_e, df_e=df_e, niter=niter, burnin=burnin, seed=seed, verbose=FALSE)
 
 # set number of threads to old value for GWAS
 set_num_threads(old_threads,silent=TRUE)

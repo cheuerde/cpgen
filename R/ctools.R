@@ -439,7 +439,7 @@ var_a = Vp*h2 / n_qtl
 qtl<-sample(1:ncol(M),n_qtl)
 alpha=sqrt((var_a)/(2*p[qtl]*q[qtl]))
 
-y <- rnorm(nindividuals,0,sqrt(Vp*(1-h2)))
+y <- stats::rnorm(nindividuals,0,sqrt(Vp*(1-h2)))
 y = y + (M[,qtl]%c%alpha)[,1]
 
 # export

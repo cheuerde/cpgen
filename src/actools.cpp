@@ -430,7 +430,7 @@ SEXP ccolmv_sparse(SEXP XR,SEXP varR){
     temp = 0;
     innerSize = OuterStarts[i+1] - OuterStarts[i];
 
-    for(int rit = 0; rit < innerSize; rit++) {
+    for(size_t rit = 0; rit < innerSize; rit++) {
 
       temp += x[OuterStarts[i] + rit]; 
 
@@ -447,7 +447,7 @@ SEXP ccolmv_sparse(SEXP XR,SEXP varR){
       temp = 0;
       innerSize = OuterStarts[i+1] - OuterStarts[i];
 
-      for(int rit = 0; rit < innerSize; rit++) {
+      for(size_t rit = 0; rit < innerSize; rit++) {
 
         rowindex = OuterStarts[i] + rit;
         temp += (x[rowindex] - mu(i)) * (x[rowindex] - mu(i)); 
@@ -483,7 +483,7 @@ SEXP cscale_inplace(SEXP Xa, SEXP meansR, SEXP varsR, SEXP scaleR, SEXP threadsR
   Eigen::Map<Eigen::RowVectorXd> vars(Rcpp::NumericVector(varsR).begin(), p);
 
 # pragma omp parallel for
-  for(size_t i=0; i< X.cols(); ++i){
+  for(size_t i=0; i< p; ++i){
 
     X.col(i).array() -= means(i);
 
@@ -494,7 +494,7 @@ SEXP cscale_inplace(SEXP Xa, SEXP meansR, SEXP varsR, SEXP scaleR, SEXP threadsR
   if(scale){
 
 # pragma omp parallel for
-    for(size_t i=0; i< X.cols(); ++i){
+    for(size_t i=0; i< p; ++i){
 
       X.col(i).array() /= sqrt(vars(i));
 

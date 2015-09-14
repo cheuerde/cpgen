@@ -16,7 +16,7 @@ cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0,
 \item{M}{Marker Matrix for genotyped individuals}
 \item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
 \item{X}{Fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}.
-         If omitted a column-vector of ones will be assigned. Must have as many rows as data}
+         If omitted a column-vector of ones will be assigned. Must have as many rows as \code{data}}
 \item{par_random}{as in \code{\link{clmm}}}
 \item{niter}{as in \code{\link{clmm}}}
 \item{burnin}{as in \code{\link{clmm}}}
@@ -36,18 +36,20 @@ The function sets up the following model using \code{\link{cSSBR.setup}}:
 The matrix \eqn{\mathbf{M}} denotes a combined marker matrix consisting of actual and imputed marker covariates.
 Best linear predictions of gene content (Gengler et al., 2007) for the non-genotyped individuals are obtained using: \eqn{\mathbf{A}^{11}\hat{\mathbf{M}_1} = -\mathbf{A}^{12}\mathbf{M}_2} (Fernando et al., 2014).
 \eqn{\mathbf{A}^{11}} and \eqn{\mathbf{A}^{12}} are submatrices of the inverse of the numerator relationship matrix, which is easily obtained (Henderson, 1976). The subscripts 1 and 2 denote non genotyped and genotyped individuals respectively. The very sparse equation system is being solved using a sparse cholesky solver provided by the Eigen library.
-The residual imputation error has variance: \eqn{(\mathbf{A}^{11})^{-1}\sigma_{\epsilon}^2} and is modelled by constructing the design matrix as \eqn{\mathbf{Z} = \mathbf{L}_{11}}, where \eqn{\mathbf{A}=\mathbf{LL}'} and \eqn{(\mathbf{A}^{11})^{-1} = \mathbf{L}_{11}\mathbf{L'}_{11}}.
+The residual imputation error has variance: \eqn{(\mathbf{A}^{11})^{-1}\sigma_{\epsilon}^2}.
 }
 
 \value{
 List of 4 + number of random effects as in \code{\link{clmm}} +
-  \item{SSBR}{List of 4:
+  \item{SSBR}{List of 7:
      \itemize{
        \item{\code{ids} - ids used in the model (ordered as in other model terms)}
        \item{\code{y} - phenotype vector}
        \item{\code{X} - Design matrix for fixed effects}
        \item{\code{Marker_Matrix} - Combined Marker Matrix including imputed and genotyped individuals}
        \item{\code{Z_residual} - Design Matrix used to model the residual error for the imputed individuals}
+       \item{\code{ginverse_residual} - Submatrix of the inverse of the numerator relationship matrix. 
+                                       Used to model the residual error for the imputed individuals}
        \item{\code{Breeding_Values} - Predicted Breeding Values for all animals in \code{data} that have
              genotypes and/or phenotypes}
       }

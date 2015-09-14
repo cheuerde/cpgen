@@ -23,13 +23,16 @@
 
 # clmm
 
-clmm <- function(y, X = NULL , random = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE){
+clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE){
 
 default_scale = 0
 default_df = -2
 h2 = 0.3
 default_GWAS_window_size_proportion = 0.01
 default_GWAS_threshold = 0.01
+
+# renamed 'random' to Z in the R function
+random = Z
 
 allowed=c("numeric", "list")
 a = class(y)
@@ -66,6 +69,8 @@ if(is.null(X)) {
 par_fixed$GWAS=FALSE    
 par_fixed$GWAS_threshold = 0.01 
 par_fixed$GWAS_window_size = 1
+# added 09/2015 - ginverse
+par_fixed$sparse_or_dense_ginverse = "dense"
 
 par_random_all = list()
 par_temp = par_random
@@ -198,6 +203,56 @@ if(is.null(random)) {
 
 
 
+################################
+### added 09/2015 - Ginverse ###
+################################
+
+# first add the parameter "sparse_or_dense_ginverse" to the par_random list
+for(i in 1:length(par_random_all)) {
+
+  for(j in 1:length(par_random_all[[i]])) par_random_all[[i]][[j]]$sparse_or_dense_ginverse = "sparse"
+
+}
+
+
+if(!is.null(ginverse)) {
+
+  if(length(ginverse)!= length(random)) stop("If provided, ginverse must have as many items as random. Put 'NULL' for no ginverse in the list for a particular random effect")
+
+# check dimensions - all that matters is the number of columns
+  for(i in 1:length(ginverse)) {
+
+    if(!is.null(ginverse[[i]])) {
+
+      if(ncol(ginverse[[i]]) != ncol(random[[i]])) stop(paste("Number of columns in design matrix: '",
+                                                        par_random[[i]]$name,"' dont match dimnsion of corresponding ginverse", sep=""))
+
+      if(!class(ginverse[[i]]) %in% c("matrix","dgCMatrix")) stop(paste("Ginverse: '",par_random[[i]]$name,
+                                                                       "' must be of type 'matrix' or 'dgCMatrix'",sep=""))
+
+# set the method for that effect - Only ridge regression allowed
+# also set the type of matrix for ginverse
+
+# this is crap - but good enough for now
+      for(j in 1:length(par_random_all)) {
+
+          par_random_all[[j]][[i]]$method = "ridge_ginverse"
+          par_random_all[[j]][[i]]$sparse_or_dense_ginverse = ifelse(class(ginverse[[i]])=="matrix", "dense", "sparse")
+
+      }
+
+    }
+
+  }
+
+# if no ginverse in the list, create dummy
+} else {
+
+    ginverse <- vector("list",length(random))
+
+  }
+
+
 # RNG Seed based on system time and process id
 # Taken from: http://stackoverflow.com/questions/8810338/same-random-numbers-every-time
 if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
@@ -223,9 +278,11 @@ for(i in 1:length(y)) {
 
 }
 
- mod <- .Call("clmm",y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, PACKAGE = "cpgen" )
+ mod <- .Call("clmm",y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, ginverse, PACKAGE = "cpgen" )
 
  if(length(y) == 1) { return(mod[[1]]) } else { return(mod) }
+
+#return(list(y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, ginverse))
 
 }
 
@@ -290,7 +347,7 @@ if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) 
 old_threads <- get_num_threads()
 set_num_threads(1,silent=TRUE)
 
-mod <- clmm(Uy, UX , list(Z), par_random ,scale_e=scale_e,df_e=df_e, verbose=verbose, niter=niter,burnin=burnin,seed=seed)
+mod <- clmm(y = Uy, X = UX , Z = list(Z), par_random = par_random, scale_e=scale_e, df_e=df_e, verbose=verbose, niter=niter, burnin=burnin, seed=seed)
 
 # set number of threads to old value
 set_num_threads(old_threads,silent=TRUE)
@@ -338,57 +395,57 @@ return(1)
 
 ### GWAS
 
-cGWAS.BR <- function(mod, M, window_size, threshold, sliding_window=FALSE, verbose=TRUE) {		
-		
-  niter = mod$mcmc$niter		
-  burnin = mod$mcmc$burnin
-		
-  n_windows = ifelse(sliding_window, as.integer(ncol(M) - window_size + 1), as.integer(ncol(M) / window_size))		
- 		
-  posterior = mod[[4]]$posterior$estimates[(burnin+1):niter,]		
-		
-  genetic_values = tcrossprod(M, posterior)		
-  genetic_variance = apply(genetic_values,2,var)		
-		
-  res = array(0, dim=c(n_windows,6))		
-  colnames(res) <- c("window","mean_var","mean_var_proportion","prob_var_bigger_threshold","start","end")		
-  end=0	
-  count = 0	
-		
-  for(i in 1:n_windows) {		
-		
-    count = count + 1
-    if(verbose) print(paste("window: ", i, " out of ", n_windows,sep=""))		
+#cGWAS.BR <- function(mod, M, window_size, threshold, sliding_window=FALSE, verbose=TRUE) {		
+#		
+#  niter = mod$mcmc$niter		
+#  burnin = mod$mcmc$burnin
+#		
+#  n_windows = ifelse(sliding_window, as.integer(ncol(M) - window_size + 1), as.integer(ncol(M) / window_size))		
+# 		
+#  posterior = mod[[4]]$posterior$estimates[(burnin+1):niter,]		
+#		
+#  genetic_values = tcrossprod(M, posterior)		
+#  genetic_variance = apply(genetic_values,2,var)		
+#		
+#  res = array(0, dim=c(n_windows,6))		
+#  colnames(res) <- c("window","mean_var","mean_var_proportion","prob_var_bigger_threshold","start","end")		
+#  end=0	
+#  count = 0	
+#		
+#  for(i in 1:n_windows) {		
+#		
+#    count = count + 1
+#    if(verbose) print(paste("window: ", i, " out of ", n_windows,sep=""))		
 
-    if(sliding_window) {
+#    if(sliding_window) {
 
-      start = count
-      end = count + window_size - 1
+#      start = count
+#      end = count + window_size - 1
 
-    } else {
+#    } else {
 
-        start = end + 1		
-        end = end + window_size		
-        if(i == n_windows) end = ncol(M) 
+#        start = end + 1		
+#        end = end + window_size		
+#        if(i == n_windows) end = ncol(M) 
 
-      }
- 		
-    window_genetic_values = tcrossprod(M[,start:end], posterior[,start:end])		
-    window_genetic_variance = ccolmv(window_genetic_values,compute_var=TRUE)		
-    post_var_proportion = window_genetic_variance / genetic_variance		
-  			
-    res[i,"window"] = i		
-    res[i,"mean_var"] = mean(window_genetic_variance)		
-    res[i,"mean_var_proportion"] = mean(post_var_proportion)		
-    res[i,"prob_var_bigger_threshold"] = sum(post_var_proportion > threshold) / nrow(posterior)		
-    res[i,"start"] = start
-    res[i,"end"] = end	
-		
-  }		
-		
-  return(res)		
-		
-}
+#      }
+# 		
+#    window_genetic_values = tcrossprod(M[,start:end], posterior[,start:end])		
+#    window_genetic_variance = ccolmv(window_genetic_values,compute_var=TRUE)		
+#    post_var_proportion = window_genetic_variance / genetic_variance		
+#  			
+#    res[i,"window"] = i		
+#    res[i,"mean_var"] = mean(window_genetic_variance)		
+#    res[i,"mean_var_proportion"] = mean(post_var_proportion)		
+#    res[i,"prob_var_bigger_threshold"] = sum(post_var_proportion > threshold) / nrow(posterior)		
+#    res[i,"start"] = start
+#    res[i,"end"] = end	
+#		
+#  }		
+#		
+#  return(res)		
+#		
+#}
 
 
 

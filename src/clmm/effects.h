@@ -36,6 +36,8 @@ public:
   function_base * my_functions;
 
   SEXP design_matrix;
+// added 09/2015 - ginverse
+  SEXP ginverse;
   int total_number_effects;
   int columns;
   int niter;
@@ -54,6 +56,8 @@ public:
 //  MatrixXd mean_var;
 
   std::string sparse_or_dense;
+// added 09/2015 - ginverse
+  std::string sparse_or_dense_ginverse;
   std::string method;
   std::string name;
   bool initialized;
@@ -74,7 +78,7 @@ public:
   VectorXd estimates;
   VectorXd mean_estimates;
 
-  effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, bool full_output_from_MCMC);
+  effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, bool full_output_from_MCMC, SEXP ginverse_from_MCMC);
   inline void initialize(base_methods_abstract*& base_fun);  
   inline void sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec, int& niter_from_MCMC); 
   inline void sample_variance(sampler& mcmc_sampler, int& niter_from_MCMC); 
@@ -94,12 +98,17 @@ public:
 };
 
 
-effects::effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, bool full_output_from_MCMC) : my_functions(0) {
+effects::effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, 
+                 double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, 
+                 bool full_output_from_MCMC, SEXP ginverse_from_MCMC) : my_functions(0) {
  
   design_matrix = design_matrix_from_MCMC;
+  ginverse = ginverse_from_MCMC;
   scale = as<double>(list_from_MCMC["scale"]);
   df = as<double>(list_from_MCMC["df"]);
   sparse_or_dense = as<std::string>(list_from_MCMC["sparse_or_dense"]);
+// added 09/2015 - ginverse
+  sparse_or_dense_ginverse = as<std::string>(list_from_MCMC["sparse_or_dense_ginverse"]);
   method = as<std::string>(list_from_MCMC["method"]);
   name = as<std::string>(list_from_MCMC["name"]);
   GWAS = as<bool>(list_from_MCMC["GWAS"]);
@@ -127,15 +136,22 @@ void effects::initialize(base_methods_abstract*& base_fun){
   delete my_functions;
 
   if(sparse_or_dense == "sparse") {
+
     if(method == "fixed") my_functions = new function_fixed<MapSparseMatrixXd>(design_matrix); 
     if(method == "ridge") my_functions = new function_random<MapSparseMatrixXd>(design_matrix); 
     if(method == "BayesA") my_functions = new function_bayesA<MapSparseMatrixXd>(design_matrix); 
+    if((method == "ridge_ginverse") && (sparse_or_dense_ginverse == "sparse")) my_functions = new function_ridge_ginv<MapSparseMatrixXd, MapSparseMatrixXd>(design_matrix, ginverse); 
+    if((method == "ridge_ginverse") && (sparse_or_dense_ginverse == "dense")) my_functions = new function_ridge_ginv<MapSparseMatrixXd, MapMatrixXd>(design_matrix, ginverse); 
+
   } else {
+
       if(method == "fixed") my_functions = new function_fixed<MapMatrixXd>(design_matrix); 
       if(method == "ridge") my_functions = new function_random<MapMatrixXd>(design_matrix); 
       if(method == "BayesA") my_functions = new function_bayesA<MapMatrixXd>(design_matrix); 
-    }
+      if((method == "ridge_ginverse") && (sparse_or_dense_ginverse == "sparse")) my_functions = new function_ridge_ginv<MapMatrixXd, MapSparseMatrixXd>(design_matrix, ginverse); 
+      if((method == "ridge_ginverse") && (sparse_or_dense_ginverse == "dense")) my_functions = new function_ridge_ginv<MapMatrixXd, MapMatrixXd>(design_matrix, ginverse); 
 
+    }
 
   my_functions->initialize(base_fun,xtx,columns,var, mean_var,var_y,initialized,total_number_effects);
   estimates = VectorXd::Zero(columns);
@@ -173,7 +189,6 @@ void effects::initialize(base_methods_abstract*& base_fun){
   n_samples = 0;
   initialized = true;
   
-
 }
 
 void effects::sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec, int& niter_from_MCMC){
