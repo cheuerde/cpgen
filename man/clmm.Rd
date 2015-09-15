@@ -351,7 +351,7 @@ data(milk)
 
 T_Inv <- as(pedCows, "sparseMatrix")
 D_Inv <- Diagonal(x=1/Dmat(pedCows))
-Ainv<-t(T_Inv) %*% D_Inv %*% T_Inv
+Ainv <- t(T_Inv) \%*\% D_Inv \%*\% T_Inv
 dimnames(Ainv)[[1]]<-dimnames(Ainv)[[2]] <-pedCows@label
 Ainv <- as(Ainv, "dgCMatrix")
 
