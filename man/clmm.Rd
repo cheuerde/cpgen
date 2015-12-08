@@ -16,8 +16,8 @@ Alternatively, the argument \code{ginverse} can be passed.
 
 \usage{
 clmm(y, X = NULL, Z = NULL, ginverse = NULL, par_random = NULL,
-niter=10000, burnin=5000, scale_e=0, df_e=-2, beta_posterior = FALSE,
-verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE)
+niter=10000, burnin=5000, scale_e=0, df_e=-2,
+verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE, beta_posterior_fixed = FALSE)
 }
 \arguments{
 \item{y}{vector or list of phenotypes}
@@ -32,6 +32,7 @@ verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE)
     \item{\code{df} - (vector of) degrees of freedom for the inverse chi-square prior}
     \item{\code{method} - method to be used for the random effects, may be: \code{ridge} or \code{BayesA}}
     \item{\code{name} - name for that effect}
+    \item{\code{beta_posterior} - save all samples from posterior}
     \item{\code{GWAS} - list of options for conducting GWAS using window variance proportions (Fernando et al, 2013):
     \itemize{
       \item{\code{window_size} - number of markers used to form a single window}
@@ -42,12 +43,12 @@ verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE)
 \item{niter}{number of iterations}
 \item{burnin}{number of iterations to be discarded as burnin}
 \item{verbose}{prints progress to the screen}
-\item{beta_posterior}{save all posterior samples of regression coefficients}
 \item{timings}{prints time per iteration to the screen - sets \code{verbose = FALSE}}
 \item{scale_e}{scale parameter for the inverse chi-square prior for the residuals}
 \item{df_e}{degrees of freedom for the inverse chi-square prior for the residuals}
 \item{seed}{seed for the random number generator. If omitted, a seed will be generated based on machine and time}
 \item{use_BLAS}{use BLAS library instead of Eigen}
+\item{beta_posterior_fixed}{save all samples from posterior of fixed effects}
 }
 
 

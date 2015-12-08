@@ -61,7 +61,7 @@ public:
   std::string method;
   std::string name;
   bool initialized;
-  bool full_output;
+  bool beta_posterior;
   bool GWAS;
   int GWAS_window_size;
   int GWAS_n_windows;
@@ -78,7 +78,7 @@ public:
   VectorXd estimates;
   VectorXd mean_estimates;
 
-  effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, bool full_output_from_MCMC, SEXP ginverse_from_MCMC);
+  effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, SEXP ginverse_from_MCMC);
   inline void initialize(base_methods_abstract*& base_fun);  
   inline void sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec, int& niter_from_MCMC); 
   inline void sample_variance(sampler& mcmc_sampler, int& niter_from_MCMC); 
@@ -100,7 +100,7 @@ public:
 
 effects::effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::List list_from_MCMC, double * var_e_from_MCMC, 
                  double var_y_from_MCMC,int total_number_effects_from_MCMC,int niter_from_MCMC, int burnin_from_MCMC, 
-                 bool full_output_from_MCMC, SEXP ginverse_from_MCMC) : my_functions(0) {
+                 SEXP ginverse_from_MCMC) : my_functions(0) {
  
   design_matrix = design_matrix_from_MCMC;
   ginverse = ginverse_from_MCMC;
@@ -118,7 +118,7 @@ effects::effects(SEXP design_matrix_from_MCMC, double * ycorr_from_MCMC, Rcpp::L
   ycorr = ycorr_from_MCMC;
   var_e = var_e_from_MCMC;
   var_y = var_y_from_MCMC;
-  full_output = full_output_from_MCMC;
+  beta_posterior = as<bool>(list_from_MCMC["beta_posterior"]);
   niter = niter_from_MCMC;
   burnin = burnin_from_MCMC;
 
@@ -158,7 +158,7 @@ void effects::initialize(base_methods_abstract*& base_fun){
   mean_estimates = VectorXd::Zero(columns);
   var_posterior.resize(niter);
 // store posterior distribution of estimates
-  if(full_output) effects_posterior = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Zero(niter,columns);
+  if(beta_posterior) effects_posterior = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Zero(niter,columns);
 
 // prepare GWAS stuff
   if(GWAS) {
@@ -194,7 +194,7 @@ void effects::initialize(base_methods_abstract*& base_fun){
 void effects::sample_effects(sampler& mcmc_sampler,base_methods_abstract*& base_fun, mp_container& thread_vec, int& niter_from_MCMC){
 
   my_functions->sample_effects(base_fun,xtx,estimates, ycorr, var,var_e, mcmc_sampler,thread_vec);
-  if(full_output) effects_posterior.row(niter_from_MCMC).noalias() = estimates;
+  if(beta_posterior) effects_posterior.row(niter_from_MCMC).noalias() = estimates;
 
 }
 
@@ -273,7 +273,7 @@ Rcpp::List effects::get_summary(int effiter){
   }			  	       
 
   Rcpp::List out_posterior = my_functions->summary(mean_estimates,mean_var,effiter, var_posterior);
-  if(full_output) out_posterior["estimates"] = effects_posterior;
+  if(beta_posterior) out_posterior["estimates"] = effects_posterior;
   out["posterior"] = out_posterior;
 
   if(GWAS) {

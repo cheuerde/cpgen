@@ -23,7 +23,7 @@
 
 # clmm
 
-clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, beta_posterior = FALSE, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE){
+clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE, beta_posterior_fixed = FALSE){
 
 default_scale = 0
 default_df = -2
@@ -71,6 +71,8 @@ par_fixed$GWAS_threshold = 0.01
 par_fixed$GWAS_window_size = 1
 # added 09/2015 - ginverse
 par_fixed$sparse_or_dense_ginverse = "dense"
+# added 8.12.15 - beta_posterior
+par_fixed$beta_posterior = beta_posterior_fixed
 
 par_random_all = list()
 par_temp = par_random
@@ -96,9 +98,14 @@ if(is.null(random)) {
 
         if(X_is_ok(random[[i]],n,names(random)[i])) {
         method = "ridge"
+	# added 8.12.15 - beta_posterior individually for effects
+	beta_posterior = FALSE
         if(class(random[[i]]) == "matrix") type = "dense"
         if(class(random[[i]]) == "dgCMatrix") type = "sparse"
-        par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method, name=as.character(names(random)[i]), GWAS=FALSE, GWAS_threshold = 0.01, GWAS_window_size = 1) }
+
+        par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method,
+			       name=as.character(names(random)[i]), GWAS=FALSE, GWAS_threshold = 0.01, 
+			       GWAS_window_size = 1, beta_posterior = beta_posterior) }
       }
 
       } else {
@@ -111,6 +118,8 @@ if(is.null(random)) {
               X_is_ok(random[[i]],n,names(random)[i])
               allowed_methods = c("fixed","ridge","BayesA")
               if(is.null(par_random[[i]]$method)) par_random[[i]]$method <- "ridge"
+	      # added 8.12.15 - beta_posterior individually for effects
+              if(is.null(par_random[[i]]$beta_posterior)) par_random[[i]]$beta_posterior <- "FALSE"
               if(is.null(par_random[[i]]$name)) par_random[[i]]$name = as.character(names(random)[i])
               if(!par_random[[i]]$method %in% allowed_methods) stop(paste("Method must be one of: ",paste(allowed_methods,collapse=" , "),sep=""))
 
@@ -273,7 +282,7 @@ if(length(y) > 1) timings = FALSE
 
 for(i in 1:length(y)) {
 
-  par_mcmc[[i]] = list(niter=niter, burnin=burnin, full_output=beta_posterior, verbose=verbose_single,
+  par_mcmc[[i]] = list(niter=niter, burnin=burnin, verbose=verbose_single,
   timings = timings, scale_e = scale_e[i], df_e = df_e[i], seed = as.character(seed), name=as.character(names(y)[i]))
 
 }

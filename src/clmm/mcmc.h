@@ -85,7 +85,6 @@ private:
 
   int niter;
   int  burnin;
-  bool full_output;
   bool verbose;
   bool timings;
   bool initialized;
@@ -176,7 +175,6 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
 
   niter = Rcpp::as<int>(par["niter"]);
   burnin = Rcpp::as<int>(par["burnin"]);
-  full_output = Rcpp::as<bool>(par["full_output"]);
   verbose = Rcpp::as<bool>(par["verbose"]);
   timings = Rcpp::as<bool>(par["timings"]);
   scale_e = Rcpp::as<double>(par["scale_e"]);
@@ -232,7 +230,7 @@ MCMC<F>::MCMC(const MCMC& mcmc_source) {
 
   niter = mcmc_source.niter;
   burnin = mcmc_source.burnin;
-  full_output = mcmc_source.full_output;
+  beta_posterior = mcmc_source.beta_posterior;
   verbose = mcmc_source.verbose;
   initialized = mcmc_source.initialized;
   scale_e = mcmc_source.scale_e;
@@ -339,11 +337,11 @@ for(int i=0;i<n_threads;i++) {
 // this is just for passing something as ginverse to the fixed effects
   SEXP ginverse_fixed;
   model_effects.clear();
-  model_effects.push_back(effects(X_design_matrix, ycorr.data(),par_fixed, &var_e, var_y,n_random,niter, burnin, full_output, ginverse_fixed)); 
+  model_effects.push_back(effects(X_design_matrix, ycorr.data(),par_fixed, &var_e, var_y,n_random,niter, burnin, ginverse_fixed)); 
 // random effects
   for(int i=0;i<list_of_design_matrices.size();i++){
 
-    model_effects.push_back(effects(list_of_design_matrices[i], ycorr.data(), Rcpp::List(par_random[i]), &var_e, var_y, n_random, niter, burnin, full_output, list_of_ginverse[i])); 
+    model_effects.push_back(effects(list_of_design_matrices[i], ycorr.data(), Rcpp::List(par_random[i]), &var_e, var_y, n_random, niter, burnin, list_of_ginverse[i])); 
 
   }
 
