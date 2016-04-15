@@ -386,9 +386,8 @@ SEXP csolve_sparse_fac_three(SEXP XR, SEXP yR, SEXP threadsR) {
  //  Eigen::initParallel();
 
   Eigen::MappedSparseMatrix<double, Eigen::ColMajor> LHS(Rcpp::as<Eigen::MappedSparseMatrix<double, Eigen::ColMajor> >(XR));
-  // Eigen::SparseMatrix<double, Eigen::ColMajor> LHS(Rcpp::as<Eigen::SparseMatrix<double, Eigen::ColMajor> >(XR));
   // Eigen::Map<Eigen::SparseMatrix<double, Eigen::ColMajor> > LHS(Rcpp::as<Eigen::Map<Eigen::SparseMatrix<double, Eigen::ColMajor> > >(XR));
-  // Eigen::MappedSparseMatrix<double, Eigen::ColMajor> RHS(Rcpp::as<Eigen::MappedSparseMatrix<double, Eigen::ColMajor> >(yR));
+  // Eigen has no method implemented to solve for a MappedSparsematrix, so we have to copy
   Eigen::SparseMatrix<double, Eigen::ColMajor> RHS(Rcpp::as<Eigen::SparseMatrix<double, Eigen::ColMajor> >(yR));
   // Eigen::Map<Eigen::SparseMatrixXd> RHS(Rcpp::as<Eigen::Map<Eigen::SparseMatrix<double, Eigen::ColMajor> > >(yR));
 
@@ -396,49 +395,8 @@ SEXP csolve_sparse_fac_three(SEXP XR, SEXP yR, SEXP threadsR) {
   
   W.compute(LHS);
 
-// the solution
   int n = LHS.rows();
   int p = RHS.cols();
-  // Eigen::SparseMatrix<double, Eigen::ColMajor> sol;
-  //Eigen::MatrixXd sol;
-
-//// only use omp if threads > 1
-//  mp_container thread_vec;
-//  int n_threads;
-//  int who;
-//
-//  if(threads >1) {
-//
-//// container to store start and length for OpenMP threads - Credit: Hao Cheng (Iowa State University)
-//// get the number of threads
-//#pragma omp parallel
-//{
-//  if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
-//}
-//
-//  thread_vec = mp_container(n_threads);
-//
-//  for(int i=0;i<n_threads;i++) {
-//
-//    thread_vec.at(i)["start"] = i * p / n_threads;
-//    if(i==(n_threads-1)){thread_vec.at(i)["end"] = p;} else {
-//    thread_vec.at(i)["end"] = (i+1) * p / n_threads;}
-//    thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
-//
-//  }
-//
-//#pragma omp parallel private(who)
-//{ 
-//  who = omp_get_thread_num(); 
-//// Eigen's block operations do not trigger copies (rather something like an Eigen::Map<>)
-//  sol_map.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]).noalias() = W.solve(y.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]));
-//}
-//    
-//} else {
-  
-    //sol = W.solve(RHS);
-    
-//  }
   
   return Rcpp::wrap(W.solve(RHS));
 
