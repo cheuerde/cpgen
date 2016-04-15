@@ -25,14 +25,14 @@
 
 check_openmp <- function() {
 
-if(.Call("check_openmp",PACKAGE="cpgen")) {
-  
-  ver = .Call("check_openmp_version",PACKAGE="cpgen")
-  cat("OpenMP is available - Version: ",ver,"\n") 
+	if(.Call("check_openmp",PACKAGE="cpgen")) {
 
-} else {
-      cat("OpenMP is NOT available \n")
-  }
+		ver = .Call("check_openmp_version",PACKAGE="cpgen")
+		cat("OpenMP is available - Version: ",ver,"\n") 
+
+	} else {
+		cat("OpenMP is NOT available \n")
+	}
 
 } 
 
@@ -53,16 +53,16 @@ get_num_threads <- function() options()$cpgen.threads
 
 set_num_threads <- function(x, silent=FALSE, global=FALSE) {
 
-if(!.Call("check_openmp",PACKAGE="cpgen")) { if(!silent) cat("OpenMP is not available, threads set to 1 \n") } else {
-  if(length(x)!=1) stop("must be a scalar")
-  t = as.integer(round(x,digits=0))
-  if(t<=0) t=1
+	if(!.Call("check_openmp",PACKAGE="cpgen")) { if(!silent) cat("OpenMP is not available, threads set to 1 \n") } else {
+		if(length(x)!=1) stop("must be a scalar")
+		t = as.integer(round(x,digits=0))
+		if(t<=0) t=1
 
-  options(cpgen.threads=t)
-# this allows using the function to control other openmp functions in R also (MKL,...)
-  if(global) .Call("set_num_threads",t,PACKAGE="cpgen")
-  if(!silent) cat("Number of threads set to ",t,"\n")
-  }
+		options(cpgen.threads=t)
+		# this allows using the function to control other openmp functions in R also (MKL,...)
+		if(global) .Call("set_num_threads",t,PACKAGE="cpgen")
+		if(!silent) cat("Number of threads set to ",t,"\n")
+	}
 
 }
 
@@ -70,16 +70,16 @@ if(!.Call("check_openmp",PACKAGE="cpgen")) { if(!silent) cat("OpenMP is not avai
 
 ccov <- function(X,lambda=0, w=NULL, compute_cor=FALSE){
 
-  allowed=c("matrix","numeric")
-  if(!class(X)%in%allowed) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
-  if(is.vector(X)) X<-matrix(X)
-  if(anyNA(X)) stop("No NAs allowed")
-  if(missing(w)) { w<-rep(1/nrow(X),nrow(X))} 
-  else { w <- w/sum(w) }
-  if(lambda>1) lambda=1
-  if(lambda<0) lambda=0
+	allowed=c("matrix","numeric")
+	if(!class(X)%in%allowed) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
+	if(is.vector(X)) X<-matrix(X)
+	if(anyNA(X)) stop("No NAs allowed")
+	if(missing(w)) { w<-rep(1/nrow(X),nrow(X))} 
+	else { w <- w/sum(w) }
+	if(lambda>1) lambda=1
+	if(lambda<0) lambda=0
 
-  .Call( "ccov", X,lambda, as.numeric(w), as.integer(compute_cor), options()$cpgen.threads, PACKAGE = "cpgen" )
+	.Call( "ccov", X,lambda, as.numeric(w), as.integer(compute_cor), options()$cpgen.threads, PACKAGE = "cpgen" )
 
 }
 
@@ -89,40 +89,50 @@ ccov <- function(X,lambda=0, w=NULL, compute_cor=FALSE){
 
 csolve <- function(X,y=NULL){
 
- allowed=c("matrix","numeric", "array", "dgCMatrix")
- a = class(X)
+	allowed=c("matrix","numeric", "array", "dgCMatrix")
+	a = class(X)
 
-# this is just the dense inverse
- if(a == "matrix" & is.null(y) & get_num_threads()==1) {
+	# this is just the dense inverse
+	if(a == "matrix" & is.null(y) & get_num_threads()==1) {
 
-   .Call( "cinverse_dense", X, PACKAGE = "cpgen" ) 
+		.Call( "cinverse_dense", X, PACKAGE = "cpgen" ) 
 
- } else {
+	} else {
 
 
-     if(is.null(y)) y = diag(nrow(X)) 
-     b = class(y)
- 
-     if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'array', 'dgCMatrix'") 
-     if(!b%in%allowed[c(1,2,3)]) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
-     if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
+		if(is.null(y)) y = diag(nrow(X)) 
+		b = class(y)
 
-     if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
-     if(is.vector(y) | is.array(y)) { y = as.matrix(y); b = "matrix" } 
+		if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'array', 'dgCMatrix'") 
+		if(!b%in%allowed) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
+		if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
 
-     if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
+		if((is.vector(X) | is.array(X)) & class(X) != "dgCMatrix") { X = as.matrix(X); a = "matrix" } 
+		if((is.vector(y) | is.array(y)) & class(y) != "dgCMatrix") { y = as.matrix(y); b = "matrix" } 
 
-     if(a == "matrix") {
+		if(class(X) == "matrix" & class(y) != "matrix") y <- as.matrix(y)
 
-       .Call( "csolve", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
+		if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
 
-     } else {
+		if(class(X) == "matrix") {
 
-         .Call( "csolve_sparse", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
+			.Call( "csolve", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
 
-       }
+		} else {
 
-  }
+			if(class(y) == "matrix") { 
+
+				.Call( "csolve_sparse", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
+
+			} else {
+
+				.Call("csolve_sparse_fac_three", X,y, options()$cpgen.threads ,PACKAGE = "cpgen" )
+
+			}
+
+		}
+
+	}
 
 }
 
@@ -140,21 +150,21 @@ cscanx <- function(path){
 
 cgrm.A <- function(X, lambda=0, yang=FALSE){
 
-         if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-         if(anyNA(X)) stop("No NAs allowed in X")
-         if(lambda>1) lambda=1
-         if(lambda<0) lambda=0        
-	 .Call( "camat", X, lambda, yang, options()$cpgen.threads ,PACKAGE = "cpgen" )
+	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(anyNA(X)) stop("No NAs allowed in X")
+	if(lambda>1) lambda=1
+	if(lambda<0) lambda=0        
+	.Call( "camat", X, lambda, yang, options()$cpgen.threads ,PACKAGE = "cpgen" )
 }
 
 # cgrm.D
 
 cgrm.D <- function(X, lambda=0){
 
-         if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-         if(anyNA(X)) stop("No NAs allowed in X")
-         if(lambda>1) lambda=1
-         if(lambda<0) lambda=0
+	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(anyNA(X)) stop("No NAs allowed in X")
+	if(lambda>1) lambda=1
+	if(lambda<0) lambda=0
 	.Call( "cdmat", X, lambda, options()$cpgen.threads ,PACKAGE = "cpgen" )
 }
 
@@ -162,51 +172,51 @@ cgrm.D <- function(X, lambda=0){
 
 cgrm <- function(X, w = NULL, lambda=0){
 
-         if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-         if(anyNA(X)) stop("No NAs allowed in X")
-         isw = TRUE
-	 if(missing(w)) {w = rep(1,ncol(X)); isw = FALSE} else {
-	   if(!is.vector(w) | !is.numeric(w)) stop("weights must be passed as a numeric vector")
-           if(length(w)!=ncol(X)) stop("weight vector must have as many items as columns in X") 
-           vars = ccolmv(X,compute_var=T)
-           var_zero = sum(vars==0)
-           if(var_zero>0) {
-             cat(paste(var_zero," Columns with zero variance (non-polymorphic) omitted\n",sep=""))
-	     X = X[,vars>0]
-	     w = w[vars>0]
-           }
-	 }
-         if(lambda>1) lambda=1
-         if(lambda<0) lambda=0
+	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(anyNA(X)) stop("No NAs allowed in X")
+	isw = TRUE
+	if(missing(w)) {w = rep(1,ncol(X)); isw = FALSE} else {
+		if(!is.vector(w) | !is.numeric(w)) stop("weights must be passed as a numeric vector")
+		if(length(w)!=ncol(X)) stop("weight vector must have as many items as columns in X") 
+		vars = ccolmv(X,compute_var=T)
+		var_zero = sum(vars==0)
+		if(var_zero>0) {
+			cat(paste(var_zero," Columns with zero variance (non-polymorphic) omitted\n",sep=""))
+			X = X[,vars>0]
+			w = w[vars>0]
+		}
+	}
+	if(lambda>1) lambda=1
+	if(lambda<0) lambda=0
 
-	 .Call( "cgrm", X, w,isw, lambda, options()$cpgen.threads ,PACKAGE = "cpgen" )
+	.Call( "cgrm", X, w,isw, lambda, options()$cpgen.threads ,PACKAGE = "cpgen" )
 }
 
 
 # parallel crossproduct operator
 
- `%c%` <- function(X,Y) {
+`%c%` <- function(X,Y) {
 
- allowed=c("matrix","dgCMatrix","numeric","array")
- a = class(X)
- b = class(Y)
+	allowed=c("matrix","dgCMatrix","numeric","array")
+	a = class(X)
+	b = class(Y)
 
- if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric', 'array'") }
- if(anyNA(X) | anyNA(Y)) { stop("no NAs allowed") }
+	if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric', 'array'") }
+	if(anyNA(X) | anyNA(Y)) { stop("no NAs allowed") }
 
- if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
- if(is.vector(Y) | is.array(Y)) { Y = as.matrix(Y); b = "matrix" } 
+	if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
+	if(is.vector(Y) | is.array(Y)) { Y = as.matrix(Y); b = "matrix" } 
 
- if(dim(X)[2]!=dim(Y)[1]) {stop("ncol(X) doesn't match nrow(Y)")}
+	if(dim(X)[2]!=dim(Y)[1]) {stop("ncol(X) doesn't match nrow(Y)")}
 
- if(a == "matrix"){
-   if(b == "matrix") {.Call( "ccp_dense_dense", X,Y,options()$cpgen.threads ,PACKAGE = "cpgen" ) } 
-     else { .Call( "ccp_dense_sparse", X,Y,PACKAGE = "cpgen" ) } 
- } else {
-   if(b == "matrix") { .Call( "ccp_sparse_dense", X,Y,PACKAGE = "cpgen" ) }
-     else { .Call( "ccp_sparse_sparse", X,Y,PACKAGE = "cpgen" ) } 
- } 
- 
+	if(a == "matrix"){
+		if(b == "matrix") {.Call( "ccp_dense_dense", X,Y,options()$cpgen.threads ,PACKAGE = "cpgen" ) } 
+		else { .Call( "ccp_dense_sparse", X,Y,PACKAGE = "cpgen" ) } 
+	} else {
+		if(b == "matrix") { .Call( "ccp_sparse_dense", X,Y,PACKAGE = "cpgen" ) }
+		else { .Call( "ccp_sparse_sparse", X,Y,PACKAGE = "cpgen" ) } 
+	} 
+
 
 }
 
@@ -216,52 +226,52 @@ cgrm <- function(X, w = NULL, lambda=0){
 
 cCV <- function(y,folds=5,reps=1,matrix=FALSE,seed=NULL) {
 
-if(!is.vector(y)) stop("y must be a vector")
-if(folds < 2) stop("'folds' must be larger than one")
-if(reps < 1) reps = 1
+	if(!is.vector(y)) stop("y must be a vector")
+	if(folds < 2) stop("'folds' must be larger than one")
+	if(reps < 1) reps = 1
 
-reps = as.integer(reps)
-folds = as.integer(folds)
+	reps = as.integer(reps)
+	folds = as.integer(folds)
 
-isy <- (1:length(y))[!is.na(y)]
+	isy <- (1:length(y))[!is.na(y)]
 
-n_vec <- rep(NA,folds)
-start <- rep(NA,folds)
-end <- rep(NA,folds)
+	n_vec <- rep(NA,folds)
+	start <- rep(NA,folds)
+	end <- rep(NA,folds)
 
-n_vec[1:(folds-1)] <- round(length(isy)/folds,digits=0)
-n_vec[folds] <- length(isy) - sum(n_vec[1:(folds-1)])
-
-
-for(j in 1:folds) {
-if(j==1) { start[j] = 1 } else { start[j] = end[j-1]+1 }
-end[j] = sum(n_vec[1:j]) 
-}
-
-count=0
-cv_pheno <- list(folds*reps)
-
-if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
-set.seed(seed)
-
-  for(i in 1:reps) {
-
-    ids <- sample(isy,length(isy),replace=F)
- 
-    for(j in 1:folds) {
-
-      count=count+1
-      y_temp = y    
-      y_temp[ids[start[j]:end[j]]] <- NA 
-      cv_pheno[[count]] <- y_temp  
-
-    }
-
-  }
+	n_vec[1:(folds-1)] <- round(length(isy)/folds,digits=0)
+	n_vec[folds] <- length(isy) - sum(n_vec[1:(folds-1)])
 
 
-if(matrix) { return(matrix(unlist(cv_pheno),nrow=length(y),ncol=length(cv_pheno),byrow=FALSE)) } else {
-return(cv_pheno) }
+	for(j in 1:folds) {
+		if(j==1) { start[j] = 1 } else { start[j] = end[j-1]+1 }
+		end[j] = sum(n_vec[1:j]) 
+	}
+
+	count=0
+	cv_pheno <- list(folds*reps)
+
+	if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
+	set.seed(seed)
+
+	for(i in 1:reps) {
+
+		ids <- sample(isy,length(isy),replace=F)
+
+		for(j in 1:folds) {
+
+			count=count+1
+			y_temp = y    
+			y_temp[ids[start[j]:end[j]]] <- NA 
+			cv_pheno[[count]] <- y_temp  
+
+		}
+
+	}
+
+
+	if(matrix) { return(matrix(unlist(cv_pheno),nrow=length(y),ncol=length(cv_pheno),byrow=FALSE)) } else {
+		return(cv_pheno) }
 
 }
 
@@ -271,9 +281,9 @@ return(cv_pheno) }
 # cmaf
 
 cmaf <- function(X)	{
-   maf <- .Call( "cmaf", X ,PACKAGE = "cpgen" )[1,]
-   maf[maf>0.5] = 1-maf[maf>0.5]
-   return(maf)
+	maf <- .Call( "cmaf", X ,PACKAGE = "cpgen" )[1,]
+	maf[maf>0.5] = 1-maf[maf>0.5]
+	return(maf)
 }
 
 
@@ -282,36 +292,36 @@ cmaf <- function(X)	{
 
 ccross <- function(X,D=NULL){
 
-         if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-         if(anyNA(X)) stop("No NAs allowed in X")
-	 if(missing(D)) { D = rep(1,ncol(X)) } else {
-	   if(!is.vector(D) | !is.numeric(D)) stop("D must be passed as a numeric vector") }
-         if(length(D)!=ncol(X)) stop("vector D must have as many items as columns in X") 
-	 .Call( "ccross", X, D, options()$cpgen.threads, PACKAGE = "cpgen" )
+	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(anyNA(X)) stop("No NAs allowed in X")
+	if(missing(D)) { D = rep(1,ncol(X)) } else {
+		if(!is.vector(D) | !is.numeric(D)) stop("D must be passed as a numeric vector") }
+	if(length(D)!=ncol(X)) stop("vector D must have as many items as columns in X") 
+	.Call( "ccross", X, D, options()$cpgen.threads, PACKAGE = "cpgen" )
 }
-   
+
 
 # cscale_inplace
 
 cscale_inplace <- function(X,means=NULL, vars=NULL, scale=FALSE){
 
-   if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
-   if(anyNA(X)) stop("No NAs allowed in X")
+	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(anyNA(X)) stop("No NAs allowed in X")
 
-   if(is.null(means))  means = ccolmv(X)
-   if(!is.vector(means) | !is.numeric(means)) stop("'means' must be passed as a numeric vector")
-   if(length(means)!=ncol(X)) stop("vector 'means' must have as many items as columns in X") 
-   if(anyNA(means)) stop("vector 'means' has NAs") 
+	if(is.null(means))  means = ccolmv(X)
+	if(!is.vector(means) | !is.numeric(means)) stop("'means' must be passed as a numeric vector")
+	if(length(means)!=ncol(X)) stop("vector 'means' must have as many items as columns in X") 
+	if(anyNA(means)) stop("vector 'means' has NAs") 
 
-   if(is.null(vars)) if(scale) { vars = ccolmv(X,compute_var=T) } else { vars = rep(1,ncol(X)) } 
-   if(!is.vector(vars) | !is.numeric(vars)) stop("'vars' must be passed as a numeric vector") 
-   if(length(vars)!=ncol(X)) stop("vector 'vars' must have as many items as columns in X") 
-   if(anyNA(vars)) stop("vector 'vars' has NAs") 
-   if(any(vars==0)) stop("vector 'vars' has zeros") 
+	if(is.null(vars)) if(scale) { vars = ccolmv(X,compute_var=T) } else { vars = rep(1,ncol(X)) } 
+	if(!is.vector(vars) | !is.numeric(vars)) stop("'vars' must be passed as a numeric vector") 
+	if(length(vars)!=ncol(X)) stop("vector 'vars' must have as many items as columns in X") 
+	if(anyNA(vars)) stop("vector 'vars' has NAs") 
+	if(any(vars==0)) stop("vector 'vars' has zeros") 
 
-   ans <- .Call( "cscale_inplace", X, means, vars, scale, options()$cpgen.threads, PACKAGE = "cpgen" )
+	ans <- .Call( "cscale_inplace", X, means, vars, scale, options()$cpgen.threads, PACKAGE = "cpgen" )
 }
-   
+
 
 
 # Symmetrix Matrix Power operator %^% - taken from: http://stackoverflow.com/questions/16172731/how-to-compute-the-power-of-a-matrix-in-r
@@ -334,21 +344,21 @@ cscale_inplace <- function(X,means=NULL, vars=NULL, scale=FALSE){
 
 ccolmv <- function(X,compute_var=FALSE){
 
- allowed=c("matrix","dgCMatrix")
- a = class(X)
+	allowed=c("matrix","dgCMatrix")
+	a = class(X)
 
- if(!a%in%allowed) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") }
- if(anyNA(X)) { stop("no NAs allowed") }
- 
- if(a=="dgCMatrix") {
- 
-   .Call("ccolmv_sparse", X, compute_var, PACKAGE = "cpgen")
-     
-  } else {
- 
-      .Call( "ccolmv_dense", X, compute_var, PACKAGE = "cpgen" )
- 
-    } 
+	if(!a%in%allowed) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") }
+	if(anyNA(X)) { stop("no NAs allowed") }
+
+	if(a=="dgCMatrix") {
+
+		.Call("ccolmv_sparse", X, compute_var, PACKAGE = "cpgen")
+
+	} else {
+
+		.Call( "ccolmv_dense", X, compute_var, PACKAGE = "cpgen" )
+
+	} 
 
 }
 
@@ -356,8 +366,8 @@ ccolmv <- function(X,compute_var=FALSE){
 # ctrace
 
 ctrace <- function(X){
- if(class(X)!="matrix"){stop("object must be of type 'matrix'")}
- .Call("ctrace",X,PACKAGE="cpgen")
+	if(class(X)!="matrix"){stop("object must be of type 'matrix'")}
+	.Call("ctrace",X,PACKAGE="cpgen")
 }
 
 
@@ -404,47 +414,47 @@ ctrace <- function(X){
 
 rand_data <- function(n=500,p_marker=10000,h2=0.3,prop_qtl=0.01,seed=NULL) { 
 
-if(h2>1) h2 <- 2
-if(h2<0) h2 <- 0
-if(prop_qtl > 1) prop_qtl <- 1
-if(prop_qtl < 0) prop_qtl <- 0
-if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
-set.seed(seed)
+	if(h2>1) h2 <- 2
+	if(h2<0) h2 <- 0
+	if(prop_qtl > 1) prop_qtl <- 1
+	if(prop_qtl < 0) prop_qtl <- 0
+	if(missing(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
+	set.seed(seed)
 
-### generate random data
-nindividuals = n
-nmarkers = p_marker
+	### generate random data
+	nindividuals = n
+	nmarkers = p_marker
 
-# sample allele frequencies 
-p <- sample(seq(0.1,0.9,by=0.05),nmarkers,replace=T)
-q <- 1-p
+	# sample allele frequencies 
+	p <- sample(seq(0.1,0.9,by=0.05),nmarkers,replace=T)
+	q <- 1-p
 
-# random marker matrix
-M<-array(NA,dim=c(nindividuals,nmarkers))
+	# random marker matrix
+	M<-array(NA,dim=c(nindividuals,nmarkers))
 
-# fill matrix with marker-covariates(-1,0,1) - HWE
-for (i in 1:ncol(M)) { M[,i] <- sample(c(1,0,-1),nindividuals,prob=c(p[i]**2,2*p[i]*q[i],q[i]**2),replace=T) }
+	# fill matrix with marker-covariates(-1,0,1) - HWE
+	for (i in 1:ncol(M)) { M[,i] <- sample(c(1,0,-1),nindividuals,prob=c(p[i]**2,2*p[i]*q[i],q[i]**2),replace=T) }
 
 
-# generate random phenotypes with one qtl
-n_qtl <- round(p_marker*prop_qtl,digits=0)
-if(n_qtl==0) n_qtl <- 1
-Vp=1
-h2=h2
-# sample variance explained by single qtl form chisquare
-#var_a = rchisq(n_qtl,Vp*h2)/n_qtl
+	# generate random phenotypes with one qtl
+	n_qtl <- round(p_marker*prop_qtl,digits=0)
+	if(n_qtl==0) n_qtl <- 1
+	Vp=1
+	h2=h2
+	# sample variance explained by single qtl form chisquare
+	#var_a = rchisq(n_qtl,Vp*h2)/n_qtl
 
-#same variance for every marker
-var_a = Vp*h2 / n_qtl
-qtl<-sample(1:ncol(M),n_qtl)
-alpha=sqrt((var_a)/(2*p[qtl]*q[qtl]))
+	#same variance for every marker
+	var_a = Vp*h2 / n_qtl
+	qtl<-sample(1:ncol(M),n_qtl)
+	alpha=sqrt((var_a)/(2*p[qtl]*q[qtl]))
 
-y <- stats::rnorm(nindividuals,0,sqrt(Vp*(1-h2)))
-y = y + (M[,qtl]%c%alpha)[,1]
+	y <- stats::rnorm(nindividuals,0,sqrt(Vp*(1-h2)))
+	y = y + (M[,qtl]%c%alpha)[,1]
 
-# export
-M <<- M
-y <<- y
+	# export
+	M <<- M
+	y <<- y
 
 }
 
