@@ -24,15 +24,13 @@ Square matrix of dimension nrow(X)
 \examples{
 
 # Computing the matrix-square-root of a positive definite square matrix:
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 W <- ccross(M)
 
 # this is the implementation of the matrix power-operator '\%**\%'
 W_sqrt <- with(eigen(W), ccross(vectors,values**0.5))
-}
 }
 
 \keyword{Tools}

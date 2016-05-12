@@ -21,9 +21,8 @@ Matrix \code{X} to the power \code{p}
 }
 
 \examples{
-\dontrun{
 # Inverse Square Root of a positive definite square matrix
-X <- matrix(rnorm(100*5000),100,1000)
+X <- matrix(rnorm(100*500),100,500)
 
 XX <- ccross(X)
 
@@ -31,7 +30,6 @@ XX_InvSqrt <- XX \%**\% -0.5
 
 # check result: ((XX')^-0.5 (XX')^-0.5)^-1 = XX'
 table(round(csolve(XX_InvSqrt \%c\% XX_InvSqrt),digits=2) == round(XX,digits=2) )
-}
 }
 
 \keyword{Tools}

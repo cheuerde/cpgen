@@ -224,14 +224,12 @@ Fernando, Rohan L., and Dorian Garrick. "Bayesian methods applied to GWAS." Geno
 
 \examples{
 
-\dontrun{
-
 ############################################################# 
 ### Running a model with an additive and dominance effect ###
 ############################################################# 
 
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 ### compute the relationship matrices
 G.A <- cgrm.A(M,lambda=0.01)
@@ -259,7 +257,7 @@ str(fit)
  
 ### 4-fold cross-validation with one repetition:
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 ### compute the list of masked phenotype-vectors for CV
 y_CV <- cCV(y, fold=4, reps=1)
@@ -274,7 +272,7 @@ Z_list = list(t(chol(G.A)))
 
 ### specify options
 h2 = 0.3
-scale = unlist(lapply(y_CV,function(x)var(x,na.rm=T))) * h2
+scale = unlist(lapply(y_CV,function(x)var(x,na.rm=TRUE))) * h2
 df = rep(5,length(y_CV))
 par_random = list(list(method="ridge",scale=scale,df=df, name="animal"))
 
@@ -296,7 +294,7 @@ get_cor(pred,y_CV,y)
 ########################################################
  
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 ### generate the list of design matrices for clmm
 Z_list = list(M)
@@ -441,7 +439,6 @@ heritabilities[,2] <- unlist(lapply(model, function(x)
                                       )
                              )
 
-}
 }
 \keyword{Genomic Prediction}
 \keyword{GWAS}

@@ -23,40 +23,35 @@
 
 #include "cGWAS.h"
 
-SEXP cGWAS(SEXP yR,SEXP MR, SEXP VR, SEXP V2R, SEXP XR, SEXP domR, SEXP second_transformR, SEXP sparseR, SEXP verboseR, SEXP threadsR){
+SEXP cGWAS(SEXP yR,SEXP MR, SEXP VR, SEXP V2R, SEXP XR, SEXP domR, SEXP second_transformR, SEXP sparseR, SEXP verboseR, SEXP threadsR) {
 
-bool dom = as<bool> (domR); 
-bool sparse = as<bool> (sparseR);
-bool second_transform = as<bool> (second_transformR);
-bool verbose = as<bool> (verboseR);
-int threads = as<int>(threadsR); 
+	bool dom = as<bool> (domR); 
+	bool sparse = as<bool> (sparseR);
+	bool second_transform = as<bool> (second_transformR);
+	bool verbose = as<bool> (verboseR);
+	int threads = as<int>(threadsR); 
 
-omp_set_num_threads(threads);
+	omp_set_num_threads(threads);
 
-Eigen::setNbThreads(1);
-Eigen::initParallel();
+	Eigen::setNbThreads(1);
+	Eigen::initParallel();
 
-GWA<MapSparseMatrixXd> W_sparse;
-GWA<MapMatrixXd> W_dense;
+	GWA<MapSparseMatrixXd> W_sparse;
+	GWA<MapMatrixXd> W_dense;
 
-if(sparse) {
-  W_sparse.initialize(yR,MR,VR,V2R,XR,dom, second_transform,verbose);
-  W_sparse.run_GWAS();
-  return W_sparse.summary(); 
+	if(sparse) {
+		 
+		W_sparse.initialize(yR,MR,VR,V2R,XR,dom, second_transform,verbose);
+		W_sparse.run_GWAS();
+		return W_sparse.summary(); 
 
-  } else {
+	} else {
 
-    W_dense.initialize(yR,MR,VR,V2R,XR,dom, second_transform,verbose);
-    W_dense.run_GWAS();
-    return W_dense.summary(); 
+		W_dense.initialize(yR,MR,VR,V2R,XR,dom, second_transform,verbose);
+		W_dense.run_GWAS();
+		return W_dense.summary(); 
 
-    }
+	}
 
 }
-
-
-
-
-
-
 

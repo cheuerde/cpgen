@@ -43,132 +43,133 @@
 
 typedef vector<MCMC<base_methods_st> > mcmc_st;
 
-SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par_design_matricesR, SEXP par_mcmcR, SEXP verboseR, SEXP threadsR, SEXP use_BLAS, SEXP list_of_ginverseR){
+SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par_design_matricesR, SEXP par_mcmcR, SEXP verboseR, SEXP threadsR, SEXP use_BLAS, SEXP list_of_ginverseR) {
 
-int threads = as<int>(threadsR); 
-int verbose = as<int>(verboseR); 
-bool BLAS = Rcpp::as<bool>(use_BLAS);
 
-Rcpp::List list_of_phenotypes(yR);
-Rcpp::List list_of_par_design_matrices(par_design_matricesR);
-Rcpp::List list_of_par_mcmc(par_mcmcR);
+	int threads = as<int>(threadsR); 
+	int verbose = as<int>(verboseR); 
+	bool BLAS = Rcpp::as<bool>(use_BLAS);
 
-int p = list_of_phenotypes.size();
+	Rcpp::List list_of_phenotypes(yR);
+	Rcpp::List list_of_par_design_matrices(par_design_matricesR);
+	Rcpp::List list_of_par_mcmc(par_mcmcR);
 
-//omp_set_dynamic(0);
-omp_set_num_threads(threads);
+	int p = list_of_phenotypes.size();
 
-Eigen::setNbThreads(1);
-Eigen::initParallel();
+	//omp_set_dynamic(0);
+	omp_set_num_threads(threads);
 
-int max = p / threads;
-if(max < 1) max = 1;
-//printer prog(max);
+	Eigen::setNbThreads(1);
+	Eigen::initParallel();
 
-Rcpp::List summary_out;
+	int max = p / threads;
+	if(max < 1) max = 1;
+	//printer prog(max);
 
-mcmc_st vec_mcmc_st;
-MCMC_abstract * single_mcmc;
+	Rcpp::List summary_out;
 
-Rcpp::List Summary;
+	mcmc_st vec_mcmc_st;
+	MCMC_abstract * single_mcmc;
 
-bool multiple_phenos = false;
+	Rcpp::List Summary;
 
-// CV
-if(p > 1) {
+	bool multiple_phenos = false;
 
-  multiple_phenos = true;
-// fill the container with mcmc_objects
-  for(int i=0;i<p;i++) {
+	// CV
+	if(p > 1) {
 
-// added 09/2015 - ginverse
-    vec_mcmc_st.push_back(MCMC<base_methods_st>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,list_of_par_design_matrices[i], list_of_par_mcmc[i],i, list_of_ginverseR));
+		multiple_phenos = true;
+		// fill the container with mcmc_objects
+		for(int i=0;i<p;i++) {
 
-  }
+			// added 09/2015 - ginverse
+			vec_mcmc_st.push_back(MCMC<base_methods_st>(list_of_phenotypes[i], XR, par_XR, list_of_design_matricesR ,list_of_par_design_matrices[i], list_of_par_mcmc[i],i, list_of_ginverseR));
 
-  for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
+		}
 
-    it->initialize();
+		for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
 
-  }
+			it->initialize();
 
-//  if ((p > 1) & verbose) { prog.initialize(); }
+		}
 
-// this looks easy - the work was to allow this step to be parallelized
-// verbose
-  Progress * prog = new Progress(vec_mcmc_st.size(), verbose);
+		//  if ((p > 1) & verbose) { prog.initialize(); }
+
+		// this looks easy - the work was to allow this step to be parallelized
+		// verbose
+		Progress * prog = new Progress(vec_mcmc_st.size(), verbose);
 
 #pragma omp parallel for 
-      for(unsigned int i=0;i<vec_mcmc_st.size();i++){
+		for(unsigned int i=0;i<vec_mcmc_st.size();i++){
 
-        if ( ! Progress::check_abort() ) {
+			if ( ! Progress::check_abort() ) {
 
-          vec_mcmc_st.at(i).gibbs();
-          prog->increment();
+				vec_mcmc_st.at(i).gibbs();
+				prog->increment();
 
-        }
+			}
 
-      }
-
-
-  for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
-
-    it->summary();
-    Summary[it->get_name()] = it->get_summary();     
-
-  }
+		}
 
 
-  delete prog;
-  summary_out = Summary;
+		for(mcmc_st::iterator it = vec_mcmc_st.begin(); it != vec_mcmc_st.end(); it++) {
+
+			it->summary();
+			Summary[it->get_name()] = it->get_summary();     
+
+		}
 
 
-} else {
-
-// Dont know whether it is possible to control threads for OMP and BLAS seperately
-// Single Model Run
-
-    if ((threads==1) & (!BLAS)) { 
-
-      single_mcmc = new MCMC<base_methods_st>(list_of_phenotypes[0], XR, par_XR, list_of_design_matricesR, 
-                                              list_of_par_design_matrices[0], list_of_par_mcmc[0],0, list_of_ginverseR);
-
-    }
-
-    if ((threads>1) & (!BLAS)) { 
-
-      single_mcmc = new MCMC<base_methods_mp>(list_of_phenotypes[0], XR, par_XR, list_of_design_matricesR, 
-                                              list_of_par_design_matrices[0], list_of_par_mcmc[0],0, list_of_ginverseR);
-
-    }
-
-    if (BLAS) { 
-
-      single_mcmc = new MCMC<base_methods_BLAS>(list_of_phenotypes[0], XR, par_XR, list_of_design_matricesR, 
-                                                list_of_par_design_matrices[0], list_of_par_mcmc[0],0, list_of_ginverseR);
-
-    }
-
-// FIXME This is dangerious as no condition from above might be true
-    single_mcmc->initialize();
-    Progress * prog = new Progress(single_mcmc->get_niter() , single_mcmc->get_verbose());
-//    single_mcmc->gibbs(prog);
-    single_mcmc->gibbs(prog);
-
-    single_mcmc->summary();
-    Summary[single_mcmc->get_name()] = single_mcmc->get_summary();  
-
-    delete single_mcmc; 
-    delete prog;
-    summary_out = Summary;
-  
-  }
+		delete prog;
+		summary_out = Summary;
 
 
-    
-////////////
+	} else {
 
-return summary_out;
+		// Dont know whether it is possible to control threads for OMP and BLAS seperately
+		// Single Model Run
+
+		if ((threads==1) & (!BLAS)) { 
+
+			single_mcmc = new MCMC<base_methods_st>(list_of_phenotypes[0], XR, par_XR, list_of_design_matricesR, 
+					list_of_par_design_matrices[0], list_of_par_mcmc[0],0, list_of_ginverseR);
+
+		}
+
+		if ((threads>1) & (!BLAS)) { 
+
+			single_mcmc = new MCMC<base_methods_mp>(list_of_phenotypes[0], XR, par_XR, list_of_design_matricesR, 
+					list_of_par_design_matrices[0], list_of_par_mcmc[0],0, list_of_ginverseR);
+
+		}
+
+		if (BLAS) { 
+
+			single_mcmc = new MCMC<base_methods_BLAS>(list_of_phenotypes[0], XR, par_XR, list_of_design_matricesR, 
+					list_of_par_design_matrices[0], list_of_par_mcmc[0],0, list_of_ginverseR);
+
+		}
+
+		// FIXME This is dangerious as no condition from above might be true
+		single_mcmc->initialize();
+		Progress * prog = new Progress(single_mcmc->get_niter() , single_mcmc->get_verbose());
+		//    single_mcmc->gibbs(prog);
+		single_mcmc->gibbs(prog);
+
+		single_mcmc->summary();
+		Summary[single_mcmc->get_name()] = single_mcmc->get_summary();  
+
+		delete single_mcmc; 
+		delete prog;
+		summary_out = Summary;
+
+	}
+
+
+
+	////////////
+
+	return summary_out;
 
 }
 

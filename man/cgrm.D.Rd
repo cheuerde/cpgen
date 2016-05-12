@@ -44,11 +44,9 @@ Su G, Christensen OF, Ostersen T, Henryon M, Lund MS (2012) "Estimating Additive
 \seealso{\code{\link{cgrm}}, \code{\link{cgrm.A}}.}
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 D <- cgrm.D(M,lambda=0.01)
-}
 }
 \keyword{Genomic Relationship}

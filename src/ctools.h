@@ -27,18 +27,18 @@
 
 
 #ifdef _OPENMP
-  #define has_openmp 1
-  #include <omp.h>
-  #define OMP_VERSION _OPENMP
+#define has_openmp 1
+#include <omp.h>
+#define OMP_VERSION _OPENMP
 #else 
-  #define has_openmp 0
-  #define omp_get_num_threads() 1
-  #define omp_set_num_threads(x) 1
-  #define omp_get_max_threads() 1
-  #define omp_get_thread_limit() 1
-  #define omp_set_dynamic(x) 1
-  #define omp_get_thread_num() 0
-  #define OMP_VERSION 0
+#define has_openmp 0
+#define omp_get_num_threads() 1
+#define omp_set_num_threads(x) 1
+#define omp_get_max_threads() 1
+#define omp_get_thread_limit() 1
+#define omp_set_dynamic(x) 1
+#define omp_get_thread_num() 0
+#define OMP_VERSION 0
 #endif
 
 using namespace Rcpp;
@@ -54,25 +54,23 @@ typedef Eigen::Map<Eigen::ArrayXd> MapArrayXd;
 typedef std::vector<std::map<std::string, int> > mp_container;
 
 template<class T1,class T2>
-SEXP ccrossproduct(SEXP XR, SEXP ZR)
+SEXP ccrossproduct(SEXP XR, SEXP ZR) {
 
-{
+	T1 X(as<T1> (XR));
+	T2 Z(as<T2> (ZR));
 
-  T1 X(as<T1> (XR));
-  T2 Z(as<T2> (ZR));
+	// allocate R-matrix
+	int n = X.rows();
+	int p = Z.cols();
+	Rcpp::NumericMatrix sol(n,p);
 
-// allocate R-matrix
-  int n = X.rows();
-  int p = Z.cols();
-  Rcpp::NumericMatrix sol(n,p);
+	// map that R-matrix to an Eigen-class
+	MapMatrixXd sol_map(sol.begin(),n,p);
 
-// map that R-matrix to an Eigen-class
-  MapMatrixXd sol_map(sol.begin(),n,p);
+	sol_map.noalias() = X*Z;
 
-  sol_map.noalias() = X*Z;
+	return sol;
 
-  return sol;
-  
 };
 
 
@@ -82,100 +80,109 @@ SEXP ccrossproduct(SEXP XR, SEXP ZR)
 template<class T1, class T2, class T3>
 SEXP eigensolver(SEXP XR, SEXP yR, SEXP threadsR) {
 
-  int threads = as<int>(threadsR);
-  omp_set_num_threads(threads);
-  Eigen::setNbThreads(1);
-  Eigen::initParallel();
+	int threads = as<int>(threadsR);
+	omp_set_num_threads(threads);
+	Eigen::setNbThreads(1);
+	Eigen::initParallel();
 
-  T1 X(as<T1> (XR));
-  T2 y(as<T2> (yR));
+	T1 X(as<T1> (XR));
+	T2 y(as<T2> (yR));
 
-  T3 W; 
-  
-  W.compute(X);
+	T3 W; 
 
-// allocate R-matrix
-  int n = X.rows();
-  int p = y.cols();
-  Rcpp::NumericMatrix sol(n,p);
+	W.compute(X);
 
-// map that R-matrix to an Eigen-class
-  MapMatrixXd sol_map(sol.begin(),n,p);
+	// allocate R-matrix
+	int n = X.rows();
+	int p = y.cols();
+	Rcpp::NumericMatrix sol(n,p);
 
-// only use omp if threads > 1
-  mp_container thread_vec;
-  int n_threads;
-  int who;
+	// map that R-matrix to an Eigen-class
+	MapMatrixXd sol_map(sol.begin(),n,p);
 
-  if(threads >1) {
+	// only use omp if threads > 1
+	mp_container thread_vec;
+	int n_threads;
+	int who;
 
-// container to store start and length for OpenMP threads - Credit: Hao Cheng (Iowa State University)
-// get the number of threads
+	if(threads >1) {
+
+		// container to store start and length for OpenMP threads - Credit: Hao Cheng (Iowa State University)
+		// get the number of threads
 #pragma omp parallel
-{
-  if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
-}
+		{
+			if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
+		}
 
-  thread_vec = mp_container(n_threads);
+		thread_vec = mp_container(n_threads);
 
-  for(int i=0;i<n_threads;i++) {
+		for(int i=0;i<n_threads;i++) {
 
-    thread_vec.at(i)["start"] = i * p / n_threads;
-    if(i==(n_threads-1)){thread_vec.at(i)["end"] = p;} else {
-    thread_vec.at(i)["end"] = (i+1) * p / n_threads;}
-    thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
+			thread_vec.at(i)["start"] = i * p / n_threads;
+			if(i==(n_threads-1)) {
 
-  }
+				thread_vec.at(i)["end"] = p;
+
+			} else {
+
+				thread_vec.at(i)["end"] = (i+1) * p / n_threads;
+
+			}
+
+			thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
+
+		}
 
 #pragma omp parallel private(who)
-{ 
-  who = omp_get_thread_num(); 
-// Eigen's block operations do not trigger copies (rather something like an Eigen::Map<>)
-  sol_map.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]).noalias() = W.solve(y.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]));
-}
-    
-} else {
-  
-    sol_map.noalias() = W.solve(y);
-    
-  }
-  
-  return sol;
+		{ 
+			who = omp_get_thread_num(); 
+			// Eigen's block operations do not trigger copies (rather something like an Eigen::Map<>)
+			sol_map.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]).noalias() = 
+				W.solve(y.block(0,thread_vec.at(who)["start"],n,thread_vec.at(who)["length"]));
+		}
+
+	} else {
+
+		sol_map.noalias() = W.solve(y);
+
+	}
+
+	return sol;
 
 };
 
 
 
-template<class T1>
+	template<class T1>
 SEXP ccolmv(SEXP XR, SEXP varR)
 
 {
 
-  T1 X(Rcpp::as<T1> (XR));
-  bool var = Rcpp::as<bool>(varR);
-  size_t p = X.cols();
-  size_t n = X.rows();
-  Rcpp::NumericVector mu(p);
+	T1 X(Rcpp::as<T1> (XR));
+	bool var = Rcpp::as<bool>(varR);
+	size_t p = X.cols();
+	size_t n = X.rows();
+	Rcpp::NumericVector mu(p);
 
-  for(size_t i=0;i < p; ++i) {
+	for(size_t i=0;i < p; ++i) {
 
-    mu(i) = X.col(i).sum() / n;
+		mu(i) = X.col(i).sum() / n;
 
-  }
+	}
 
-  if(var) {
+	if(var) {
 
-    for(size_t i=0;i < p; ++i) {
+		for(size_t i=0;i < p; ++i) {
 
 
-      mu(i) = (X.col(i).array() - mu(i)).matrix().squaredNorm() / (n - 1);
+			mu(i) = (X.col(i).array() - mu(i)).matrix().squaredNorm() / (n - 1);
 
-    }
+		}
 
-  }
+	}
 
-  return mu;
-  
+	return mu;
+
 };
 
 

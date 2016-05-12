@@ -63,13 +63,11 @@ Kang, Hyun Min, Jae Hoon Sul, Susan K Service, Noah A Zaitlen, Sit-yee Kong, Nel
 \seealso{\code{\link{cGWAS}}}
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 # run EMMAX
 res <- cGWAS.emmax(y,M,verbose=TRUE)
-}
 }
 \keyword{GWAS}
 

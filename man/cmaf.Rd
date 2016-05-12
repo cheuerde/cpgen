@@ -20,7 +20,7 @@ Numeric Vector of minor allele frequencies for every column in X
 
 \examples{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 # compute minor allele frequencies
 mafs <- cmaf(M)

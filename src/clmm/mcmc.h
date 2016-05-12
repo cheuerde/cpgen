@@ -81,139 +81,137 @@ typedef std::vector<std::map<std::string, int> > mp_container;
 template<class F>
 class MCMC : public MCMC_abstract {
 
-private:
+	private:
+		int niter;
+		int  burnin;
+		bool verbose;
+		bool timings;
+		bool initialized;
 
-  int niter;
-  int  burnin;
-  bool verbose;
-  bool timings;
-  bool initialized;
+		double scale_e;
+		double df_e;
 
-  double scale_e;
-  double df_e;
+		sampler mcmc_sampler;
 
-  sampler mcmc_sampler;
+	public:
+		Rcpp::List list_of_design_matrices;
+		// added 09/2015 - ginverse
+		Rcpp::List list_of_ginverse;
+		SEXP X_design_matrix;
+		Rcpp::List summary_list;
+		Rcpp::List par_fixed;
+		Rcpp::List par_random;
 
-public:
+		double var_y;
+		double post_var_e;
+		double mu;
 
-  Rcpp::List list_of_design_matrices;
-// added 09/2015 - ginverse
-  Rcpp::List list_of_ginverse;
-  SEXP X_design_matrix;
-  Rcpp::List summary_list;
-  Rcpp::List par_fixed;
-  Rcpp::List par_random;
+		int effiter;
+		int n_random;
 
-  double var_y;
-  double post_var_e;
-  double mu;
- 
-  int effiter;
-  int n_random;
+		int n;
 
-  int n;
+		std::string seed;
 
-  std::string seed;
- 
-  std::string name;
+		std::string name;
 
-  VectorXd y;
-  VectorXd ycorr;
-  VectorXd mean_var_e;
+		VectorXd y;
+		VectorXd ycorr;
+		VectorXd mean_var_e;
 
-  mp_container thread_vec;
+		mp_container thread_vec;
 
-// this obejct determines whethter we run in parallel or not
-  base_methods_abstract * my_base_functions;
+		// this obejct determines whethter we run in parallel or not
+		base_methods_abstract * my_base_functions;
 
-  vector<effects> model_effects;
+		vector<effects> model_effects;
 
-  double var_e;
+		double var_e;
 
-  bool has_na;
-  vector<int> isna;
+		bool has_na;
+		vector<int> isna;
 
-//  for timings
-//  std::chrono::high_resolution_clock::time_point t0; //FIXME TIMING
-//  std::chrono::high_resolution_clock::time_point t1; //FIXME TIMING
-  struct timeval t0;
-  struct timeval t1;
-  double time_temp;
-  double mean_time_per_iter;
+		//  for timings
+		//  std::chrono::high_resolution_clock::time_point t0; //FIXME TIMING
+		//  std::chrono::high_resolution_clock::time_point t1; //FIXME TIMING
+		struct timeval t0;
+		struct timeval t1;
+		double time_temp;
+		double mean_time_per_iter;
 
-//  void populate(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
-  int get_niter() { return niter; };
-  bool get_verbose() { return verbose; };
-  inline void initialize();
-  inline void gibbs(Progress * prog);
-  inline void gibbs();
-  inline void summary();
-  std::string get_name();
-  Rcpp::List get_summary();
-// taken from http://stackoverflow.com/questions/307082/cleaning-up-an-stl-list-vector-of-pointers
-//  ~MCMC() { while(!model_effects.empty()) delete model_effects.back(), model_effects.pop_back() ;};
-//  MCMC() : my_base_functions(new F) {};
-   MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, 
-   SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number, SEXP list_of_ginverse_from_R);
-//   MCMC(const MyString& mcmc_source);
-  ~MCMC(){ delete my_base_functions;};
+		//  void populate(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number);
+		int get_niter() { return niter; };
+		bool get_verbose() { return verbose; };
+		inline void initialize();
+		inline void gibbs(Progress * prog);
+		inline void gibbs();
+		inline void summary();
+		std::string get_name();
+		Rcpp::List get_summary();
+		// taken from http://stackoverflow.com/questions/307082/cleaning-up-an-stl-list-vector-of-pointers
+		//  ~MCMC() { while(!model_effects.empty()) delete model_effects.back(), model_effects.pop_back() ;};
+		//  MCMC() : my_base_functions(new F) {};
+		MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, 
+		     SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number, SEXP list_of_ginverse_from_R);
+		//   MCMC(const MyString& mcmc_source);
+		~MCMC(){ delete my_base_functions;};
 
 };
 
 template<class F>
 MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_design_matrices_from_R, 
-              SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number, SEXP list_of_ginverse_from_R) : my_base_functions(0)  {
+	      SEXP par_design_matrices_from_R, SEXP par_from_R, int phenotype_number, SEXP list_of_ginverse_from_R) : my_base_functions(0) {
 
-// Initializing all members
-  Rcpp::List par(par_from_R);
-  list_of_design_matrices = Rcpp::List(list_of_design_matrices_from_R);
+	// Initializing all members
+	Rcpp::List par(par_from_R);
+	list_of_design_matrices = Rcpp::List(list_of_design_matrices_from_R);
 
-// added 09/2015 - ginverse
-  list_of_ginverse = Rcpp::List(list_of_ginverse_from_R);
-  X_design_matrix = X_from_R;
-  MapVectorXd y_temp = MapVectorXd(as<MapVectorXd> (y_from_R));
+	// added 09/2015 - ginverse
+	list_of_ginverse = Rcpp::List(list_of_ginverse_from_R);
+	X_design_matrix = X_from_R;
+	MapVectorXd y_temp = MapVectorXd(as<MapVectorXd> (y_from_R));
 
-  niter = Rcpp::as<int>(par["niter"]);
-  burnin = Rcpp::as<int>(par["burnin"]);
-  verbose = Rcpp::as<bool>(par["verbose"]);
-  timings = Rcpp::as<bool>(par["timings"]);
-  scale_e = Rcpp::as<double>(par["scale_e"]);
-  df_e = Rcpp::as<double>(par["df_e"]);
-  seed = Rcpp::as<std::string>(par["seed"]);
-  name = Rcpp::as<std::string>(par["name"]);
+	niter = Rcpp::as<int>(par["niter"]);
+	burnin = Rcpp::as<int>(par["burnin"]);
+	verbose = Rcpp::as<bool>(par["verbose"]);
+	timings = Rcpp::as<bool>(par["timings"]);
+	scale_e = Rcpp::as<double>(par["scale_e"]);
+	df_e = Rcpp::as<double>(par["df_e"]);
+	seed = Rcpp::as<std::string>(par["seed"]);
+	name = Rcpp::as<std::string>(par["name"]);
 
-  par_fixed = Rcpp::List(par_fixed_from_R);
-  par_random = Rcpp::List(par_design_matrices_from_R);
+	par_fixed = Rcpp::List(par_fixed_from_R);
+	par_random = Rcpp::List(par_design_matrices_from_R);
 
-// this is to ensure that if a couple of models are run at the same time
-// that every instance has got a unique seed - openmp
-  std::ostringstream oss; 
-  oss << phenotype_number + 1;
-  seed.append(oss.str());
-  mcmc_sampler = sampler(seed);
-//  my_base_functions = new F;
+	// this is to ensure that if a couple of models are run at the same time
+	// that every instance has got a unique seed - openmp
+	std::ostringstream oss; 
+	oss << phenotype_number + 1;
+	seed.append(oss.str());
+	mcmc_sampler = sampler(seed);
+	//  my_base_functions = new F;
 
-  y = y_temp;
+	y = y_temp;
 
-  mean_var_e = VectorXd::Zero(niter);
+	mean_var_e = VectorXd::Zero(niter);
 
-  effiter=0;
-  post_var_e=0;
+	effiter=0;
+	post_var_e=0;
 
-  n = y.size();
-  n_random = list_of_design_matrices.size();
-  if(n_random<1) n_random=1;
+	n = y.size();
+	n_random = list_of_design_matrices.size();
+	if(n_random<1) n_random=1;
 
-// check for NAs in pehnotype vector
-// comparison x!=x yields TRUE if x=NA
+	// check for NAs in pehnotype vector
+	// comparison x!=x yields TRUE if x=NA
 
-  has_na = true;
-  mu = 0;
-  var_y=0;
-  isna = vector<int>();
-  model_effects = vector<effects>();
+	has_na = true;
+	mu = 0;
+	var_y=0;
+	isna = vector<int>();
+	model_effects = vector<effects>();
 
-  initialized = false;
+	initialized = false;
 
 }
 
@@ -228,49 +226,49 @@ MCMC<F>::MCMC(SEXP y_from_R, SEXP X_from_R, SEXP par_fixed_from_R, SEXP list_of_
 template<class F>
 MCMC<F>::MCMC(const MCMC& mcmc_source) {
 
-  niter = mcmc_source.niter;
-  burnin = mcmc_source.burnin;
-  beta_posterior = mcmc_source.beta_posterior;
-  verbose = mcmc_source.verbose;
-  initialized = mcmc_source.initialized;
-  scale_e = mcmc_source.scale_e;
-  df_e = mcmc_source.df_e;
+niter = mcmc_source.niter;
+burnin = mcmc_source.burnin;
+beta_posterior = mcmc_source.beta_posterior;
+verbose = mcmc_source.verbose;
+initialized = mcmc_source.initialized;
+scale_e = mcmc_source.scale_e;
+df_e = mcmc_source.df_e;
 
 // default copy constructor of class 'sampler' is sufficent (no dynamic objects)
-  mcmc_sampler = mcmc_source.mcmc_sampler;
+mcmc_sampler = mcmc_source.mcmc_sampler;
 
 
-  list_of_design_matrices = mcmc_source.list_of_design_matrices;
-  summary_list = mcmc_source.summary_list;
-  var_y = mcmc_source.var_y;
-  post_var_e = mcmc_source.post_var_e;
-  mu = mcmc_source.mu;
- 
-  effiter = mcmc_source.effiter;
-  n_random = mcmc_source.n_random;
+list_of_design_matrices = mcmc_source.list_of_design_matrices;
+summary_list = mcmc_source.summary_list;
+var_y = mcmc_source.var_y;
+post_var_e = mcmc_source.post_var_e;
+mu = mcmc_source.mu;
 
-  n = mcmc_source.n;
+effiter = mcmc_source.effiter;
+n_random = mcmc_source.n_random;
 
-  seed = mcmc_source.seed;
- 
-  name = mcmc_source.name;
+n = mcmc_source.n;
 
-  y = mcmc_source.y;
-  ycorr = mcmc_source.ycorr;
-  mean_var_e = mcmc_source.mean_var_e;
+seed = mcmc_source.seed;
 
-  thread_vec = mcmc_source.thread_vec;
+name = mcmc_source.name;
+
+y = mcmc_source.y;
+ycorr = mcmc_source.ycorr;
+mean_var_e = mcmc_source.mean_var_e;
+
+thread_vec = mcmc_source.thread_vec;
 
 // First reason for explicit copy constructor
-  my_base_functions = new base_methods_abstract(*mcmc_source.my_base_functions);
+my_base_functions = new base_methods_abstract(*mcmc_source.my_base_functions);
 
 // FIXME check this
-  vector<effects> model_effects;
+vector<effects> model_effects;
 
-  var_e = mcmc_source.var_e;
+var_e = mcmc_source.var_e;
 
-  has_na = mcmc_source.has_na;
-  isna = mcmc_source.isna;
+has_na = mcmc_source.has_na;
+isna = mcmc_source.isna;
 
 }
 
@@ -279,82 +277,116 @@ MCMC<F>::MCMC(const MCMC& mcmc_source) {
 template<class F>
 void MCMC<F>::initialize() {
 
-// here we assign the base_function class outside
-// the constructor to prevent the nightmare of having to 
-// code copy constructors for every single virtual and 
-// derived class
+	// here we assign the base_function class outside
+	// the constructor to prevent the nightmare of having to 
+	// code copy constructors for every single virtual and 
+	// derived class
 
-  delete my_base_functions;
-  my_base_functions = new F; 
+	delete my_base_functions;
+	my_base_functions = new F; 
 
-//  isna.clear();
+	//  isna.clear();
 
-  for(int i=0;i<y.size();i++) { if( y(i)!=y(i) ){ isna.push_back(i);} else { mu+=y(i);} }
-//Rcout << endl << "na size: " << isna.size() << endl;
-  has_na = isna.size() > 0 ? true : false;
+	for(int i=0;i<y.size();i++) { 
 
-  mu = mu / (y.size() - isna.size());  
+		if( y(i)!=y(i) ) { 
 
-// compute variance; missing at random for NAs -- FIXME crucial part
-// FIXME assign: if( y(i)!=y(i)  or if( y(i)!=0 ??
-  for(int i=0;i<y.size();i++) { if( y(i)!=y(i) ) {y(i) = mu;} else {var_y += (y(i) - mu) * (y(i) - mu);} }
-  var_y = var_y / (y.size() - isna.size() - 1);
-  var_e = var_y - (var_y / (2 * n_random));
+			isna.push_back(i);
 
-  ycorr = y;
+		} else {
 
-/////////////////////
-// Multithreading //
-////////////////////
+			mu+=y(i);
 
-  int n_threads;
+		}
 
-// container to store start and length for OpenMP threads - Credit: Hao Cheng (Iowa State University)
-// get the number of threads
+	}
+	//Rcout << endl << "na size: " << isna.size() << endl;
+	has_na = isna.size() > 0 ? true : false;
+
+	mu = mu / (y.size() - isna.size());  
+
+	// compute variance; missing at random for NAs -- FIXME crucial part
+	// FIXME assign: if( y(i)!=y(i)  or if( y(i)!=0 ??
+	for(int i=0;i<y.size();i++) { 
+
+		if( y(i)!=y(i) ) {
+
+			y(i) = mu;
+
+		} else {
+
+			var_y += (y(i) - mu) * (y(i) - mu);
+
+		} 
+
+	}
+
+	var_y = var_y / (y.size() - isna.size() - 1);
+	var_e = var_y - (var_y / (2 * n_random));
+
+	ycorr = y;
+
+	/////////////////////
+	// Multithreading //
+	////////////////////
+
+	int n_threads;
+
+	// container to store start and length for OpenMP threads - Credit: Hao Cheng (Iowa State University)
+	// get the number of threads
 #pragma omp parallel
-{
-if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
-}
+	{
+		if(omp_get_thread_num()==0) { n_threads = omp_get_num_threads(); }
+	}
 
 
-thread_vec = mp_container(n_threads);
+	thread_vec = mp_container(n_threads);
 
 
-for(int i=0;i<n_threads;i++) {
+	for(int i=0;i<n_threads;i++) {
 
-  thread_vec.at(i)["start"] = i * n / n_threads;
-  if(i==(n_threads-1)){thread_vec.at(i)["end"] = n;} else {
-  thread_vec.at(i)["end"] = (i+1) * n / n_threads;}
-  thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
+		thread_vec.at(i)["start"] = i * n / n_threads;
+		if(i==(n_threads-1)) {
 
-}
+			thread_vec.at(i)["end"] = n;
+
+		} else {
+
+			thread_vec.at(i)["end"] = (i+1) * n / n_threads;
+
+		}
+
+		thread_vec.at(i)["length"] = thread_vec.at(i)["end"] - thread_vec.at(i)["start"];
+
+	}
 
 
-// populate with effects
-// include fixed effect
-//
-// added 09/2015 - ginverse
-// this is just for passing something as ginverse to the fixed effects
-  SEXP ginverse_fixed;
-  model_effects.clear();
-  model_effects.push_back(effects(X_design_matrix, ycorr.data(),par_fixed, &var_e, var_y,n_random,niter, burnin, ginverse_fixed)); 
-// random effects
-  for(int i=0;i<list_of_design_matrices.size();i++){
+	// populate with effects
+	// include fixed effect
+	//
+	// added 09/2015 - ginverse
+	// this is just for passing something as ginverse to the fixed effects
+	SEXP ginverse_fixed;
+	model_effects.clear();
+	model_effects.push_back(effects(X_design_matrix, ycorr.data(),par_fixed, &var_e, var_y,n_random,niter, burnin, ginverse_fixed)); 
+	// random effects
+	for(int i=0;i<list_of_design_matrices.size();i++){
 
-    model_effects.push_back(effects(list_of_design_matrices[i], ycorr.data(), Rcpp::List(par_random[i]), &var_e, var_y, n_random, niter, burnin, list_of_ginverse[i])); 
+		model_effects.push_back(effects(list_of_design_matrices[i], ycorr.data(), Rcpp::List(par_random[i]),
+					       	&var_e, var_y, n_random, niter, burnin, list_of_ginverse[i])); 
 
-  }
+	}
 
-// initializing effects
+	// initializing effects
 
-    for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
+	for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
 
-      it->initialize(my_base_functions);
+		it->initialize(my_base_functions);
 
-    }
+	}
 
-    mean_time_per_iter = 0;
-    initialized = true;
+	mean_time_per_iter = 0;
+	initialized = true;
 
 }
 
@@ -363,87 +395,87 @@ for(int i=0;i<n_threads;i++) {
 template<class F>
 void MCMC<F>::gibbs(Progress * prog) {
 
-  if(!initialized) initialize();
+	if(!initialized) initialize();
 
-  vector<effects>::iterator it;  
+	vector<effects>::iterator it;  
 
-//  printer prog(niter);
-//  Progress prog(niter, verbose);
-//  if(verbose) { prog.initialize(); }
+	//  printer prog(niter);
+	//  Progress prog(niter, verbose);
+	//  if(verbose) { prog.initialize(); }
 
-    for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
+	for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++) {
 
-// check for interrupt from R
-//    if (omp_get_thread_num() == 0) R_CheckUserInterrupt();
-//    if(!multiple_phenos) R_CheckUserInterrupt();
-      if ( ! Progress::check_abort() ) {
-      	
-// timings
-//    if(timings) t0 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
-        if(timings) gettimeofday(&t0, NULL);
+		// check for interrupt from R
+		//    if (omp_get_thread_num() == 0) R_CheckUserInterrupt();
+		//    if(!multiple_phenos) R_CheckUserInterrupt();
+		if(!Progress::check_abort()) {
 
-        for(it = model_effects.begin(); it != model_effects.end(); it++) {
+			// timings
+			//    if(timings) t0 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
+			if(timings) gettimeofday(&t0, NULL);
 
-          it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
+			for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-        }
+				it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
 
-        for(it = model_effects.begin(); it != model_effects.end(); it++) {
+			}
 
-          it->sample_variance(mcmc_sampler, gibbs_iter);
+			for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-        }
+				it->sample_variance(mcmc_sampler, gibbs_iter);
 
-// sample residual variance
+			}
 
-     var_e = (ycorr.matrix().squaredNorm() + scale_e * df_e) / mcmc_sampler.rchisq(n + df_e);
-     mean_var_e(gibbs_iter)=var_e;
+			// sample residual variance
 
-// residual noise to NAs -- Reference: de los Campos (2009) - BLR
-      if(has_na) {
-     
-        for (unsigned int i=0;i<isna.size();i++) {ycorr(isna[i]) = mcmc_sampler.rnorm(0,sqrt(var_e));}
+			var_e = (ycorr.matrix().squaredNorm() + scale_e * df_e) / mcmc_sampler.rchisq(n + df_e);
+			mean_var_e(gibbs_iter)=var_e;
 
-      }
+			// residual noise to NAs -- Reference: de los Campos (2009) - BLR
+			if(has_na) {
 
-// posterior means
+				for (unsigned int i=0;i<isna.size();i++) {ycorr(isna[i]) = mcmc_sampler.rnorm(0,sqrt(var_e));}
 
-      if(gibbs_iter > (burnin - 1)) {
+			}
 
-        for(it = model_effects.begin(); it != model_effects.end(); it++) {
+			// posterior means
 
-          it->update_means();
+			if(gibbs_iter > (burnin - 1)) {
 
-        }
+				for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-      post_var_e += var_e;
-      effiter++;
+					it->update_means();
 
-      }
+				}
+
+				post_var_e += var_e;
+				effiter++;
+
+			}
 
 
-// timings
-      if(timings) {
+			// timings
+			if(timings) {
 
-//      t1 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
-//      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0; //FIXME TIMING
-        gettimeofday(&t1, NULL);
-// taken from here: http://stackoverflow.com/questions/16764276/measuring-time-in-millisecond-precision
-        time_temp = (t1.tv_sec - t0.tv_sec) + (t1.tv_usec - t0.tv_usec) / 1000000.0;
-        mean_time_per_iter += time_temp;
-        Rcpp::Rcout << std::endl 
-                    << " Iteration: |"   << gibbs_iter + 1 
-//                  << "|  var_e: |"     << var_e  
-                    << "|  secs/iter: |" << time_temp
-                    << "|"               << std::endl;
+				//      t1 = std::chrono::high_resolution_clock::now(); //FIXME TIMING
+				//      time_temp = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() / 1000.0; //FIXME TIMING
+				gettimeofday(&t1, NULL);
+				// taken from here: http://stackoverflow.com/questions/16764276/measuring-time-in-millisecond-precision
+				time_temp = (t1.tv_sec - t0.tv_sec) + (t1.tv_usec - t0.tv_usec) / 1000000.0;
+				mean_time_per_iter += time_temp;
+				Rcpp::Rcout << std::endl 
+					<< " Iteration: |"   << gibbs_iter + 1 
+					//                  << "|  var_e: |"     << var_e  
+					<< "|  secs/iter: |" << time_temp
+					<< "|"               << std::endl;
 
-      }
-      
-      prog->increment();
+			}
 
-    }
+			prog->increment();
 
-  } 
+		}
+
+	} 
 
 }
 
@@ -453,52 +485,52 @@ void MCMC<F>::gibbs(Progress * prog) {
 template<class F>
 void MCMC<F>::gibbs() {
 
-  if(!initialized) initialize();
+	if(!initialized) initialize();
 
-  vector<effects>::iterator it;  
+	vector<effects>::iterator it;  
 
-  for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
+	for(int gibbs_iter=0; gibbs_iter<niter; gibbs_iter++){
 
-    for(it = model_effects.begin(); it != model_effects.end(); it++) {
+		for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-      it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
+			it->sample_effects(mcmc_sampler,my_base_functions,thread_vec, gibbs_iter);
 
-    }
+		}
 
-    for(it = model_effects.begin(); it != model_effects.end(); it++) {
+		for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-      it->sample_variance(mcmc_sampler, gibbs_iter);
+			it->sample_variance(mcmc_sampler, gibbs_iter);
 
-    }
+		}
 
-// sample residual variance
+		// sample residual variance
 
-    var_e = (ycorr.matrix().squaredNorm() + scale_e * df_e) / mcmc_sampler.rchisq(n + df_e);
-    mean_var_e(gibbs_iter)=var_e;
+		var_e = (ycorr.matrix().squaredNorm() + scale_e * df_e) / mcmc_sampler.rchisq(n + df_e);
+		mean_var_e(gibbs_iter)=var_e;
 
-// residual noise to NAs -- Reference: de los Campos (2009) - BLR
-    if(has_na) {
-     
-      for (unsigned int i=0;i<isna.size();i++) ycorr(isna[i]) = mcmc_sampler.rnorm(0,sqrt(var_e));
+		// residual noise to NAs -- Reference: de los Campos (2009) - BLR
+		if(has_na) {
 
-    }
+			for (unsigned int i=0;i<isna.size();i++) ycorr(isna[i]) = mcmc_sampler.rnorm(0,sqrt(var_e));
 
-// posterior means
+		}
 
-    if(gibbs_iter > (burnin - 1)) {
+		// posterior means
 
-      for(it = model_effects.begin(); it != model_effects.end(); it++) {
+		if(gibbs_iter > (burnin - 1)) {
 
-        it->update_means();
+			for(it = model_effects.begin(); it != model_effects.end(); it++) {
 
-      }
+				it->update_means();
 
-    post_var_e += var_e;
-    effiter++;
+			}
 
-    }
+			post_var_e += var_e;
+			effiter++;
 
-  } 
+		}
+
+	} 
 
 }
 
@@ -508,49 +540,47 @@ template<class F>
 void MCMC<F>::summary() {
 
 
-  summary_list["Residual_Variance"] = Rcpp::List::create(Rcpp::Named("Posterior_Mean") = post_var_e / effiter,
-			      Rcpp::Named("Posterior") = mean_var_e,
-			      Rcpp::Named("scale_prior") = scale_e,
-			      Rcpp::Named("df_prior") = df_e);
+	summary_list["Residual_Variance"] = Rcpp::List::create(Rcpp::Named("Posterior_Mean") = post_var_e / effiter,
+							       Rcpp::Named("Posterior") = mean_var_e,
+							       Rcpp::Named("scale_prior") = scale_e,
+							       Rcpp::Named("df_prior") = df_e);
 
-  VectorXd yhat = VectorXd::Zero(n);
-  for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
+	VectorXd yhat = VectorXd::Zero(n);
+	for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
 
-    yhat += it->predict(effiter);
+		yhat += it->predict(effiter);
 
-  }
-  
+	}
 
-  summary_list["Predicted"] = yhat;
 
-  int count = 1;
+	summary_list["Predicted"] = yhat;
 
-  std::string list_name;
+	int count = 1;
 
-  for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
-  
-    summary_list[it->get_name()] = it->get_summary(effiter);
-    count++;
+	std::string list_name;
 
-  }
+	for(vector<effects>::iterator it = model_effects.begin(); it != model_effects.end(); it++) {
 
-  Rcpp::List mcmc_out;
-  mcmc_out["niter"] = niter;
-  mcmc_out["burnin"] = burnin;
-  mcmc_out["number_of_samples"] = effiter;
-  mcmc_out["seed"] = seed;
-  if(timings) mcmc_out["time_per_iter"] = mean_time_per_iter / niter;
-  summary_list["mcmc"] = mcmc_out;
-  
+		summary_list[it->get_name()] = it->get_summary(effiter);
+		count++;
+
+	}
+
+	Rcpp::List mcmc_out;
+	mcmc_out["niter"] = niter;
+	mcmc_out["burnin"] = burnin;
+	mcmc_out["number_of_samples"] = effiter;
+	mcmc_out["seed"] = seed;
+	if(timings) mcmc_out["time_per_iter"] = mean_time_per_iter / niter;
+	summary_list["mcmc"] = mcmc_out;
+
 }
 
 
 template<class F>
 std::string MCMC<F>::get_name() {
 
-
-  return name;
-  
+	return name;
 
 }
 
@@ -558,7 +588,7 @@ std::string MCMC<F>::get_name() {
 template<class F>
 Rcpp::List MCMC<F>::get_summary() {
 
- return summary_list;
+	return summary_list;
 
 }
 

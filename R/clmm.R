@@ -23,7 +23,9 @@
 
 # clmm
 
-clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, timings = FALSE, seed = NULL, use_BLAS=FALSE, beta_posterior_fixed = FALSE){
+clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, 
+		 niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, 
+		 timings = FALSE, seed = NULL, use_BLAS=FALSE, beta_posterior_fixed = FALSE) {
 
 	default_scale = 0
 	default_df = -2
@@ -47,7 +49,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, nit
 		if (sum(n[1]!=n) > 0) stop("phenoytpe vectors must have same length")
 		n = n[1]
 		if(is.null(names(y))) names(y) <- paste("Phenotype_",1:p,sep="") 
-		
+
 	} else {
 
 		if(!is.vector(y)) stop("phenotype must be supplied as vector")
@@ -90,7 +92,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, nit
 
 		random = list()
 		par_random_all = list()
-		for(k in 1:length(y)) { par_random_all[[k]] = list(list()) }
+		for(k in 1:length(y)) par_random_all[[k]] = list(list())
 
 	} else {
 
@@ -107,6 +109,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, nit
 				for(i in 1:length(random)){
 
 					if(X_is_ok(random[[i]],n,names(random)[i])) {
+
 						method = "ridge"
 						# added 8.12.15 - beta_posterior individually for effects
 						beta_posterior = FALSE
@@ -116,6 +119,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, nit
 						par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method,
 								       name=as.character(names(random)[i]), GWAS=FALSE, GWAS_threshold = 0.01, 
 								       GWAS_window_size = 1, beta_posterior = beta_posterior) }
+
 				}
 
 			} else {
@@ -236,18 +240,31 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, nit
 
 	if(!is.null(ginverse)) {
 
-		if(length(ginverse)!= length(random)) stop("If provided, ginverse must have as many items as random. Put 'NULL' for no ginverse in the list for a particular random effect")
+		if(length(ginverse)!= length(random)) {
+
+			stop("If provided, ginverse must have as many items as random. 
+			     Put 'NULL' for no ginverse in the list for a particular random effect")
+
+		}
 
 		# check dimensions - all that matters is the number of columns
 		for(i in 1:length(ginverse)) {
 
 			if(!is.null(ginverse[[i]])) {
 
-				if(ncol(ginverse[[i]]) != ncol(random[[i]])) stop(paste("Number of columns in design matrix: '",
-											par_random[[i]]$name,"' dont match dimnsion of corresponding ginverse", sep=""))
+				if(ncol(ginverse[[i]]) != ncol(random[[i]])) { 
 
-				if(!class(ginverse[[i]]) %in% c("matrix","dgCMatrix")) stop(paste("Ginverse: '",par_random[[i]]$name,
-												  "' must be of type 'matrix' or 'dgCMatrix'",sep=""))
+					stop(paste("Number of columns in design matrix: '",
+						   par_random[[i]]$name,"' dont match dimnsion of corresponding ginverse", sep=""))
+
+				}
+
+				if(!class(ginverse[[i]]) %in% c("matrix","dgCMatrix")) {
+
+					stop(paste("Ginverse: '",par_random[[i]]$name,
+						   "' must be of type 'matrix' or 'dgCMatrix'",sep=""))
+
+				}
 
 				# set the method for that effect - Only ridge regression allowed
 				# also set the type of matrix for ginverse
@@ -274,7 +291,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, nit
 
 	# RNG Seed based on system time and process id
 	# Taken from: http://stackoverflow.com/questions/8810338/same-random-numbers-every-time
-	if(is.null(seed)) { seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31) }
+	if(is.null(seed)) seed = as.integer((as.double(Sys.time())*1000+Sys.getpid()) %% 2^31)
 
 	par_mcmc = list()
 	verbose_single = verbose
@@ -299,7 +316,15 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, nit
 
 	mod <- .Call("clmm",y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, ginverse, PACKAGE = "cpgen" )
 
-	if(length(y) == 1) { return(mod[[1]]) } else { return(mod) }
+	if(length(y) == 1) { 
+
+		return(mod[[1]]) 
+
+	} else { 
+
+		return(mod) 
+
+	}
 
 	#return(list(y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, ginverse))
 
@@ -344,8 +369,14 @@ cGBLUP <- function(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,ni
 	if(verbose) cat("\nComputing Eigen Decomposition\n")
 
 	if(length(isy) < length(y)) {
-		UD <- eigen(G[isy,isy]) } else {
-			UD <- eigen(G) }
+
+		UD <- eigen(G[isy,isy]) 
+
+	} else {
+
+		UD <- eigen(G) 
+
+	}
 
 	n <- length(isy)
 
@@ -366,7 +397,8 @@ cGBLUP <- function(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,ni
 	old_threads <- get_num_threads()
 	set_num_threads(1,silent=TRUE)
 
-	mod <- clmm(y = Uy, X = UX , Z = list(Z), par_random = par_random, scale_e=scale_e, df_e=df_e, verbose=verbose, niter=niter, burnin=burnin, seed=seed)
+	mod <- clmm(y = Uy, X = UX , Z = list(Z), par_random = par_random, scale_e=scale_e, df_e=df_e, 
+		    verbose=verbose, niter=niter, burnin=burnin, seed=seed)
 
 	# set number of threads to old value
 	set_num_threads(old_threads,silent=TRUE)
@@ -391,9 +423,6 @@ cGBLUP <- function(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,ni
 
 
 
-
-
-
 X_is_ok <- function(X,n,name) {
 
 	allowed=c("matrix","dgCMatrix")
@@ -401,9 +430,9 @@ X_is_ok <- function(X,n,name) {
 	#if(sum(a%in%allowed)!=1) stop(paste(c("lol","rofl"))) 
 	if(sum(a%in%allowed)!=1) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" , "),sep="")) 
 
-	if(anyNA(X)) { stop(paste("No NAs allowed in design matrix '", name,"'", sep="")) } 
+	if(anyNA(X)) stop(paste("No NAs allowed in design matrix '", name,"'", sep="")) 
 
-	if(a=="matrix" | a=="dgCMatrix") { if(nrow(X) != n) stop(paste("Number of rows in design matrix '",name,"' doesnt match number of observations in y",sep="")) }
+	if(a=="matrix" | a=="dgCMatrix") if(nrow(X) != n) stop(paste("Number of rows in design matrix '",name,"' doesnt match number of observations in y",sep=""))
 
 
 	return(1) 

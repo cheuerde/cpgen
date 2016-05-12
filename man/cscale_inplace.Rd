@@ -25,13 +25,11 @@ nothing, function works 'inplace'
 
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 # scale matrix
 cscale_inplace(M,scale=TRUE)
-}
 }
 
 \keyword{Tools}

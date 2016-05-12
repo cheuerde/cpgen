@@ -26,27 +26,27 @@
 
 class sampler {
 
-public:
-double  rnorm(double mean, double sd){
+	public:
+		double  rnorm(double mean, double sd) {
 
-  return R::rnorm(mean,sd);
+			return R::rnorm(mean,sd);
 
-  };
+		};
 
-double  rchisq(int df){
+		double  rchisq(int df) {
 
-  return R::rchisq(df);
+			return R::rchisq(df);
 
-  };
+		};
 
-  void set_seed(uint32_t seed){};
+		void set_seed(uint32_t seed){};
 
-  void set_seed(){};
+		void set_seed(){};
 
-void check_sampler(){ 
+		void check_sampler() { 
 
-  std::cout << std::endl << " I am the R-RNG " << std::endl;
+			std::cout << std::endl << " I am the R-RNG " << std::endl;
 
-  };
+		};
 
 };

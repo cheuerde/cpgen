@@ -27,12 +27,10 @@ List (matrix) with as many items (columns) as \code{folds * reps}
 \seealso{\code{\link{clmm}, \link{get_pred}, \link{get_cor}}}
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(500,1000)
 
 y_CV <- cCV(y,folds=5,reps=20)
-}
 }
 
 \keyword{Genomic Prediction}

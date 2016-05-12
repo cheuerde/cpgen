@@ -47,13 +47,11 @@ Zhang Z, Liu J, Ding X, Bijma P, de Koning D-J, et al. (2010) "Best Linear Unbia
 \seealso{\code{\link{cgrm.A}}, \code{\link{cgrm.D}}.}
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 weights <- (cor(M,y)**2)[,1]
 
 G <- cgrm(M,weights,lambda=0.01)
-}
 }
 \keyword{Genomic Relationship}

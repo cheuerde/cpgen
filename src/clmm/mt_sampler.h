@@ -28,65 +28,68 @@
 
 class sampler {
 
-private:
+	private:
+		std::mt19937 gen;
 
-  std::mt19937 gen;
+	public:
+		double rnorm(double mean, double sd) {
 
-public:
-  double rnorm(double mean, double sd){
+			return std::normal_distribution<double>(mean,sd)(gen);
 
-    return std::normal_distribution<double>(mean,sd)(gen);
+		};
 
-  };
+		double rchisq(double df) {
 
-  double rchisq(double df){
+			return std::chi_squared_distribution<double>(df)(gen);
 
-    return std::chi_squared_distribution<double>(df)(gen);
+		};
 
-  };
+		int rbinom(size_t trials, double prob) {
 
-  int rbinom(size_t trials, double prob){
+			return std::binomial_distribution<int>(trials, prob)(gen);
 
-    return std::binomial_distribution<int>(trials, prob)(gen);
-
-  };
-
+		};
 
 
-  void set_seed(std::string string_seed){
 
-  std::seed_seq my_seed(string_seed.begin(),string_seed.end());
-  gen.seed(my_seed);
+		void set_seed(std::string string_seed) {
 
-  };
+			std::seed_seq my_seed(string_seed.begin(),string_seed.end());
+			gen.seed(my_seed);
+
+		};
 
 
-// not nice
-  void set_seed(){
+		// not nice
+		void set_seed() {
 
-  std::random_device rd;
-  gen.seed(static_cast<uint32_t> (rd())); 
+			std::random_device rd;
+			gen.seed(static_cast<uint32_t> (rd())); 
 
-  };
+		};
 
-  void check_sampler(){ std::cout << std::endl << " I am mt19937_C++ " << std::endl;};
+		void check_sampler() { 
 
-  sampler() {
+			std::cout << std::endl << " I am mt19937_C++ " << std::endl;
 
-  std::random_device rd;
-  gen = std::mt19937(static_cast<uint32_t> (rd())); 
+		};
 
-  }
+		sampler() {
 
-  sampler(std::string string_seed) {
+			std::random_device rd;
+			gen = std::mt19937(static_cast<uint32_t> (rd())); 
 
-  std::seed_seq my_seed(string_seed.begin(),string_seed.end());
- // cout << endl << my_seed << endl;
-  gen = std::mt19937(my_seed);
+		}
 
-  }
+		sampler(std::string string_seed) {
 
-//  ~sampler(){ delete gen; }
+			std::seed_seq my_seed(string_seed.begin(),string_seed.end());
+			// cout << endl << my_seed << endl;
+			gen = std::mt19937(my_seed);
+
+		}
+
+		//  ~sampler(){ delete gen; }
 
 
 };

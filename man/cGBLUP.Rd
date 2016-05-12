@@ -71,15 +71,13 @@ Kang, H. M., N. A. Zaitlen, C. M. Wade, A. Kirby, D. Heckerman, M. J. Daly, and 
 \seealso{\code{\link{clmm}}, \code{\link{cgrm}}, \code{\link{cGWAS.emmax}}}
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 # compute a genomic relationship-matrix
 G <- cgrm(M,lambda=0.01)
 
 # run model
 mod <- cGBLUP(y,G)
-}
 }
 \keyword{Genomic Prediction}

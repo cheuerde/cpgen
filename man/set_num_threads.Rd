@@ -31,13 +31,12 @@ Changes the global variable \code{cpgen.threads} to the value in \code{x}
 # Control the number of threads being used in an R-session:
 
 # set the number of threads to 1
-\dontrun{
 set_num_threads(1)
 
 #### Use a parallelized cpgen-function
 
 # generate random data
-rand_data(1000,10000)
+rand_data(100,500)
 
 # check single-threaded performance
 system.time(W <- M\%c\%t(M))
@@ -50,7 +49,6 @@ set_num_threads(2)
 system.time(W <- M\%c\%t(M))
 }
 
-}
 
 \keyword{Parallelization}
 

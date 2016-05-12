@@ -59,9 +59,8 @@ Kang, Hyun Min, Jae Hoon Sul, Susan K Service, Noah A Zaitlen, Sit-yee Kong, Nel
 \seealso{\code{\link{cGWAS.emmax}}}
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 
 ### GWAS without accounting for population structure
@@ -84,6 +83,4 @@ V2inv <- V \%**\% -0.5
 mod2 <- cGWAS(y,M,V=V2inv,verbose=TRUE)
 }
 
-
-}
 \keyword{GWAS}

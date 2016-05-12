@@ -30,11 +30,15 @@ using namespace std;
 
 class base_methods_abstract{
 
-public:
-virtual void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns) = 0;
-virtual void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns) = 0;
-virtual void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1) = 0;
-virtual void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, double * ycorr, VectorXd& var, double * var_e, sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1) = 0;
-virtual ~base_methods_abstract(){};
+	public:
+		virtual void initialize(MapMatrixXd& Z, VectorXd& xtx, int& columns) = 0;
+		virtual void initialize(MapSparseMatrixXd& Z, VectorXd& xtx, int& columns) = 0;
+		virtual void sample_effects(MapMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, 
+					    double * ycorr, VectorXd& var, double * var_e, 
+					    sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1) = 0;
+		virtual void sample_effects(MapSparseMatrixXd& Z, VectorXd& xtx, VectorXd& estimates, 
+					    double * ycorr, VectorXd& var, double * var_e, 
+					    sampler& mcmc_sampler,mp_container& thread_vec, double lambda = 1) = 0;
+		virtual ~base_methods_abstract(){};
 
 };

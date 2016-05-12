@@ -1,0 +1,14 @@
+cpgen v0.2 (Release date: 2016-05-12)
+==============
+
+Changes:
+
+* Added ability to save posterior samples of regression coefficients in \code{clmm}
+* Added missing dimension checks of matrices in \code{cGWAS} and \code{cGWAS.emmax}
+* Added solver for sparse RHS and sparse LHS for \code{csolve}
+* Code indentation improved
+
+cpgen v0.1 (Release date: 2015-09-15)
+==============
+
+Initial Release

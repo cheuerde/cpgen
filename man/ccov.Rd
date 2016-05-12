@@ -26,13 +26,11 @@ Covariance matrix with dimension ncol(X)
 
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 # compute correlation matrix of t(M)
-corM <- ccov(t(M),compute_cor=T)
-}
+corM <- ccov(t(M),compute_cor=TRUE)
 }
 
 \keyword{Tools}

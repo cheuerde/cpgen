@@ -27,10 +27,9 @@ Numeric scalar - Mean prediction accuracy measured as correlation between predic
 
 \examples{
 ### Running a 4-fold cross-validation with one repetition:
-\dontrun{
 
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 ### compute the list of masked phenotype-vectors for CV
 y_CV <- cCV(y,fold=4,reps=1)
@@ -45,7 +44,7 @@ Z_list = list(t(chol(G.A)))
 
 ### specify options
 h2 = 0.3
-scale = unlist(lapply(y_CV,function(x)var(x,na.rm=T))) * h2
+scale = unlist(lapply(y_CV,function(x)var(x,na.rm=TRUE))) * h2
 df = rep(5,length(y_CV))
 par_random = list(list(method="ridge",scale=scale,df=df))
 
@@ -62,6 +61,5 @@ pred <- get_pred(fit)
 get_cor(pred,y_CV,y)
 }
 
-}
 \keyword{Genomic Prediction}
 \keyword{Tools}

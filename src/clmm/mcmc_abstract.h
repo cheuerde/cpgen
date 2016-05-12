@@ -30,15 +30,15 @@ using namespace std;
 
 class MCMC_abstract{
 
-public:
-virtual int get_niter()  = 0;
-virtual bool get_verbose() = 0;
-virtual void initialize() = 0;
-virtual void gibbs(Progress * prog) = 0;
-virtual void gibbs() = 0;
-virtual void summary() = 0;
-virtual std::string get_name() = 0;
-virtual Rcpp::List get_summary() = 0;
-virtual ~MCMC_abstract(){};
+	public:
+		virtual int get_niter()  = 0;
+		virtual bool get_verbose() = 0;
+		virtual void initialize() = 0;
+		virtual void gibbs(Progress * prog) = 0;
+		virtual void gibbs() = 0;
+		virtual void summary() = 0;
+		virtual std::string get_name() = 0;
+		virtual Rcpp::List get_summary() = 0;
+		virtual ~MCMC_abstract(){};
 
 };

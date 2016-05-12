@@ -43,12 +43,10 @@ Yang, Jian, Beben Benyamin, Brian P McEvoy, Scott Gordon, Anjali K Henders, Dale
 \seealso{\code{\link{cgrm}}, \code{\link{cgrm.D}}}
 
 \examples{
-\dontrun{
 # generate random data
-rand_data(500,5000)
+rand_data(100,500)
 
 ### compute the additive genomic relationship matrix
 A <- cgrm.A(M,lambda=0.01)
-}
 }
 \keyword{Genomic Relationship}
