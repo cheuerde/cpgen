@@ -553,7 +553,7 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP index_ngtR
 	MapMatrixXd M2(as<MapMatrixXd>(MR));
 
 	// Matrix to store temporary results for imputed genotype columns
-	Eigen::MatrixXd impTmp;
+	Eigen::VectorXd impTmp;
 
 	// those are the submatrices of Ainverse
 	MapSparseMatrixXd A11(as<MapSparseMatrixXd>(A11R));
@@ -582,7 +582,7 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP index_ngtR
 
 		for(int j=0;i < n_ngeno_model; j++) {
 
-			M_full.row(n_geno_model + j) = impTmp.row(index_ngt[j]-1);
+			M_full(n_geno_model + j, i) = impTmp(index_ngt[j]-1);
 
 		}
 

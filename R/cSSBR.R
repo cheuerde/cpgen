@@ -182,19 +182,19 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 	non_genotyped <- ids[!ids %in% genotyped]
 	non_genotyped_index <- match(non_genotyped, ids)
 
-	nrow_gt = length(genotyped)
-	nrow_non_gt = length(non_genotyped)
-
 	# if non-genotyped dont provide phenotypes then SSBR is not a good model choice
 	if(length(non_genotyped) == 0) stop("There are no non-genotyped individuals that provide phenotypes")
 
 	# now we already have to make the decission whether to export everything or just the animals with
 	# phenotypes
 	index_gt = 1:length(genotyped)
-	if(returnAll == FALSE) index_gt[!is.na(data$y[match(genotyped, data$id)])]
+	if(returnAll == FALSE) index_gt = index_gt[!is.na(data$y[match(genotyped, data$id)])]
 
 	index_ngt = 1:length(non_genotyped)
-	if(returnAll == FALSE) index_ngt[!is.na(data$y[match(non_genotyped, data$id)])]
+	if(returnAll == FALSE) index_ngt = index_ngt[!is.na(data$y[match(non_genotyped, data$id)])]
+
+	nrow_gt = length(index_gt)
+	nrow_non_gt = length(index_ngt)
 		
 	if(verbose) cat(" Allocating combined Marker matrix ( n =",nrow_gt + nrow_non_gt,", p =",ncol(M),")\n")
 	if(verbose) cat(" Imputing non-genotyped individuals\n")
@@ -234,9 +234,9 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 	# Update 14.09.2015: Insted of the cholesky we now use the
 	# submatrix of Ainv directly and pass it as 'ginverse' argument
 	# to clmm
-
 	Ainv11 <- Ainv[non_genotyped[index_ngt], non_genotyped[index_ngt]]
 
+	# incidence matrix for the residual imputation component
 	Z <- sparse.model.matrix(
 				 ~ -1 + residId, 
 				 data = out, 
@@ -249,14 +249,32 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 	}
 
 	Z <- Z[, match(non_genotyped[index_ngt], levels(out$residId))]
+	colnames(Z) <- gsub("residId", "", colnames(Z))
 
+	# now we make the incidence matrices for the genotype "centering"
+	# the genotyped get the covariate -1 (sort of substracting the population
+	# mean) and the non genotyped animals get imputed just like the markers
+	J <- array(-1, dim = c(n, 1))
+
+	# this is the solution for all non-genotypes individuals
+	Jtmp <- as.vector(
+			  solve(
+				Ainv[non_genotyped_index,non_genotyped_index], 
+				(-Ainv[non_genotyped_index,genotyped_index]) %*% rep(-1, length(genotyped))
+				)
+			  )
+
+	# subset only those we keep (see "returnAll" argument)
+	J[match(non_genotyped[index_ngt], out$id), 1] <- Jtmp[match(non_genotyped[index_ngt], non_genotyped)]
 
 	return(list(
 		    ids = out$id, 
 		    y = out$y, 
 		    Marker_Matrix = M_combined, 
 		    Z_residual = Z, 
-		    ginverse_residual = Ainv11
+		    ginverse_residual = Ainv11,
+		    J = J,
+		    imputed = non_genotyped[index_ngt]
 		    ))
 
 }

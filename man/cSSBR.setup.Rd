@@ -12,13 +12,14 @@ or to pass them to alternative software.
 
 
 \usage{
-cSSBR.setup(data, M, M.id, verbose=TRUE)
+cSSBR.setup(data, M, M.id, verbose=TRUE, returnAll = FALSE)
 }
 \arguments{
 \item{data}{\code{data.frame} with four columns: \code{id, sire, dam, y}}
 \item{M}{Marker Matrix for genotyped individuals}
 \item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
 \item{verbose}{Prints progress to the screen}
+\item{returnAll}{Return all individuals present in \code{M} and pedigree. If false, function only return individuals with phenotypes}
 }
 
 
@@ -36,6 +37,8 @@ List of 5:
   \item{Z_residual}{Design Matrix used to model the residual error for the imputed individuals}
   \item{\code{ginverse_residual}}{Submatrix of the inverse of the numerator relationship matrix. 
                                   Used to model the residual error for the imputed individuals}
+  \item{J}{Design Matrix for modelling differences in means for genotyped and non-genotyped individuals}
+  \item{imputed}{List of imputed individuals}
 }
 
 
