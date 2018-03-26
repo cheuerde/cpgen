@@ -312,7 +312,7 @@ editPed_fast <- function(sire, dam, label, verbose = FALSE)
 	# new version that calls the C-function "get_generation"
 	# Note: there is no return value, the R-objects are directly being changed
 
-	.Call("get_generation", pede$sire, pede$dam, pede$id, pede$gene, as.integer(verbose), package="cpgen")    
+	.Call("get_generation", pede$sire, pede$dam, pede$id, pede$gene, as.integer(verbose), PACKAGE="cpgen")    
 
 	ord<- order(pede$gene)
 	ans<-data.frame(label=labelOl, sire=sireOl, dam=damOl, gene=pede$gene,
