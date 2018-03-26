@@ -4,7 +4,7 @@ Title: Parallel Genomic Evaluations
 Version: 0.2
 Date: 2018-03-26
 Author: Claas Heuer
-Maintainer: Claas Heuer <cheuer@googlemail.com>
+Maintainer: Claas Heuer <claasheuer@googlemail.com>
 Description: Frequently used methods in genomic applications with emphasis on parallel computing.
  At its core, the package has a Gibbs Sampler that allows running univariate linear
  mixed models that have both, sparse and dense design matrices. The parallel sampling method
@@ -18,3 +18,4 @@ SystemRequirements: C++11
 Imports: methods, stats
 Depends: R(>= 3.4.0), Matrix(>= 1.0-5), pedigreemm(>= 0.3-3)
 LinkingTo: Rcpp, RcppEigen, RcppProgress
+RoxygenNote: 6.0.1

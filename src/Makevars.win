@@ -1,14 +1,4 @@
-
-## Use the R_HOME indirection to support installations of multiple R version
-
-# this is for openmp-support in windows
 CXX_STD = CXX11
-PKG_LIBS= $(SHLIB_OPENMP_CFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
-PKG_CXXFLAGS= $(SHLIB_OPENMP_CFLAGS) -DNDEBUG
-#
-# without openmp
-
-#PKG_LIBS = $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::LdFlags()")
-#PKG_CXXFLAGS= $(shell "`${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()") 
-
+PKG_LIBS = $(SHLIB_OPENMP_CFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CFLAGS) -DNDEBUG
 

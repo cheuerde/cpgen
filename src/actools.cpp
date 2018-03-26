@@ -580,7 +580,7 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP index_ngtR
 
 		impTmp = A.solve(A12 * M2.col(i));
 
-		for(int j=0;i < n_ngeno_model; j++) {
+		for(int j=0;j < n_ngeno_model; j++) {
 
 			M_full(n_geno_model + j, i) = impTmp(index_ngt[j]-1);
 

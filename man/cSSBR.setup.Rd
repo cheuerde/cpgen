@@ -76,7 +76,7 @@ M <- rbind(c(1,2,1,1,0,0,1,2,1,0),
 
 M.id <- 1:3
 
-model_terms <- cSSBR.setup(dat,M, M.id)
+model_terms <- cSSBR.setup(data = dat, M = M, M.id = M.id, verbose = TRUE, returnAll = TRUE)
 
 var_y <- var(y,na.rm=TRUE)
 var_e <- (10*var_y / 21)

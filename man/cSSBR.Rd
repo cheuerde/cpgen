@@ -8,13 +8,14 @@ This function runs Single Step Bayesian Regression (SSBR) for the prediction of 
 in a unified model that incorporates genotyped and non genotyped individuals (Fernando et al., 2014).
 }
 \usage{
-cSSBR(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, 
+cSSBR(data, M, M.id, returnAll = FALSE, X=NULL, par_random=NULL, scale_e=0, df_e=0, 
       niter=5000, burnin=2500, seed=NULL, verbose=TRUE)
 }
 \arguments{
 \item{data}{\code{data.frame} with four columns: \code{id, sire, dam, y}}
 \item{M}{Marker Matrix for genotyped individuals}
 \item{M.id}{Vector of length \code{nrow(M)} representing rownames for M}
+\item{returnAll}{Return all individuals present in \code{M} and pedigree. If false, function only return individuals with phenotypes}
 \item{X}{Fixed effects design matrix of type: \code{matrix} or \code{dgCMatrix}.
          If omitted a column-vector of ones will be assigned. Must have as many rows as \code{data}}
 \item{par_random}{as in \code{\link{clmm}}}
@@ -50,6 +51,8 @@ List of 4 + number of random effects as in \code{\link{clmm}} +
        \item{\code{Z_residual} - Design Matrix used to model the residual error for the imputed individuals}
        \item{\code{ginverse_residual} - Submatrix of the inverse of the numerator relationship matrix. 
                                        Used to model the residual error for the imputed individuals}
+  \item{J}{Design Matrix for modelling differences in means for genotyped and non-genotyped individuals}
+  \item{imputed}{List of imputed individuals}
        \item{\code{Breeding_Values} - Predicted Breeding Values for all animals in \code{data} that have
              genotypes and/or phenotypes}
       }
@@ -111,6 +114,7 @@ set_num_threads(1)
 mod<-cSSBR(data = dat,
            M=M,
            M.id=M.id,
+	   returnAll = TRUE,
            par_random=par_random,
            scale_e = var_e,
            df_e=df,

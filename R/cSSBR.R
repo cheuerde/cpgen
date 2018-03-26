@@ -22,7 +22,7 @@
 #
 
 # cSSBR
-cSSBR <- function(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE, returnAll = FALSE) {
+cSSBR <- function(data, M, M.id, returnAll = FALSE, X=NULL, par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
 
 
 	# double check some stuff to prevent clmm from failing 
@@ -52,7 +52,7 @@ cSSBR <- function(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, nit
 	}
 
 	# obtain the model terms
-	model_terms <- cSSBR.setup(data, M, M.id, verbose)
+	model_terms <- cSSBR.setup(data = data, M = M, M.id = M.id, verbose = verbose, returnAll = returnAll)
 	X <- X[match(model_terms$ids,data$id),,drop=FALSE]
 
 
@@ -145,7 +145,7 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 	# Update: 14.09.2015 - Dont force people to change pedigreem version, simply
 	# call an internally provided version of 'editPed' = 'editPed_fast'. See below
 	# ped <- editPed_fast(
-	ped <- EditPedFast(
+	ped <- editPed_fast(
 			    label=data$id,
 			    sire=data$sire, 
 			    dam=data$dam, 
