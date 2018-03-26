@@ -534,8 +534,7 @@ SEXP cscale_inplace(SEXP Xa, SEXP meansR, SEXP varsR, SEXP scaleR, SEXP threadsR
 // cSSBR_impute
 // this function will return a combined marker matrix
 // with the genotyped individuals on the top rows
-
-SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR) {
+SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP index_ngtR, SEXP threadsR) {
 
 	int threads = as<int>(threadsR);
 	omp_set_num_threads(threads);
@@ -543,19 +542,25 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR) 
 	Eigen::initParallel();
 
 	// get genotyped individuals that will enter the model
-
 	int n_geno_model = LENGTH(index_gtR);
 	int * index_gt = INTEGER(index_gtR);
 
+	// get non-genotyped individuals that will enter the model
+	int n_ngeno_model = LENGTH(index_ngtR);
+	int * index_ngt = INTEGER(index_ngtR);
+
 	// this is the marker matrix of the genotyped individuals	
 	MapMatrixXd M2(as<MapMatrixXd>(MR));
+
+	// Matrix to store temporary results for imputed genotype columns
+	Eigen::MatrixXd impTmp;
 
 	// those are the submatrices of Ainverse
 	MapSparseMatrixXd A11(as<MapSparseMatrixXd>(A11R));
 	MapSparseMatrixXd A12(as<MapSparseMatrixXd>(A12R));
 
 	// dimensions of combined matrix
-	int n = n_geno_model + A11.rows();
+	int n = n_geno_model + n_ngeno_model;
 	int p = M2.cols();
 
 	// the combined model matrix 
@@ -568,10 +573,18 @@ SEXP cSSBR_impute(SEXP A11R, SEXP A12R, SEXP MR, SEXP index_gtR, SEXP threadsR) 
 	//  M_full.bottomRows(A11.rows()).noalias() = A.solve(A12 * M2);
 
 	// here we impute the non-genotyped directly into the combined marker matrix
+	// Edit 2018-03-26: not anymore. We impute into a temporary vector (or 1-columned
+	// matrix) and then copy according to the index for the non-genotyped individuals
 # pragma omp parallel for
 	for(int i=0;i<p;++i) {
 
-		M_full.block(n_geno_model,i,A11.rows(),1).noalias() = A.solve(A12*M2.col(i));
+		impTmp = A.solve(A12 * M2.col(i));
+
+		for(int j=0;i < n_ngeno_model; j++) {
+
+			M_full.row(n_geno_model + j) = impTmp.row(index_ngt[j]-1);
+
+		}
 
 	}
 

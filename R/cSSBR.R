@@ -22,8 +22,7 @@
 #
 
 # cSSBR
-
-cSSBR <- function(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE) {
+cSSBR <- function(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, niter=5000, burnin=2500, seed=NULL, verbose=TRUE, returnAll = FALSE) {
 
 
 	# double check some stuff to prevent clmm from failing 
@@ -96,8 +95,7 @@ cSSBR <- function(data, M, M.id, X=NULL, par_random=NULL, scale_e=0, df_e=0, nit
 
 
 # cSSBR.setup
-
-cSSBR.setup <- function(data, M, M.id, verbose=TRUE) {
+cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 
 
 	# double check some stuff to prevent clmm from failing 
@@ -129,8 +127,9 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE) {
 	data$dam <- as.character(data$dam)
 	M.id <- as.character(M.id)
 
-	marker_without_ped <- M.id[!M.id %in% c(data$id,data$sire,data$dam)]
-	if(length(marker_without_ped)>0) {
+	marker_without_ped <- M.id[!M.id %in% c(data$id, data$sire, data$dam)]
+
+	if(length(marker_without_ped) > 0) {
 
 		temp <- data.frame(id = marker_without_ped, sire = NA, dam = NA, y = NA)
 		data <- cbind(data,temp)
@@ -145,8 +144,19 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE) {
 
 	# Update: 14.09.2015 - Dont force people to change pedigreem version, simply
 	# call an internally provided version of 'editPed' = 'editPed_fast'. See below
-	ped <- editPed_fast(label=data$id,sire=data$sire,dam=data$dam,verbose=FALSE)
-	ped <- pedigreemm::pedigree(label=ped$label,sire=ped$sire,dam=ped$dam)
+	# ped <- editPed_fast(
+	ped <- EditPedFast(
+			    label=data$id,
+			    sire=data$sire, 
+			    dam=data$dam, 
+			    verbose=FALSE
+			    )
+
+	ped <- pedigreemm::pedigree(
+				    label=ped$label,
+				    sire=ped$sire,
+				    dam=ped$dam
+				    )
 
 	# construct A-inverse
 	# Ainv <- as(getAInv(ped),"dgCMatrix")
@@ -157,45 +167,38 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE) {
 	dimnames(Ainv)[[1]]<-dimnames(Ainv)[[2]] <-ped@label
 	Ainv <- as(Ainv, "dgCMatrix")
 
-	# now check which individuals have phenotypes and provide pedigree and/or marker information
-	DAT <- data.frame(id=ped@label, y = as.numeric(NA), has_y = 0, has_gt = 0, has_ped = 0, stringsAsFactors=FALSE)
-	n = nrow(DAT)
-
-	DAT[match(data$id,DAT$id),"y"] <- data[match(DAT[match(data$id,DAT$id),"id"],data$id),"y"]
-	DAT[!is.na(DAT$y),"has_y"] <- 1
-	DAT[DAT$id %in% M.id,"has_gt"] <- 1
-	DAT[DAT$id %in% ped@label,"has_ped"] <- 1
-
-	ids <- 1:n
-
-	genotyped <- ids[match(M.id,DAT$id)]
-
-	# from the non genotyped we only need those with phenotype
-	non_genotyped <- ids[DAT$has_y & !DAT$id %in% DAT[genotyped,"id"]]
-
-	# if non-genotyped dont provide phenotypes then SSBR is not a good model choice
-	if(length(non_genotyped) == 0) stop("There are no non-genotyped individuals that provide phenotypes")
-
-	# allocate the combined marker matrix for the model (only individuals with phenotype)
-	nrow_gt = sum(DAT[genotyped,"has_y"])
-	nrow_non_gt = length(non_genotyped)
-	tmp <- DAT[genotyped,]
-	index_gt <- seq(1,nrow(M))[match(tmp[tmp[,"has_y"]==1,"id"] ,M.id)]
-	# set up model ids
-	model_ids <- c(M.id[index_gt],DAT$id[non_genotyped])
 
 	#######################
 	### Imputation Step ###
 	#######################
 
-	### this part is recplaced now by the very memory efficient c++-function 'cSSBR_impute'
-	# M_combined <- matrix(double(),nrow = nrow_gt + nrow_non_gt, ncol = ncol(M))
-	# if(nrow_gt > 0){
-	#  M_combined[1:nrow_gt,] <- M[index_gt,]
-	# }
+	ids <- ped@label
 
+	# we have to match the genotyped ones to the marker matrix so we dont have to
+	# reorder that matrix
+	genotyped <- ids[match(M.id, ids)]
+	genotyped_index <- match(genotyped, ids)
+
+	non_genotyped <- ids[!ids %in% genotyped]
+	non_genotyped_index <- match(non_genotyped, ids)
+
+	nrow_gt = length(genotyped)
+	nrow_non_gt = length(non_genotyped)
+
+	# if non-genotyped dont provide phenotypes then SSBR is not a good model choice
+	if(length(non_genotyped) == 0) stop("There are no non-genotyped individuals that provide phenotypes")
+
+	# now we already have to make the decission whether to export everything or just the animals with
+	# phenotypes
+	index_gt = 1:length(genotyped)
+	if(returnAll == FALSE) index_gt[!is.na(data$y[match(genotyped, data$id)])]
+
+	index_ngt = 1:length(non_genotyped)
+	if(returnAll == FALSE) index_ngt[!is.na(data$y[match(non_genotyped, data$id)])]
+		
 	if(verbose) cat(" Allocating combined Marker matrix ( n =",nrow_gt + nrow_non_gt,", p =",ncol(M),")\n")
 	if(verbose) cat(" Imputing non-genotyped individuals\n")
+
 	# 'csolve' uses Eigen's 'SimplicalLLT-Solver' which is very fast for this purpose.
 	# Now impute the non_genotyped directly into the model matrix
 	#
@@ -203,40 +206,58 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE) {
 	# (-Ainv[non_genotyped,genotyped]) %c% M)
 
 	# This function runs in parallel with an absolute minimum of temporary memory allocation
-	M_combined <- .Call("cSSBR_impute",Ainv[non_genotyped,non_genotyped],
-			    (-Ainv[non_genotyped,genotyped]), M, as.integer(index_gt), options()$cpgen.threads)
+	M_combined <- .Call(
+			    "cSSBR_impute",
+			    Ainv[non_genotyped_index,non_genotyped_index],
+			    (-Ainv[non_genotyped_index,genotyped_index]), 
+			    M, 
+			    as.integer(index_gt), 
+			    as.integer(index_ngt), 
+			    options()$cpgen.threads
+			    )
 
-	# obtain the cholesky factor for residual error of non_genotyped
-	# using pedigreemm::relfactor
-	#L <- t(as(relfactor(ped),"dgCMatrix"))
+	#################################
+	### Model terms and filtering ###
+	#################################
 
-	# set zeros for genotyped individuals
-	#if(nrow_gt > 0){
-	#  L[match(M.id[index_gt],DAT$id),] <- 0 
-	#}
+	modelIds <- c(genotyped[index_gt], non_genotyped[index_ngt])
 
-	# remove individuals we dont need and order
-	#L <- L[match(model_ids,DAT$id),non_genotyped]
+	# 
+	out <- data.frame(
+			  id = modelIds,
+			  residId = factor(modelIds),
+			  y = data$y[match(modelIds, data$id)], 
+			  stringsAsFactors=FALSE
+			  )
+	n = nrow(out)
 
 	# Update 14.09.2015: Insted of the cholesky we now use the
 	# submatrix of Ainv directly and pass it as 'ginverse' argument
 	# to clmm
 
-	Ainv11 <- Ainv[non_genotyped, non_genotyped]
+	Ainv11 <- Ainv[non_genotyped[index_ngt], non_genotyped[index_ngt]]
 
-	Z <- sparse.model.matrix( ~ -1 + id, data=DAT, drop.unused.levels=FALSE)
+	Z <- sparse.model.matrix(
+				 ~ -1 + residId, 
+				 data = out, 
+				 drop.unused.levels = FALSE
+				 )
 
 	if(nrow_gt > 0){
-		Z[match(M.id[index_gt],DAT$id),] <- 0 
+
+		Z[match(genotyped[index_gt], out$id),] <- 0 
 	}
 
-	Z <- Z[match(model_ids,DAT$id),non_genotyped]
+	Z <- Z[, match(non_genotyped[index_ngt], levels(out$residId))]
 
 
-	# phenotype vector
-	pheno <- DAT$y[match(model_ids,DAT$id)]
-
-	return(list(ids = model_ids, y=pheno, Marker_Matrix=M_combined, Z_residual = Z, ginverse_residual = Ainv11))
+	return(list(
+		    ids = out$id, 
+		    y = out$y, 
+		    Marker_Matrix = M_combined, 
+		    Z_residual = Z, 
+		    ginverse_residual = Ainv11
+		    ))
 
 }
 
