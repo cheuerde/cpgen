@@ -16,6 +16,6 @@ Description: Frequently used methods in genomic applications with emphasis on pa
 License: GPL (>= 2)
 SystemRequirements: C++11
 Imports: methods, stats
-Depends: R(>= 3.4.0), Matrix(>= 1.0-5), pedigreemm(>= 0.3-3)
+Depends: R(>= 3.3.0), Matrix(>= 1.0-5), pedigreemm(>= 0.3-3)
 LinkingTo: Rcpp, RcppEigen, RcppProgress
 RoxygenNote: 6.0.1
