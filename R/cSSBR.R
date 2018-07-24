@@ -135,7 +135,8 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 			id = as.character(marker_without_ped), 
 			sire = as.character(NA), 
 			dam = as.character(NA), 
-			y = as.numeric(NA)
+			y = as.numeric(NA),
+			stringsAsFactors = FALSE
 			)
 		data <- cbind(data,temp)
 
