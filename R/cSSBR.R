@@ -138,7 +138,7 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 			y = as.numeric(NA),
 			stringsAsFactors = FALSE
 			)
-		data <- cbind(data,temp)
+		data <- rbind(data,temp)
 
 	}
 
