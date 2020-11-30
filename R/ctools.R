@@ -216,8 +216,13 @@ cgrm <- function(X, w = NULL, lambda=0){
 	allowed=c("matrix","dgCMatrix","numeric","array")
 	a = class(X)
 	b = class(Y)
+	
+	goodClass = 0
+	
+	if(any(a %in% allowed)) goodClass = goodClass + 1
+	if(any(b %in% allowed)) goodClass = goodClass + 1
 
-	if(sum(c(a,b)%in%allowed)!=2) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric', 'array'") }
+	if(goodClass!=2) { stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric', 'array'") }
 	if(anyNA(X) | anyNA(Y)) { stop("no NAs allowed") }
 
 	if(is.vector(X) | is.array(X)) { X = as.matrix(X); a = "matrix" } 
