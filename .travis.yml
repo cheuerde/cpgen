@@ -6,17 +6,3 @@
 language: r
 sudo: false
 cache: packages
-
-r_packages:
- - Rcpp
- - RcppEigen
- - RcppProgress
- - Matrix
- - pedigreemm
-apt_packages:
-
-
-env:
-  global:
-    - R_BUILD_ARGS="--no-build-vignettes --no-manual"
-    - R_CHECK_ARGS="--no-build-vignettes --no-manual --as-cran
