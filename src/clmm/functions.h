@@ -506,17 +506,7 @@ void function_ridge_ginv<MapMatrixXd, MapMatrixXd>::sample_effects(base_methods_
 	MapVectorXd ycorr_map(ycorr,design_matrix.rows());
 
 	// This might be slow as the rhs could trigger a temporary dense vector
-	//  ycorr_map += design_matrix * estimates;
-
-	for(size_t i=0; i < design_matrix.cols(); ++i) {
-
-		for (InIterMat it_(design_matrix, i); it_; ++it_){
-
-			ycorr_map(it_.index()) += it_.value() * estimates(i); 
-
-		}
-
-	}
+	ycorr_map += design_matrix * estimates;
 
 	for(int i=0;i<design_matrix.cols();i++) { 
 
@@ -536,21 +526,47 @@ void function_ridge_ginv<MapMatrixXd, MapMatrixXd>::sample_effects(base_methods_
 
 
 	// same as above applies here
-	//  ycorr_map -= design_matrix * estimates;
+	ycorr_map -= design_matrix * estimates;
 
-	for(size_t i=0; i < design_matrix.cols(); ++i) {
+}
 
-		for (InIterMat it_(design_matrix, i); it_; ++it_){
+// This is a specialization for the case of a
+// dense design matrix and sparse Ginverse (could happen).
 
-			ycorr_map(it_.index()) -= it_.value() * estimates(i); 
+template<>
+void function_ridge_ginv<MapMatrixXd, MapSparseMatrixXd>::sample_effects(base_methods_abstract*& base_fun,VectorXd& xtx,
+									 VectorXd& estimates, double * ycorr, VectorXd& var,
+									 double * var_e, sampler& mcmc_sampler, mp_container& thread_vec) {
 
-		}
+
+	double rhs,lhs,inv_lhs,mean;
+	MapVectorXd ycorr_map(ycorr,design_matrix.rows());
+
+	// This might be slow as the rhs could trigger a temporary dense vector
+	ycorr_map += design_matrix * estimates;
+
+	for(int i=0;i<design_matrix.cols();i++) { 
+
+		// References: 
+		// 1) Rohan Fernando, personal communication (2013)
+		// 2) Wang, Rutledge and Gianola, 1993 GSE
+		// 3) Linear Models for the Prediction of Animal Breeding Values, Mrode
+		estimates(i) = 0.0;
+		rhs = design_matrix.col(i).dot(ycorr_map) - ginverse.col(i).dot(estimates * (*var_e / var(i)));
+		// the only way to get scalars from a mapped sparse matrix is to use 'coeff()'
+		lhs = xtx(i) + ginverse.coeff(i,i) * (*var_e / var(i));
+		inv_lhs = 1.0 / lhs;
+		mean = inv_lhs*rhs;
+		estimates(i) = mcmc_sampler.rnorm(mean,sqrt(inv_lhs * *var_e));
 
 	}
 
 
+	// same as above applies here
+	ycorr_map -= design_matrix * estimates;
 
 }
+
 
 
 template<class T1, class T2>
@@ -588,7 +604,3 @@ Rcpp::List function_ridge_ginv<T1, T2>::summary(VectorXd& mean_estimates, Vector
 				  Rcpp::Named("variance") = var_posterior);
 
 }
-
-
-
-
