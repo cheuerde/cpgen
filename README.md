@@ -1,8 +1,6 @@
 cpgen
 =====
 
-[//]: # [![Build Status](https://travis-ci.org/cheuerde/cpgen.svg?branch=master)](https://travis-ci.org/cheuerde/cpgen)
-
 ## Parallel Genomic Evaluations in R
 
 The package offers a variety of functions that are frequently being used in genomic prediction
