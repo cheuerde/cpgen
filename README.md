@@ -1,7 +1,7 @@
 cpgen
 =====
 
-[//]: #[![Build Status](https://travis-ci.org/cheuerde/cpgen.svg?branch=master)](https://travis-ci.org/cheuerde/cpgen)
+[//]: # [![Build Status](https://travis-ci.org/cheuerde/cpgen.svg?branch=master)](https://travis-ci.org/cheuerde/cpgen)
 
 ## Parallel Genomic Evaluations in R
 
