@@ -273,7 +273,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 				for(j in 1:length(par_random_all)) {
 
 					par_random_all[[j]][[i]]$method = "ridge_ginverse"
-					par_random_all[[j]][[i]]$sparse_or_dense_ginverse = ifelse(class(ginverse[[i]])=="matrix", "dense", "sparse")
+				        par_random_all[[j]][[i]]$sparse_or_dense_ginverse = ifelse("dgCMatrix" %in% class(ginverse[[i]]), "sparse", "dense")
 
 				}
 
