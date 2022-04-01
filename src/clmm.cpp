@@ -113,7 +113,15 @@ SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par
 			if ( ! Progress::check_abort() ) {
 
 			        int who = omp_get_thread_num();
+				if(who == 0) {
+
 				vec_mcmc_st.at(i).gibbs(progress_vec.at(who));
+
+				} else {
+
+				vec_mcmc_st.at(i).gibbs();
+
+				}
 				//prog->increment();
 
 			}

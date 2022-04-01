@@ -471,9 +471,9 @@ void MCMC<F>::gibbs(Progress * prog) {
 
 			}
 
-		}
-
 			prog->increment();
+
+		}
 
 	} 
 
