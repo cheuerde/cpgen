@@ -97,15 +97,14 @@ SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par
 
 		// this looks easy - the work was to allow this step to be parallelized
 		// verbose
-		Progress * prog = new Progress(vec_mcmc_st.size(), verbose);
-
+		//Progress * prog = new Progress(vec_mcmc_st.size(), verbose);
 #pragma omp parallel for 
 		for(unsigned int i=0;i<vec_mcmc_st.size();i++){
 
 			if ( ! Progress::check_abort() ) {
 
-				vec_mcmc_st.at(i).gibbs();
-				prog->increment();
+				vec_mcmc_st.at(i).gibbs(new Progress(vec_mcmc_st.at(i).get_niter() , verbose));
+				//prog->increment();
 
 			}
 
@@ -120,7 +119,7 @@ SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par
 		}
 
 
-		delete prog;
+		//delete prog;
 		summary_out = Summary;
 
 

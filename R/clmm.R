@@ -25,7 +25,8 @@
 
 clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL, 
 		 niter=10000, burnin=5000,scale_e=0,df_e=-2, verbose = TRUE, 
-		 timings = FALSE, seed = NULL, use_BLAS=FALSE, beta_posterior_fixed = FALSE) {
+		 timings = FALSE, seed = NULL, use_BLAS=FALSE, beta_posterior_fixed = FALSE,
+		 parallel_chains = 1) {
 
 	default_scale = 0
 	default_df = -2
@@ -54,8 +55,24 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 		if(!is.vector(y)) stop("phenotype must be supplied as vector")
 		n <- length(y) 
-		y <- list(y)
-		names(y) <- "Phenotype_1"
+
+		# added March 2022: allow for parallel chain execution using the
+		# logic that is already there for running mutliple traits in parallel
+		# for the same model
+		if(parallel_chains > 1) {
+
+			y_list = list()
+			for(i in 1:parallel_chains) y_list[[paste("Phenotype_", i, sep = "")]] = y
+
+			y = y_list
+
+		} else {
+
+			y <- list(y)
+			names(y) <- "Phenotype_1"
+
+		}
+
 
 	}
 
@@ -71,7 +88,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 		if(X_is_ok(X,n,"fixed")) {
 
-			if(class(X) == "matrix") { type = "dense" } else { type = "sparse" }
+			if(any(class(X) == "matrix")) { type = "dense" } else { type = "sparse" }
 			par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense=type,name="fixed_effects",method="fixed")    
 
 		}
@@ -113,8 +130,8 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 						method = "ridge"
 						# added 8.12.15 - beta_posterior individually for effects
 						beta_posterior = FALSE
-						if(class(random[[i]]) == "matrix") type = "dense"
-						if(class(random[[i]]) == "dgCMatrix") type = "sparse"
+						if(any(class(random[[i]]) == "matrix")) type = "dense"
+						if(any(class(random[[i]]) == "dgCMatrix")) type = "sparse"
 
 						par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method,
 								       name=as.character(names(random)[i]), GWAS=FALSE, GWAS_threshold = 0.01, 
@@ -178,7 +195,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 					} 
 
-					if(class(random[[i]]) == "matrix") { type = "dense" } else { type = "sparse" }
+					if(any(class(random[[i]]) == "matrix")) { type = "dense" } else { type = "sparse" }
 					par_random[[i]]$sparse_or_dense = type
 					# GWAS
 					if(is.null(par_random[[i]]$GWAS)) {
@@ -259,7 +276,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 				}
 
-				if(!class(ginverse[[i]]) %in% c("matrix","dgCMatrix")) {
+				if(!any(class(ginverse[[i]]) %in% c("matrix","dgCMatrix"))) {
 
 					stop(paste("Ginverse: '",par_random[[i]]$name,
 						   "' must be of type 'matrix' or 'dgCMatrix'",sep=""))
@@ -273,7 +290,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 				for(j in 1:length(par_random_all)) {
 
 					par_random_all[[j]][[i]]$method = "ridge_ginverse"
-				        par_random_all[[j]][[i]]$sparse_or_dense_ginverse = ifelse("dgCMatrix" %in% class(ginverse[[i]]), "sparse", "dense")
+					par_random_all[[j]][[i]]$sparse_or_dense_ginverse = ifelse("dgCMatrix" %in% class(ginverse[[i]]), "sparse", "dense")
 
 				}
 
@@ -316,19 +333,146 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 	mod <- .Call("clmm",y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, ginverse, PACKAGE = "cpgen" )
 
+	for(i in 1:length(mod)) {
+		
+		mod[[i]]$mcmc$chains = 1
+		mod[[i]]$mcmc$number_of_samples = niter - burnin
+
+	}
+
 	if(length(y) == 1) { 
 
 		return(mod[[1]]) 
 
 	} else { 
 
-		return(mod) 
+		if(parallel_chains > 1) mod = BindChains(mod)
 
+		return(mod) 
+	
 	}
 
-	#return(list(y, X , par_fixed ,random, par_random_all ,par_mcmc, verbose=verbose, options()$cpgen.threads, use_BLAS, ginverse))
+}
+
+
+# function for combining objects and posteriors from mutliple chains
+BindChains = function(mod) {
+
+	ref = mod[[1]]
+	niter = ref$mcmc$niter
+	burnin = ref$mcmc$burnin
+	pb = (burnin + 1) : niter
+
+	p = length(mod)
+
+	############
+	### mcmc ###
+	############
+
+	mcmc = list(
+		    niter = ref$mcmc$niter,
+		    burnin = ref$mcmc$burnin,
+		    number_of_samples = (niter - burnin) * p,
+		    seed = as.character(lapply(mod, function(x) x$mcmc$seed)),
+		    chains = p
+	)
+
+	names(mcmc$seed) = paste("Chain:", 1:p)
+
+	#########################
+	### Residual Variance ###
+	#########################
+
+	Residual_Variance_all = lapply(mod, function(x) x$Residual)
+	Residual_Variance = list(
+				 Posterior_Mean = mean(unlist(lapply(Residual_Variance_all, function(x) x$Posterior[pb]))),
+				 Posterior = c(
+					       unlist(lapply(Residual_Variance_all, function(x) x$Posterior[-pb])), # burnin
+					       unlist(lapply(Residual_Variance_all, function(x) x$Posterior[pb])) # sampling
+					       ),
+				 scale_prior = ref$Residual_Variance$scale_prior,
+				 df_prior = ref$Residual_Variance$df_prior,
+				 Posterior_chains = lapply(Residual_Variance_all, function(x) x$Posterior[pb])
+	)
+	names(Residual_Variance$Posterior_chains) = paste("Chain:", 1:p)
+
+	#################
+	### Predicted ###
+	#################
+
+	Predicted =  as.numeric(colMeans(do.call(rbind, lapply(mod, function(x) x$Predicted))))
+
+	#####################
+	### Fixed Effects ###
+	#####################
+
+	fixed_effects_all = lapply(mod, function(x) x$fixed_effects)
+	fixed_effects = list(
+			     type = ref$fixed_effects$type,
+			     mehtod = ref$fixed_effects$method,
+			     posterior = list(
+					      estimates_mean = as.numeric(
+									  rowMeans(
+										   rbind(
+											 as.numeric(unlist(lapply(fixed_effects_all, function(x) x$posterior$estimates_mean)))
+										   )
+									  )
+
+					      )
+			     )
+	)
+
+	######################
+	### Random Effects ###
+	######################
+
+	# loop over effects
+	effects = names(ref)[grepl("^Effect_", names(ref))]
+	ne = length(effects)
+
+	effects_list = list()
+	for(i in 1:ne) {
+
+		this_name = effects[i]
+		this_effect = lapply(mod, function(x) x[[this_name]])
+
+		effects_list[[i]] = list(
+					 type = ref[[this_name]]$type,
+					 method = ref[[this_name]]$method,
+					 scale_prior = ref[[this_name]]$scale_prior,
+					 df_prior = ref[[this_name]]$df_prior,
+					 posterior = list(
+							  estimates_mean = as.numeric(colMeans(do.call(rbind, lapply(this_effect, function(x) x$posterior$estimates_mean)))),
+							  variance_mean = mean(as.numeric(unlist(lapply(this_effect, function(x) x$posterior$variance[pb])))),
+							  variance = c(
+								       as.numeric(unlist(lapply(this_effect, function(x) x$posterior$variance[-pb]))), # burnin
+								       as.numeric(unlist(lapply(this_effect, function(x) x$posterior$variance[pb]))) # sampling
+								       ),
+							  estimates = rbind(
+									    do.call(rbind,lapply(this_effect, function(x) x$posterior$estimates[-pb,])),
+									    do.call(rbind,lapply(this_effect, function(x) x$posterior$estimates[pb,]))
+							  )
+
+					 )
+		)
+	}
+
+	names(effects_list) = effects
+
+	out = list(
+		   Residual_Variance = Residual_Variance,
+		   Predicted = Predicted,
+		   fixed_effects = fixed_effects
+	)
+
+	for(i in 1:length(effects_list)) out[[paste("Effetc_", i, sep = "")]] = effects_list[[i]]
+
+	out$mcmc = mcmc
+
+	return(out)
 
 }
+
 
 
 
@@ -428,11 +572,11 @@ X_is_ok <- function(X,n,name) {
 	allowed=c("matrix","dgCMatrix")
 	a = class(X)
 	#if(sum(a%in%allowed)!=1) stop(paste(c("lol","rofl"))) 
-	if(sum(a%in%allowed)!=1) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" , "),sep="")) 
+	if(!any(a %in% allowed)) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" , "),sep="")) 
 
 	if(anyNA(X)) stop(paste("No NAs allowed in design matrix '", name,"'", sep="")) 
 
-	if(a=="matrix" | a=="dgCMatrix") if(nrow(X) != n) stop(paste("Number of rows in design matrix '",name,"' doesnt match number of observations in y",sep=""))
+	if("matrix" %in% a | "dgCMatrix" %in% a) if(nrow(X) != n) stop(paste("Number of rows in design matrix '",name,"' doesnt match number of observations in y",sep=""))
 
 
 	return(1) 
