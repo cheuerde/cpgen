@@ -107,12 +107,12 @@ SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par
 
 		 }
 
-#pragma omp parallel for private(who)
+#pragma omp parallel for 
 		for(unsigned int i=0;i<vec_mcmc_st.size();i++){
 
 			if ( ! Progress::check_abort() ) {
 
-			        int who=omp_get_thread_num();
+			        int who = omp_get_thread_num();
 				vec_mcmc_st.at(i).gibbs(progress_vec.at(who));
 				//prog->increment();
 
