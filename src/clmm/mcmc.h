@@ -473,7 +473,6 @@ void MCMC<F>::gibbs(Progress * prog) {
 
 		}
 
-#pragma omp atomic
 			prog->increment();
 
 	} 
