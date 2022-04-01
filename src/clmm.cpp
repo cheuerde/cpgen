@@ -98,12 +98,15 @@ SEXP clmm(SEXP yR, SEXP XR, SEXP par_XR, SEXP list_of_design_matricesR, SEXP par
 		// this looks easy - the work was to allow this step to be parallelized
 		// verbose
 		//Progress * prog = new Progress(vec_mcmc_st.size(), verbose);
+		std::vector<Progress *> progress_vec;
+		for(int i = 0;i<p;++i) progress_vec.push_back(new Progress(vec_mcmc_st.at(i).get_niter() , verbose));
+
 #pragma omp parallel for 
 		for(unsigned int i=0;i<vec_mcmc_st.size();i++){
 
 			if ( ! Progress::check_abort() ) {
 
-				vec_mcmc_st.at(i).gibbs(new Progress(vec_mcmc_st.at(i).get_niter() , verbose));
+				vec_mcmc_st.at(i).gibbs(progress_vec.at(i));
 				//prog->increment();
 
 			}
