@@ -78,7 +78,7 @@ set_num_threads <- function(x, silent=FALSE, global=FALSE) {
 ccov <- function(X,lambda=0, w=NULL, compute_cor=FALSE){
 
 	allowed=c("matrix","numeric")
-	if(!class(X)%in%allowed) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
+        if(!any(class(X) %in% allowed)) { stop("objects must match one of the following types: 'matrix' , 'numeric'") }
 	if(is.vector(X)) X<-matrix(X)
 	if(anyNA(X)) stop("No NAs allowed")
 	if(missing(w)) { w<-rep(1/nrow(X),nrow(X))} 
@@ -100,7 +100,7 @@ csolve <- function(X,y=NULL){
 	a = class(X)
 
 	# this is just the dense inverse
-	if(a == "matrix" & is.null(y) & get_num_threads()==1) {
+	if("matrix" %in% a & is.null(y) & get_num_threads()==1) {
 
 		.Call( "cinverse_dense", X, PACKAGE = "cpgen" ) 
 
@@ -110,18 +110,18 @@ csolve <- function(X,y=NULL){
 		if(is.null(y)) y = diag(nrow(X)) 
 		b = class(y)
 
-		if(!a%in%allowed) stop("X must match one of the following types: 'matrix' , 'numeric', 'array', 'dgCMatrix'") 
-		if(!b%in%allowed) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
+		if(!any(a %in% allowed)) stop("X must match one of the following types: 'matrix' , 'numeric', 'array', 'dgCMatrix'") 
+		if(!any(b %in% allowed)) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
 		if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
 
 		if((is.vector(X) | is.array(X)) & class(X) != "dgCMatrix") { X = as.matrix(X); a = "matrix" } 
 		if((is.vector(y) | is.array(y)) & class(y) != "dgCMatrix") { y = as.matrix(y); b = "matrix" } 
 
-		if(class(X) == "matrix" & class(y) != "matrix") y <- as.matrix(y)
+		if("matrix" %in% class(X) & !"matrix" %in% class(y)) y <- as.matrix(y)
 
 		if(dim(X)[2]!=dim(y)[1]) {stop("ncol(X) doesn't match nrow(y)")}
 
-		if(class(X) == "matrix") {
+		if("matrix" %in% class(X)) {
 
 			.Call( "csolve", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
 
@@ -157,7 +157,7 @@ cscanx <- function(path){
 
 cgrm.A <- function(X, lambda=0, yang=FALSE){
 
-	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(!"matrix" %in% class(X)) stop("X must be an object of class 'matrix'")
 	if(anyNA(X)) stop("No NAs allowed in X")
 	if(lambda>1) lambda=1
 	if(lambda<0) lambda=0        
@@ -168,7 +168,7 @@ cgrm.A <- function(X, lambda=0, yang=FALSE){
 
 cgrm.D <- function(X, lambda=0){
 
-	if(! "matrix" %in% class(X)) stop("X must be an object of class 'matrix'")
+	if(!"matrix" %in% class(X)) stop("X must be an object of class 'matrix'")
 	if(anyNA(X)) stop("No NAs allowed in X")
 	if(lambda>1) lambda=1
 	if(lambda<0) lambda=0
@@ -179,7 +179,7 @@ cgrm.D <- function(X, lambda=0){
 
 cgrm <- function(X, w = NULL, lambda=0){
 
-	if(! "matrix" %in% class(X)) stop("X must be an object of class 'matrix'")
+	if(!"matrix" %in% class(X)) stop("X must be an object of class 'matrix'")
 	if(anyNA(X)) stop("No NAs allowed in X")
 	isw = TRUE
 	if(missing(w)) {
@@ -348,7 +348,7 @@ cmaf <- function(X)	{
 
 ccross <- function(X,D=NULL){
 
-	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(!"matrix" %in% class(X)) stop("X must be an object of class 'matrix'")
 	if(anyNA(X)) stop("No NAs allowed in X")
 	if(missing(D)) { 
 
@@ -369,7 +369,7 @@ ccross <- function(X,D=NULL){
 
 cscale_inplace <- function(X,means=NULL, vars=NULL, scale=FALSE){
 
-	if(class(X)!= "matrix") stop("X must be an object of class 'matrix'")
+	if(!"matrix" %in% class(X)) stop("X must be an object of class 'matrix'")
 	if(anyNA(X)) stop("No NAs allowed in X")
 
 	if(is.null(means))  means = ccolmv(X)
@@ -411,7 +411,7 @@ ccolmv <- function(X,compute_var=FALSE){
 	allowed=c("matrix","dgCMatrix")
 	a = class(X)
 
-	if(!a%in%allowed) stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") 
+	if(!any(a %in% allowed)) stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") 
 	if(anyNA(X)) stop("no NAs allowed") 
 
 	if(a=="dgCMatrix") {
@@ -431,7 +431,7 @@ ccolmv <- function(X,compute_var=FALSE){
 
 ctrace <- function(X){
 
-	if(class(X)!="matrix"){stop("object must be of type 'matrix'")}
+	if(!"matrix" %in% class(X)){stop("object must be of type 'matrix'")}
 	.Call("ctrace",X,PACKAGE="cpgen")
 
 }
@@ -523,6 +523,10 @@ rand_data <- function(n=500,p_marker=10000,h2=0.3,prop_qtl=0.01,seed=NULL) {
 	y <<- y
 
 }
+
+
+
+
 
 
 
