@@ -414,7 +414,7 @@ ccolmv <- function(X,compute_var=FALSE){
 	if(!any(a %in% allowed)) stop("objects must match one of the following types: 'matrix', 'dgCMatrix', 'numeric'") 
 	if(anyNA(X)) stop("no NAs allowed") 
 
-	if(a=="dgCMatrix") {
+	if("dgCMatrix" %in% a) {
 
 		.Call("ccolmv_sparse", X, compute_var, PACKAGE = "cpgen")
 
