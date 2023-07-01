@@ -71,7 +71,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 		if(X_is_ok(X,n,"fixed")) {
 
-			if(class(X) == "matrix") { type = "dense" } else { type = "sparse" }
+			if("matrix" %in% class(X)) { type = "dense" } else { type = "sparse" }
 			par_fixed <- list(scale=default_scale,df=default_df,sparse_or_dense=type,name="fixed_effects",method="fixed")    
 
 		}
@@ -113,8 +113,8 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 						method = "ridge"
 						# added 8.12.15 - beta_posterior individually for effects
 						beta_posterior = FALSE
-						if(class(random[[i]]) == "matrix") type = "dense"
-						if(class(random[[i]]) == "dgCMatrix") type = "sparse"
+						if("matrix" %in% class(random[[i]])) type = "dense"
+						if("dgCMatrix" %in% class(random[[i]])) type = "sparse"
 
 						par_random[[i]] = list(scale=default_scale,df=default_df,sparse_or_dense=type,method=method,
 								       name=as.character(names(random)[i]), GWAS=FALSE, GWAS_threshold = 0.01, 
@@ -178,7 +178,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 					} 
 
-					if(class(random[[i]]) == "matrix") { type = "dense" } else { type = "sparse" }
+					if("matrix" %in% class(random[[i]])) { type = "dense" } else { type = "sparse" }
 					par_random[[i]]$sparse_or_dense = type
 					# GWAS
 					if(is.null(par_random[[i]]$GWAS)) {
@@ -259,7 +259,7 @@ clmm <- function(y, X = NULL , Z = NULL, ginverse = NULL, par_random = NULL,
 
 				}
 
-				if(!class(ginverse[[i]]) %in% c("matrix","dgCMatrix")) {
+				if(!any(class(ginverse[[i]]) %in% c("matrix","dgCMatrix"))) {
 
 					stop(paste("Ginverse: '",par_random[[i]]$name,
 						   "' must be of type 'matrix' or 'dgCMatrix'",sep=""))
