@@ -422,17 +422,16 @@ cGBLUP <- function(y,G,X=NULL, scale_a = 0, df_a = -2, scale_e = 0, df_e = -2,ni
 }
 
 
-
 X_is_ok <- function(X,n,name) {
 
 	allowed=c("matrix","dgCMatrix")
 	a = class(X)
 	#if(sum(a%in%allowed)!=1) stop(paste(c("lol","rofl"))) 
-	if(sum(a%in%allowed)!=1) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" , "),sep="")) 
+	if(!any(a %in% allowed)) stop(paste("design matrix '",name,"' must match one of the following types: ",paste(allowed,collapse=" , "),sep="")) 
 
 	if(anyNA(X)) stop(paste("No NAs allowed in design matrix '", name,"'", sep="")) 
 
-	if(a=="matrix" | a=="dgCMatrix") if(nrow(X) != n) stop(paste("Number of rows in design matrix '",name,"' doesnt match number of observations in y",sep=""))
+	if("matrix" %in% a | "dgCMatrix" %in% a) if(nrow(X) != n) stop(paste("Number of rows in design matrix '",name,"' doesnt match number of observations in y",sep=""))
 
 
 	return(1) 
