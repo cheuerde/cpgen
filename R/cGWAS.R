@@ -38,22 +38,22 @@ cGWAS <- function(y,M,X=NULL,V=NULL,dom=FALSE, verbose=TRUE){
 
 	if(length(dim(V)) != 2 | length(unique(dim(V))) > 1) stop("V must be symmetric")
 
-	if(class(X)!="matrix") stop("X must be of type 'matrix'")
+	if(!any(class(X) == "matrix")) stop("X must be of type 'matrix'") 
 	if(anyNA(X)) stop("NAs in X are not allowed")
-	if(class(M)!="matrix") stop("M must be of type 'matrix'")
+	if(!any(class(M) == "matrix")) stop("M must be of type 'matrix'") 
 	if(anyNA(M)) stop("NAs in M are not allowed")
 
 	if(length(y) != nrow(M)) stop("y must have as many elements as rows in M")
 	if(length(y) != nrow(X)) stop("y must have as many elements as rows in X")
 	if(length(y) != nrow(V)) stop("y must have as many elements as dim(V)")
 
-	if (class(V) == "dgCMatrix") {
+	if(!any(class(V) == "dgCMatrix")) {
 
 		sparse=TRUE
 
 	} else { 
 
-		if (class(V) != "matrix") { stop("V must be either of type 'matrix' or 'dgCMatrix'") } 
+		if(any(class(V) != "matrix")) { stop("V must be either of type 'matrix' or 'dgCMatrix'") } 
 
 	}
 
@@ -97,9 +97,9 @@ cGWAS.emmax <- function(y,M,A=NULL,X=NULL,dom=FALSE,verbose=TRUE,scale_a = 0, df
 	if(n<length(y))   stop("NAs in y are not allowed")
 	if(is.null(X)) X <- array(1,dim=c(n,1))
 
-	if(class(X)!="matrix") stop("X must be of type 'matrix'")
+	if(!any(class(X) == "matrix")) stop("X must be of type 'matrix'") 
 	if(anyNA(X)) stop("NAs in X are not allowed")
-	if(class(M)!="matrix") stop("M must be of type 'matrix'")
+	if(!any(class(M) == "matrix")) stop("M must be of type 'matrix'") 
 	if(anyNA(M)) stop("NAs in M are not allowed")
 
 	if(length(y) != nrow(M)) stop("y must have as many elements as rows in M")
@@ -109,7 +109,7 @@ cGWAS.emmax <- function(y,M,A=NULL,X=NULL,dom=FALSE,verbose=TRUE,scale_a = 0, df
 
 	lambda=0.01
 	if(is.null(A)) A = cgrm(M,lambda=lambda)
-	if(class(A)!="matrix") stop("A must be of type 'matrix'")
+	if(!any(class(A) == "matrix")) stop("A must be of type 'matrix'") 
 	if(anyNA(A)) stop("NAs in A are not allowed")
 
 	if(length(y) != nrow(A)) stop("y must have as many elements as dim(A)")
