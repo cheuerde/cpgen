@@ -100,14 +100,14 @@ cSSBR.setup <- function(data, M, M.id, verbose=TRUE, returnAll = FALSE) {
 
 	# double check some stuff to prevent clmm from failing 
 	# after having already done some heavy computations
-	if(class(data)!="data.frame") stop("'data' has to be of type 'data.frame'") 
+	if(!any(class(data) =="data.frame")) stop("'data' has to be of type 'data.frame'") 
 
 	if(is.null(data$y)) stop("'data' has to include a phenotype-vector 'y'")
 	if(is.null(data$id)) stop("'data' has to include an id-vector 'id'")
 	if(is.null(data$sire)) stop("'data' has to include a sire-vector 'sire'")
 	if(is.null(data$dam)) stop("'data' has to include a dam-vector 'dam'")
 
-	if(class(M)!="matrix") stop("'M' has to be of type 'matrix'") 
+	if(!any(class(M) == "matrix")) stop("'M' has to be of type 'matrix'") 
 	if(is.null(M.id)) stop("Please provide rownames for 'M' as 'M.id'")
 	if(length(M.id)!=nrow(M)) stop("'M.id' must have as many elements as nrow(M)")
 	if(anyNA(M)) stop("No NAs allowed in marker matrix")

@@ -53,7 +53,7 @@ cGWAS <- function(y,M,X=NULL,V=NULL,dom=FALSE, verbose=TRUE){
 
 	} else { 
 
-		if(any(class(V) != "matrix")) { stop("V must be either of type 'matrix' or 'dgCMatrix'") } 
+		if(!any(class(V) == "matrix")) { stop("V must be either of type 'matrix' or 'dgCMatrix'") } 
 
 	}
 

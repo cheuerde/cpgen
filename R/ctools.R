@@ -114,8 +114,8 @@ csolve <- function(X,y=NULL){
 		if(!any(b %in% allowed)) stop("y must match one of the following types: 'matrix' , 'numeric', 'array'") 
 		if(anyNA(X) | anyNA(y))  stop("no NAs allowed") 
 
-		if((is.vector(X) | is.array(X)) & class(X) != "dgCMatrix") { X = as.matrix(X); a = "matrix" } 
-		if((is.vector(y) | is.array(y)) & class(y) != "dgCMatrix") { y = as.matrix(y); b = "matrix" } 
+		if((is.vector(X) | is.array(X)) & !any(class(X) == "dgCMatrix")) { X = as.matrix(X); a = "matrix" } 
+		if((is.vector(y) | is.array(y)) & !any(class(y) == "dgCMatrix")) { y = as.matrix(y); b = "matrix" } 
 
 		if("matrix" %in% class(X) & !"matrix" %in% class(y)) y <- as.matrix(y)
 
@@ -127,7 +127,7 @@ csolve <- function(X,y=NULL){
 
 		} else {
 
-			if(class(y) == "matrix") { 
+			if(!any(class(y) == "matrix")) { 
 
 				.Call( "csolve_sparse", X,y,options()$cpgen.threads ,PACKAGE = "cpgen" )
 
