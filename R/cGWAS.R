@@ -34,7 +34,7 @@ cGWAS <- function(y,M,X=NULL,V=NULL,dom=FALSE, verbose=TRUE){
 	sparse=FALSE
 
 	if(is.null(X)) X<-array(1,dim=c(n,1))
-	if(is.null(V)) V<-sparseMatrix(i=1:n,j=1:n,x=rep(1,n))
+	if(is.null(V)) V <- sparseMatrix(i=1:n,j=1:n,x=rep(1,n))
 
 	if(length(dim(V)) != 2 | length(unique(dim(V))) > 1) stop("V must be symmetric")
 
@@ -47,7 +47,7 @@ cGWAS <- function(y,M,X=NULL,V=NULL,dom=FALSE, verbose=TRUE){
 	if(length(y) != nrow(X)) stop("y must have as many elements as rows in X")
 	if(length(y) != nrow(V)) stop("y must have as many elements as dim(V)")
 
-	if(!any(class(V) == "dgCMatrix")) {
+	if(any(class(V) == "dgCMatrix")) {
 
 		sparse=TRUE
 
